@@ -81,7 +81,7 @@ export default function AdoptantOnboarding() {
         arbeitszeit,
       });
       if (error) throw error;
-      router.replace("/(tabs)/swipe");
+      router.replace("/adoption/feed");
     } catch (error: any) {
       Alert.alert("Fehler", error.message);
     } finally {

@@ -59,6 +59,9 @@ export default function RootLayout() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
         <Stack.Screen name="auth" />
+        <Stack.Screen name="adoption" />
+        <Stack.Screen name="gassi" />
+        <Stack.Screen name="tierheim" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="shelter" />
         <Stack.Screen name="pet" />
@@ -74,7 +77,7 @@ function handleNotificationTap(data: any) {
     // Adoptant receives a message from shelter
     case "adoptant_chat":
       router.push({
-        pathname: "/(tabs)/matches/[matchId]",
+        pathname: "/adoption/chat/[matchId]",
         params: {
           matchId: data.matchId,
           petName: data.petName ?? "",
@@ -87,7 +90,7 @@ function handleNotificationTap(data: any) {
     // Shelter receives a match notification or adoptant message
     case "shelter_chat":
       router.push({
-        pathname: "/shelter/chat/[matchId]",
+        pathname: "/tierheim/chat/[matchId]",
         params: {
           matchId: data.matchId,
           petName: data.petName ?? "",
@@ -100,7 +103,7 @@ function handleNotificationTap(data: any) {
     // Owner receives a message from the other owner
     case "owner_chat":
       router.push({
-        pathname: "/(tabs)/matches/owner/[matchId]",
+        pathname: "/gassi/chat/[matchId]",
         params: {
           matchId: data.matchId,
           petName: data.petName ?? "",

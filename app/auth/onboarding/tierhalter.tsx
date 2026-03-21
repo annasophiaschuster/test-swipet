@@ -61,7 +61,7 @@ export default function TierhalterOnboarding() {
       });
 
       if (error) throw error;
-      router.replace("/(tabs)/swipe");
+      router.replace("/gassi/feed");
     } catch (e: any) {
       Alert.alert("Fehler", e.message ?? "Registrierung fehlgeschlagen.");
     } finally {

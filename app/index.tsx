@@ -28,7 +28,13 @@ export default function SplashScreen() {
       if (session) {
         const { data: profile } = await supabase
           .from("profiles").select("role").eq("id", session.user.id).single();
-        router.replace(profile?.role === "tierheim" ? "/shelter/dashboard" : "/(tabs)/swipe");
+        if (profile?.role === "tierheim") {
+          router.replace("/tierheim/dashboard");
+        } else if (profile?.role === "tierhalter") {
+          router.replace("/gassi/feed");
+        } else {
+          router.replace("/adoption/feed");
+        }
       } else {
         // Demo-Modus: Buttons anzeigen
         setShowButtons(true);
@@ -73,19 +79,19 @@ export default function SplashScreen() {
             icon="🏠"
             title="Adoption"
             subtitle="Finde deinen Traumhund"
-            onPress={() => router.push("/(tabs)/swipe")}
+            onPress={() => router.push("/adoption/feed")}
           />
           <DemoButton
             icon="🦮"
             title="Gassidate & Zucht"
             subtitle="Für Hundebesitzer"
-            onPress={() => router.push({ pathname: "/(tabs)/swipe", params: { initialMode: "owner" } })}
+            onPress={() => router.push("/gassi/feed")}
           />
           <DemoButton
             icon="🏢"
             title="Tierheim"
             subtitle="Dashboard & Verwaltung"
-            onPress={() => router.push("/shelter/dashboard")}
+            onPress={() => router.push("/tierheim/dashboard")}
           />
 
           <TouchableOpacity

@@ -37,7 +37,7 @@ export default function TierheimOnboarding() {
         beschreibung,
       });
       if (error) throw error;
-      router.replace("/shelter/dashboard");
+      router.replace("/tierheim/dashboard");
     } catch (error: any) {
       Alert.alert("Fehler", error.message);
     } finally {

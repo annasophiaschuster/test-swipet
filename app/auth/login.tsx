@@ -42,9 +42,11 @@ export default function LoginScreen() {
         .single();
 
       if (profile?.role === "tierheim") {
-        router.replace("/shelter/dashboard");
+        router.replace("/tierheim/dashboard");
+      } else if (profile?.role === "tierhalter") {
+        router.replace("/gassi/feed");
       } else {
-        router.replace("/(tabs)/swipe");
+        router.replace("/adoption/feed");
       }
     } catch (error: any) {
       Alert.alert("Login fehlgeschlagen", error.message);
