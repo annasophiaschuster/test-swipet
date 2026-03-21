@@ -3,15 +3,7 @@ import { Colors } from "../../constants/colors";
 import { Sizes } from "../../constants/sizes";
 import { Text, View } from "react-native";
 
-function TabIcon({
-  emoji,
-  label,
-  focused,
-}: {
-  emoji: string;
-  label: string;
-  focused: boolean;
-}) {
+function TabIcon({ emoji, label, focused }: { emoji: string; label: string; focused: boolean }) {
   return (
     <View style={{ alignItems: "center", justifyContent: "center", paddingTop: 6 }}>
       <Text style={{ fontSize: 22 }}>{emoji}</Text>
@@ -54,38 +46,31 @@ export default function GassiLayout() {
       <Tabs.Screen
         name="feed"
         options={{
-          tabBarIcon: ({ focused }) => (
-            <TabIcon emoji="🦮" label="Entdecken" focused={focused} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="meine-hunde"
-        options={{
-          tabBarIcon: ({ focused }) => (
-            <TabIcon emoji="🐕" label="Meine Hunde" focused={focused} />
-          ),
+          tabBarIcon: ({ focused }) => <TabIcon emoji="🐾" label="Entdecken" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="matches"
         options={{
-          tabBarIcon: ({ focused }) => (
-            <TabIcon emoji="❤️" label="Matches" focused={focused} />
-          ),
+          tabBarIcon: ({ focused }) => <TabIcon emoji="❤️" label="Matches" focused={focused} />,
+        }}
+      />
+      <Tabs.Screen
+        name="nachrichten"
+        options={{
+          tabBarIcon: ({ focused }) => <TabIcon emoji="💬" label="Nachrichten" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="profil"
         options={{
-          tabBarIcon: ({ focused }) => (
-            <TabIcon emoji="👤" label="Profil" focused={focused} />
-          ),
+          tabBarIcon: ({ focused }) => <TabIcon emoji="👤" label="Profil" focused={focused} />,
         }}
       />
 
-      {/* Hidden routes */}
+      {/* Hidden routes — not in tab bar */}
       <Tabs.Screen name="chat/[matchId]" options={{ href: null }} />
+      <Tabs.Screen name="meine-hunde" options={{ href: null }} />
     </Tabs>
   );
 }

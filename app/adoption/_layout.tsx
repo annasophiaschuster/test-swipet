@@ -56,9 +56,9 @@ export default function AdoptionLayout() {
         }}
       />
       <Tabs.Screen
-        name="chat/[matchId]"
+        name="nachrichten"
         options={{
-          href: null,
+          tabBarIcon: ({ focused }) => <TabIcon emoji="💬" label="Nachrichten" focused={focused} />,
         }}
       />
       <Tabs.Screen
@@ -67,6 +67,10 @@ export default function AdoptionLayout() {
           tabBarIcon: ({ focused }) => <TabIcon emoji="👤" label="Profil" focused={focused} />,
         }}
       />
+
+      {/* Hidden routes */}
+      <Tabs.Screen name="chat/[matchId]" options={{ href: null }} />
+      <Tabs.Screen name="tierheim/[id]" options={{ href: null }} />
     </Tabs>
   );
 }

@@ -64,7 +64,7 @@ export default function RootLayout() {
         <Stack.Screen name="tierheim" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="shelter" />
-        <Stack.Screen name="pet" />
+        <Stack.Screen name="pet/[petId]" />
       </Stack>
     </>
   );

@@ -281,15 +281,20 @@ function AdoptionPetView({
           )}
         </View>
 
-        {/* 7. Tierheim-Info */}
+        {/* 7. Tierheim-Info — klickbar → öffentliches Profil */}
         {pet.shelter_name && (
-          <View style={{ marginHorizontal: 20, marginBottom: 4, padding: 16, backgroundColor: Colors.SURFACE, borderRadius: 16, flexDirection: "row", alignItems: "center", gap: 12 }}>
+          <TouchableOpacity
+            onPress={() => router.push({ pathname: "/adoption/tierheim/[id]", params: { id: pet.shelter_id } })}
+            activeOpacity={0.75}
+            style={{ marginHorizontal: 20, marginBottom: 4, padding: 16, backgroundColor: Colors.SURFACE, borderRadius: 16, flexDirection: "row", alignItems: "center", gap: 12 }}
+          >
             <Text style={{ fontSize: 28 }}>🏠</Text>
-            <View>
+            <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 15, fontWeight: "700", color: Colors.TEXT }}>{pet.shelter_name}</Text>
               {pet.shelter_city && <Text style={{ fontSize: 13, color: Colors.TEXT_MUTED, marginTop: 2 }}>📍 {pet.shelter_city}</Text>}
             </View>
-          </View>
+            <Text style={{ fontSize: 13, color: Colors.PRIMARY }}>Profil →</Text>
+          </TouchableOpacity>
         )}
 
         {/* 8. Like / Nope Buttons */}

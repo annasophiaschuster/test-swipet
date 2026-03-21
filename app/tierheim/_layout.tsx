@@ -46,19 +46,19 @@ export default function TierheimLayout() {
       <Tabs.Screen
         name="dashboard"
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon emoji="🏠" label="Dashboard" focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon emoji="📊" label="Dashboard" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="hunde"
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon emoji="🐾" label="Hunde" focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon emoji="🐕" label="Hunde" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="anfragen"
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon emoji="❤️" label="Anfragen" focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon emoji="🔔" label="Anfragen" focused={focused} />,
         }}
       />
       <Tabs.Screen
@@ -68,7 +68,7 @@ export default function TierheimLayout() {
         }}
       />
 
-      {/* Hidden routes — not visible in tab bar */}
+      {/* Hidden routes */}
       <Tabs.Screen name="chat/[matchId]" options={{ href: null }} />
     </Tabs>
   );
