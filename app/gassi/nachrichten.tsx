@@ -12,6 +12,7 @@ import { router, useFocusEffect } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { Colors } from "../../constants/colors";
 import { Sizes } from "../../constants/sizes";
+import GradientHeader from "../../components/GradientHeader";
 
 interface ChatItem {
   id: string;
@@ -152,22 +153,13 @@ export default function GassiNachrichten() {
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
-      <View style={{
-        paddingTop: 56, paddingHorizontal: Sizes.SPACING_LG, paddingBottom: 12,
-        borderBottomWidth: 1, borderBottomColor: Colors.BORDER,
-      }}>
-        <TouchableOpacity
-          onPress={() => router.replace("/")}
-          style={{ flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 8 }}
-        >
-          <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED }}>‹</Text>
-          <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, fontWeight: "500" }}>Modi wechseln</Text>
-        </TouchableOpacity>
-        <Text style={{ fontSize: 26, fontWeight: "800", color: Colors.TEXT }}>💬 Nachrichten</Text>
-        <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM, marginTop: 2 }}>
-          {chats.length} Gespräch{chats.length !== 1 ? "e" : ""}
-        </Text>
-      </View>
+      <GradientHeader
+        title="💬 Nachrichten"
+        subtitle={`${chats.length} Gespräch${chats.length !== 1 ? "e" : ""}`}
+        showBack
+        backLabel="Modi wechseln"
+        onBack={() => router.replace("/")}
+      />
 
       {chats.length === 0 ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32 }}>
@@ -183,6 +175,7 @@ export default function GassiNachrichten() {
         <FlatList
           data={chats}
           keyExtractor={(item) => item.id}
+          contentContainerStyle={{ paddingVertical: 8 }}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={() => loadChats(true)} tintColor={Colors.SECONDARY} />
           }
@@ -204,11 +197,17 @@ export default function GassiNachrichten() {
               style={{
                 flexDirection: "row",
                 alignItems: "center",
-                paddingHorizontal: Sizes.SPACING_LG,
+                marginHorizontal: 16,
+                marginVertical: 6,
+                paddingHorizontal: 14,
                 paddingVertical: 14,
-                borderBottomWidth: 1,
-                borderBottomColor: Colors.BORDER,
-                backgroundColor: item.unread_count > 0 ? "#FFF8F2" : Colors.BACKGROUND,
+                borderRadius: 20,
+                backgroundColor: item.unread_count > 0 ? "#FFF2EC" : "#FFF8F4",
+                shadowColor: Colors.SECONDARY,
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.1,
+                shadowRadius: 8,
+                elevation: 2,
               }}
               activeOpacity={0.7}
             >

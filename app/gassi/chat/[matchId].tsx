@@ -22,6 +22,16 @@ interface Message {
   created_at: string;
 }
 
+const DEMO_USER_ID = "demo-amir";
+const DEMO_MAX_ID  = "demo-max";
+
+const DEMO_MESSAGES_GM1: Message[] = [
+  { id: "dm-gm1-1", sender_id: DEMO_MAX_ID,  text: "Hey Amir! Super dass wir gematcht haben 🐾", created_at: new Date(Date.now() - 50 * 60000).toISOString() },
+  { id: "dm-gm1-2", sender_id: DEMO_USER_ID, text: "Hey Max! Kira sieht toll aus. Wann wollt ihr gassi gehen?", created_at: new Date(Date.now() - 45 * 60000).toISOString() },
+  { id: "dm-gm1-3", sender_id: DEMO_MAX_ID,  text: "Morgen früh um 9 im Englischen Garten? 🌳", created_at: new Date(Date.now() - 46 * 60000).toISOString() },
+  { id: "dm-gm1-4", sender_id: DEMO_USER_ID, text: "Perfekt! Bis morgen 🐕", created_at: new Date(Date.now() - 44 * 60000).toISOString() },
+];
+
 export default function GassiChatScreen() {
   const { matchId, petName, petPhoto, ownerName, modus } = useLocalSearchParams<{
     matchId: string;
@@ -50,7 +60,14 @@ export default function GassiChatScreen() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        if (matchId === "demo-gm-1") {
+          setUserId(DEMO_USER_ID);
+          setMessages(DEMO_MESSAGES_GM1);
+          setLoading(false);
+        }
+        return;
+      }
       setUserId(user.id);
       await loadMessages();
 

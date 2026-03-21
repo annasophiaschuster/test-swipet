@@ -13,6 +13,7 @@ import { supabase } from "../../lib/supabase";
 import { Colors } from "../../constants/colors";
 import { Sizes } from "../../constants/sizes";
 import { pickSingleImage, uploadImageToStorage } from "../../lib/storage";
+import GradientHeader from "../../components/GradientHeader";
 
 type Profile = {
   id: string;
@@ -29,29 +30,55 @@ const ROLE_LABELS = {
   tierheim:   { label: "Tierheim",    icon: "🏠" },
 };
 
-function GuestState() {
+// Demo avatar — uploaded to Supabase Storage
+const DEMO_AMIR_AVATAR = "https://rdkxfctjdwsyvzbzsxsd.supabase.co/storage/v1/object/public/avatars/demo/amir.png";
+
+function DemoProfile() {
   return (
-    <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32 }}>
-      <Text style={{ fontSize: 64, marginBottom: 16 }}>👤</Text>
-      <Text style={{ fontSize: Sizes.FONT_XL, fontWeight: "700", color: Colors.TEXT, textAlign: "center", marginBottom: 8 }}>
-        Nicht angemeldet
-      </Text>
-      <Text style={{ color: Colors.TEXT_MUTED, textAlign: "center", lineHeight: 22, marginBottom: 24 }}>
-        Melde dich an, um dein Profil zu verwalten und deine Matches zu sehen.
-      </Text>
+    <ScrollView contentContainerStyle={{ padding: Sizes.SPACING_LG }}>
+      {/* Avatar + Name */}
+      <View style={{ alignItems: "center", marginTop: 24, marginBottom: 32 }}>
+        <View style={{ position: "relative", marginBottom: 12 }}>
+          <Image
+            source={{ uri: DEMO_AMIR_AVATAR }}
+            style={{ width: 90, height: 90, borderRadius: 45, borderWidth: 3, borderColor: Colors.PRIMARY }}
+          />
+        </View>
+        <Text style={{ fontSize: Sizes.FONT_XL, fontWeight: "700", color: Colors.TEXT }}>Amir</Text>
+        <View style={{
+          marginTop: 8, paddingHorizontal: 14, paddingVertical: 4,
+          backgroundColor: "#FFF0F3", borderRadius: Sizes.RADIUS_FULL,
+        }}>
+          <Text style={{ color: Colors.PRIMARY, fontWeight: "600", fontSize: Sizes.FONT_SM }}>Demo-User</Text>
+        </View>
+      </View>
+
+      {/* Info Card */}
+      <View style={{
+        backgroundColor: Colors.SURFACE, borderRadius: Sizes.RADIUS_LG,
+        padding: Sizes.SPACING_MD, marginBottom: 16,
+      }}>
+        <View style={{ paddingVertical: 10 }}>
+          <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM }}>Standort</Text>
+          <Text style={{ color: Colors.TEXT, fontWeight: "500", marginTop: 2 }}>Pforzheim</Text>
+        </View>
+      </View>
+
+      {/* Login CTA */}
       <TouchableOpacity
         onPress={() => router.push("/auth/login")}
         style={{
-          height: Sizes.BUTTON_HEIGHT, paddingHorizontal: 32,
-          backgroundColor: Colors.PRIMARY, borderRadius: Sizes.RADIUS_FULL,
+          height: Sizes.BUTTON_HEIGHT,
+          backgroundColor: Colors.PRIMARY,
+          borderRadius: Sizes.RADIUS_FULL,
           alignItems: "center", justifyContent: "center",
         }}
       >
         <Text style={{ color: Colors.WHITE, fontWeight: "700", fontSize: Sizes.FONT_MD }}>
-          Jetzt anmelden
+          Echtes Konto erstellen
         </Text>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -134,20 +161,8 @@ export default function AdoptionProfilScreen() {
   if (isGuest) {
     return (
       <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
-        <View style={{
-          paddingTop: 56, paddingHorizontal: Sizes.SPACING_LG, paddingBottom: 12,
-          borderBottomWidth: 1, borderBottomColor: Colors.BORDER,
-        }}>
-          <TouchableOpacity
-            onPress={() => router.replace("/")}
-            style={{ flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 8 }}
-          >
-            <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED }}>‹</Text>
-            <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, fontWeight: "500" }}>Modi wechseln</Text>
-          </TouchableOpacity>
-          <Text style={{ fontSize: 26, fontWeight: "800", color: Colors.TEXT }}>👤 Profil</Text>
-        </View>
-        <GuestState />
+        <GradientHeader title="👤 Profil" showBack backLabel="Modi wechseln" onBack={() => router.replace("/")} />
+        <DemoProfile />
       </View>
     );
   }
@@ -156,19 +171,7 @@ export default function AdoptionProfilScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
-      <View style={{
-        paddingTop: 56, paddingHorizontal: Sizes.SPACING_LG, paddingBottom: 12,
-        borderBottomWidth: 1, borderBottomColor: Colors.BORDER,
-      }}>
-        <TouchableOpacity
-          onPress={() => router.replace("/")}
-          style={{ flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 8 }}
-        >
-          <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED }}>‹</Text>
-          <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, fontWeight: "500" }}>Modi wechseln</Text>
-        </TouchableOpacity>
-        <Text style={{ fontSize: 26, fontWeight: "800", color: Colors.TEXT }}>👤 Profil</Text>
-      </View>
+      <GradientHeader title="👤 Profil" showBack backLabel="Modi wechseln" onBack={() => router.replace("/")} />
 
       <ScrollView contentContainerStyle={{ padding: Sizes.SPACING_LG }}>
 

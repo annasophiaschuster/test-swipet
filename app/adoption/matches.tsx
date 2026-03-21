@@ -12,6 +12,7 @@ import { router, useFocusEffect } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { Colors } from "../../constants/colors";
 import { Sizes } from "../../constants/sizes";
+import GradientHeader from "../../components/GradientHeader";
 
 interface AdoptionMatchItem {
   id: string;
@@ -194,24 +195,13 @@ export default function AdoptionMatchesScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
-      {/* Header */}
-      <View style={{
-        paddingTop: 56, paddingHorizontal: Sizes.SPACING_LG, paddingBottom: 12,
-        backgroundColor: Colors.BACKGROUND,
-        borderBottomWidth: 1, borderBottomColor: Colors.BORDER,
-      }}>
-        <TouchableOpacity
-          onPress={() => router.replace("/")}
-          style={{ flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 8 }}
-        >
-          <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED }}>‹</Text>
-          <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, fontWeight: "500" }}>Modi wechseln</Text>
-        </TouchableOpacity>
-        <Text style={{ fontSize: 26, fontWeight: "800", color: Colors.TEXT }}>❤️ Matches</Text>
-        <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM, marginTop: 2 }}>
-          {matches.length} {matches.length === 1 ? "Match" : "Matches"}
-        </Text>
-      </View>
+      <GradientHeader
+        title="❤️ Matches"
+        subtitle={`${matches.length} ${matches.length === 1 ? "Match" : "Matches"}`}
+        showBack
+        backLabel="Modi wechseln"
+        onBack={() => router.replace("/")}
+      />
 
       {matches.length === 0 ? (
         <EmptyState />
@@ -219,6 +209,7 @@ export default function AdoptionMatchesScreen() {
         <FlatList
           data={matches}
           keyExtractor={(item) => item.id}
+          contentContainerStyle={{ paddingVertical: 8 }}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -245,11 +236,17 @@ export default function AdoptionMatchesScreen() {
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
-                  paddingHorizontal: Sizes.SPACING_LG,
+                  marginHorizontal: 16,
+                  marginVertical: 6,
+                  paddingHorizontal: 14,
                   paddingVertical: 14,
-                  borderBottomWidth: 1,
-                  borderBottomColor: Colors.BORDER,
-                  backgroundColor: Colors.BACKGROUND,
+                  borderRadius: 20,
+                  backgroundColor: "#FFF5F7",
+                  shadowColor: Colors.PRIMARY,
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.12,
+                  shadowRadius: 8,
+                  elevation: 2,
                 }}
                 activeOpacity={0.7}
               >

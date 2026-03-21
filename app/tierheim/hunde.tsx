@@ -13,6 +13,7 @@ import { router, useFocusEffect } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { Colors } from "../../constants/colors";
 import { Sizes } from "../../constants/sizes";
+import GradientHeader from "../../components/GradientHeader";
 
 interface Pet {
   id: string;
@@ -150,37 +151,29 @@ export default function TierheimHundeScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
-      {/* Header */}
-      <View style={{
-        paddingTop: 56, paddingHorizontal: Sizes.SPACING_LG, paddingBottom: 12,
-        borderBottomWidth: 1, borderBottomColor: Colors.BORDER,
-      }}>
-        <TouchableOpacity
-          onPress={() => router.replace("/")}
-          style={{ flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 8 }}
-        >
-          <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED }}>‹</Text>
-          <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, fontWeight: "500" }}>Modi wechseln</Text>
-        </TouchableOpacity>
-        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-        <Text style={{ fontSize: 20, fontWeight: "800", color: Colors.TEXT }}>🐕 Meine Hunde</Text>
-        <TouchableOpacity
-          onPress={() => {
-            if (isGuest) {
-              Alert.alert("Demo-Ansicht", "Melde dich an um Hunde hinzuzufügen.");
-              return;
-            }
-            router.push("/shelter/pets/add");
-          }}
-          style={{
-            backgroundColor: Colors.PRIMARY, borderRadius: Sizes.RADIUS_FULL,
-            paddingHorizontal: 14, paddingVertical: 7,
-          }}
-        >
-          <Text style={{ color: Colors.WHITE, fontWeight: "700", fontSize: 15 }}>＋</Text>
-        </TouchableOpacity>
-        </View>
-      </View>
+      <GradientHeader
+        title="🐕 Meine Hunde"
+        showBack
+        backLabel="Modi wechseln"
+        onBack={() => router.replace("/")}
+        rightElement={
+          <TouchableOpacity
+            onPress={() => {
+              if (isGuest) {
+                Alert.alert("Demo-Ansicht", "Melde dich an um Hunde hinzuzufügen.");
+                return;
+              }
+              router.push("/shelter/pets/add");
+            }}
+            style={{
+              backgroundColor: "rgba(255,255,255,0.25)", borderRadius: Sizes.RADIUS_FULL,
+              paddingHorizontal: 14, paddingVertical: 7,
+            }}
+          >
+            <Text style={{ color: Colors.WHITE, fontWeight: "700", fontSize: 15 }}>＋</Text>
+          </TouchableOpacity>
+        }
+      />
 
       {pets.length === 0 ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32 }}>

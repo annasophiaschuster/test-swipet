@@ -8,6 +8,9 @@ import {
   ActivityIndicator,
   Image,
 } from "react-native";
+import GradientHeader from "../../components/GradientHeader";
+
+const DEMO_AMIR_AVATAR = "https://rdkxfctjdwsyvzbzsxsd.supabase.co/storage/v1/object/public/avatars/demo/amir.png";
 import { router } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { Colors } from "../../constants/colors";
@@ -98,45 +101,50 @@ export default function GassiProfilScreen() {
           </TouchableOpacity>
           <Text style={{ fontSize: 26, fontWeight: "800", color: Colors.TEXT }}>👤 Profil</Text>
         </View>
-        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32 }}>
-          <Text style={{ fontSize: 52, marginBottom: 16 }}>🔒</Text>
-          <Text
-            style={{
-              fontSize: Sizes.FONT_XL,
-              fontWeight: "700",
-              color: Colors.TEXT,
-              textAlign: "center",
-              marginBottom: 8,
-            }}
-          >
-            Noch nicht angemeldet
-          </Text>
-          <Text
-            style={{
-              color: Colors.TEXT_MUTED,
-              textAlign: "center",
-              marginBottom: 24,
-              lineHeight: 22,
-            }}
-          >
-            Melde dich an um dein Profil zu verwalten und Gassidate-Partner zu finden.
-          </Text>
+        <ScrollView contentContainerStyle={{ padding: Sizes.SPACING_LG }}>
+          {/* Avatar + Name */}
+          <View style={{ alignItems: "center", marginTop: 24, marginBottom: 32 }}>
+            <View style={{ marginBottom: 12 }}>
+              <Image
+                source={{ uri: DEMO_AMIR_AVATAR }}
+                style={{ width: 90, height: 90, borderRadius: 45, borderWidth: 3, borderColor: Colors.SECONDARY }}
+              />
+            </View>
+            <Text style={{ fontSize: Sizes.FONT_XL, fontWeight: "700", color: Colors.TEXT }}>Amir</Text>
+            <View style={{
+              marginTop: 8, paddingHorizontal: 14, paddingVertical: 4,
+              backgroundColor: Colors.SECONDARY + "18", borderRadius: Sizes.RADIUS_FULL,
+            }}>
+              <Text style={{ color: Colors.SECONDARY, fontWeight: "600", fontSize: Sizes.FONT_SM }}>Demo-User</Text>
+            </View>
+          </View>
+
+          {/* Info Card */}
+          <View style={{
+            backgroundColor: Colors.SURFACE, borderRadius: Sizes.RADIUS_LG,
+            padding: Sizes.SPACING_MD, marginBottom: 16,
+          }}>
+            <View style={{ paddingVertical: 10 }}>
+              <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM }}>Standort</Text>
+              <Text style={{ color: Colors.TEXT, fontWeight: "500", marginTop: 2 }}>Pforzheim</Text>
+            </View>
+          </View>
+
+          {/* Login CTA */}
           <TouchableOpacity
             onPress={() => router.push("/auth/login")}
             style={{
               height: Sizes.BUTTON_HEIGHT,
-              paddingHorizontal: 32,
               backgroundColor: Colors.SECONDARY,
               borderRadius: Sizes.RADIUS_FULL,
-              alignItems: "center",
-              justifyContent: "center",
+              alignItems: "center", justifyContent: "center",
             }}
           >
             <Text style={{ color: Colors.WHITE, fontWeight: "700", fontSize: Sizes.FONT_MD }}>
-              Jetzt anmelden
+              Echtes Konto erstellen
             </Text>
           </TouchableOpacity>
-        </View>
+        </ScrollView>
       </View>
     );
   }
@@ -146,25 +154,7 @@ export default function GassiProfilScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
-      {/* Header */}
-      <View
-        style={{
-          paddingTop: 56,
-          paddingHorizontal: Sizes.SPACING_LG,
-          paddingBottom: 16,
-          borderBottomWidth: 1,
-          borderBottomColor: Colors.BORDER,
-        }}
-      >
-        <TouchableOpacity
-          onPress={() => router.replace("/")}
-          style={{ flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 8 }}
-        >
-          <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED }}>‹</Text>
-          <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, fontWeight: "500" }}>Modi wechseln</Text>
-        </TouchableOpacity>
-        <Text style={{ fontSize: 26, fontWeight: "800", color: Colors.TEXT }}>👤 Profil</Text>
-      </View>
+      <GradientHeader title="👤 Profil" showBack backLabel="Modi wechseln" onBack={() => router.replace("/")} />
 
       <ScrollView contentContainerStyle={{ padding: Sizes.SPACING_LG }}>
         {/* ── Avatar + Name ── */}

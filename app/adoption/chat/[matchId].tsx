@@ -23,6 +23,18 @@ interface Message {
   created_at: string;
 }
 
+const DEMO_USER_ID = "demo-amir";
+const DEMO_SHELTER_ID = "demo-tierheim";
+
+const DEMO_MESSAGES_A1: Message[] = [
+  { id: "dm-a1-1", sender_id: DEMO_SHELTER_ID, text: "Hallo Amir! Vielen Dank für dein Interesse an Bruno 🐾", created_at: new Date(Date.now() - 60 * 60000).toISOString() },
+  { id: "dm-a1-2", sender_id: DEMO_USER_ID,    text: "Hallo! Bruno hat mich sofort begeistert. Wie läuft der Prozess ab?", created_at: new Date(Date.now() - 55 * 60000).toISOString() },
+  { id: "dm-a1-3", sender_id: DEMO_SHELTER_ID, text: "Super! Wir würden dich gerne zu einem Kennenlernen einladen.", created_at: new Date(Date.now() - 40 * 60000).toISOString() },
+  { id: "dm-a1-4", sender_id: DEMO_USER_ID,    text: "Das klingt wunderbar! Wann wäre das möglich?", created_at: new Date(Date.now() - 35 * 60000).toISOString() },
+  { id: "dm-a1-5", sender_id: DEMO_SHELTER_ID, text: "Wie wäre es am Samstag um 11 Uhr?", created_at: new Date(Date.now() - 28 * 60000).toISOString() },
+  { id: "dm-a1-6", sender_id: DEMO_USER_ID,    text: "Perfekt, ich freue mich! 🐕", created_at: new Date(Date.now() - 25 * 60000).toISOString() },
+];
+
 export default function AdoptionChatScreen() {
   const { matchId, petName, petPhoto, shelterName } = useLocalSearchParams<{
     matchId: string;
@@ -48,7 +60,14 @@ export default function AdoptionChatScreen() {
   const initChat = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        if (matchId === "demo-a-1") {
+          setUserId(DEMO_USER_ID);
+          setMessages(DEMO_MESSAGES_A1);
+          setLoading(false);
+        }
+        return;
+      }
       setUserId(user.id);
 
       await loadMessages();

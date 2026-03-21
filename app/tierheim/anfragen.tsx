@@ -13,6 +13,7 @@ import { router, useFocusEffect } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { Colors } from "../../constants/colors";
 import { Sizes } from "../../constants/sizes";
+import GradientHeader from "../../components/GradientHeader";
 
 interface AnfrageItem {
   id: string;
@@ -231,34 +232,22 @@ export default function TierheimAnfragenScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
-      {/* Header */}
-      <View style={{
-        paddingTop: 56, paddingHorizontal: Sizes.SPACING_LG, paddingBottom: 12,
-        borderBottomWidth: 1, borderBottomColor: Colors.BORDER,
-      }}>
-        <TouchableOpacity
-          onPress={() => router.replace("/")}
-          style={{ flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 8 }}
-        >
-          <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED }}>‹</Text>
-          <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, fontWeight: "500" }}>Modi wechseln</Text>
-        </TouchableOpacity>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <Text style={{ fontSize: 20, fontWeight: "800", color: Colors.TEXT }}>🔔 Anfragen</Text>
-          {totalUnread > 0 && (
-            <View style={{
-              backgroundColor: Colors.PRIMARY, borderRadius: 10,
-              minWidth: 20, height: 20,
-              alignItems: "center", justifyContent: "center", paddingHorizontal: 5,
-            }}>
-              <Text style={{ color: Colors.WHITE, fontSize: 11, fontWeight: "700" }}>{totalUnread}</Text>
-            </View>
-          )}
-        </View>
-        <Text style={{ color: Colors.TEXT_MUTED, fontSize: 12, marginTop: 2 }}>
-          {anfragen.length} Interessent{anfragen.length !== 1 ? "en" : ""}
-        </Text>
-      </View>
+      <GradientHeader
+        title="🔔 Anfragen"
+        subtitle={`${anfragen.length} Interessent${anfragen.length !== 1 ? "en" : ""}`}
+        showBack
+        backLabel="Modi wechseln"
+        onBack={() => router.replace("/")}
+        rightElement={totalUnread > 0 ? (
+          <View style={{
+            backgroundColor: "rgba(255,255,255,0.3)", borderRadius: 12,
+            minWidth: 24, height: 24,
+            alignItems: "center", justifyContent: "center", paddingHorizontal: 6,
+          }}>
+            <Text style={{ color: Colors.WHITE, fontSize: 12, fontWeight: "700" }}>{totalUnread}</Text>
+          </View>
+        ) : undefined}
+      />
 
 
       {anfragen.length === 0 ? (

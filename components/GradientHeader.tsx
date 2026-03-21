@@ -8,6 +8,8 @@ interface GradientHeaderProps {
   title: string;
   subtitle?: string;
   showBack?: boolean;
+  backLabel?: string;
+  onBack?: () => void;
   rightElement?: React.ReactNode;
 }
 
@@ -15,23 +17,27 @@ export default function GradientHeader({
   title,
   subtitle,
   showBack = false,
+  backLabel = "Zurück",
+  onBack,
   rightElement,
 }: GradientHeaderProps) {
+  const handleBack = onBack ?? (() => router.back());
   return (
     <LinearGradient
       colors={[Colors.SECONDARY, Colors.PRIMARY]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={{
-        paddingTop: 60,
-        paddingBottom: 20,
+        paddingTop: 56,
+        paddingBottom: 18,
         paddingHorizontal: Sizes.SPACING_LG,
       }}
     >
-      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: showBack ? 6 : 0 }}>
         {showBack ? (
-          <TouchableOpacity onPress={() => router.back()}>
-            <Text style={{ color: Colors.WHITE, opacity: 0.9, fontSize: 15 }}>← Zurück</Text>
+          <TouchableOpacity onPress={handleBack} style={{ flexDirection: "row", alignItems: "center", gap: 2 }}>
+            <Text style={{ color: Colors.WHITE, opacity: 0.9, fontSize: 15 }}>‹</Text>
+            <Text style={{ color: Colors.WHITE, opacity: 0.85, fontSize: 12, fontWeight: "500" }}> {backLabel}</Text>
           </TouchableOpacity>
         ) : (
           <View />
@@ -40,16 +46,16 @@ export default function GradientHeader({
       </View>
       <Text
         style={{
-          fontSize: Sizes.FONT_2XL,
-          fontWeight: "700",
+          fontSize: 26,
+          fontWeight: "800",
           color: Colors.WHITE,
-          marginTop: showBack ? 8 : 0,
+          marginTop: showBack ? 4 : 0,
         }}
       >
         {title}
       </Text>
       {subtitle && (
-        <Text style={{ color: Colors.WHITE, opacity: 0.8, marginTop: 4, fontSize: Sizes.FONT_SM }}>
+        <Text style={{ color: Colors.WHITE, opacity: 0.85, marginTop: 4, fontSize: Sizes.FONT_SM }}>
           {subtitle}
         </Text>
       )}

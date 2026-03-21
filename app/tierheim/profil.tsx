@@ -16,6 +16,7 @@ import { router } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { Colors } from "../../constants/colors";
 import { Sizes } from "../../constants/sizes";
+import GradientHeader from "../../components/GradientHeader";
 
 type ShelterProfile = {
   id: string;
@@ -233,33 +234,24 @@ export default function TierheimProfilScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
-      {/* Header */}
-      <View style={{
-        paddingTop: 56, paddingHorizontal: Sizes.SPACING_LG, paddingBottom: 14,
-        borderBottomWidth: 1, borderBottomColor: Colors.BORDER,
-      }}>
-        <TouchableOpacity
-          onPress={() => router.replace("/")}
-          style={{ flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 8 }}
-        >
-          <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED }}>‹</Text>
-          <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, fontWeight: "500" }}>Modi wechseln</Text>
-        </TouchableOpacity>
-        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-        <Text style={{ fontSize: 20, fontWeight: "800", color: Colors.TEXT }}>👤 Profil</Text>
-        {!isGuest && (
+      <GradientHeader
+        title="👤 Profil"
+        showBack
+        backLabel="Modi wechseln"
+        onBack={() => router.replace("/")}
+        rightElement={!isGuest ? (
           <TouchableOpacity
             onPress={startEdit}
             style={{
               paddingHorizontal: 14, paddingVertical: 7,
-              borderRadius: Sizes.RADIUS_FULL, borderWidth: 1.5, borderColor: Colors.BORDER,
+              borderRadius: Sizes.RADIUS_FULL,
+              backgroundColor: "rgba(255,255,255,0.25)",
             }}
           >
-            <Text style={{ fontSize: 13, fontWeight: "600", color: Colors.TEXT }}>✏️ Bearbeiten</Text>
+            <Text style={{ fontSize: 13, fontWeight: "600", color: Colors.WHITE }}>✏️ Bearbeiten</Text>
           </TouchableOpacity>
-        )}
-        </View>
-      </View>
+        ) : undefined}
+      />
 
       <ScrollView contentContainerStyle={{ padding: Sizes.SPACING_LG, paddingBottom: 40 }}>
 

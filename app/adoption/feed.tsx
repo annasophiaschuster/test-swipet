@@ -12,6 +12,7 @@ import {
   PanResponder,
 } from "react-native";
 import { router } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
 import { supabase } from "../../lib/supabase";
 import { Colors } from "../../constants/colors";
 import { Sizes } from "../../constants/sizes";
@@ -58,12 +59,14 @@ function PropRow({
   return (
     <View style={{
       flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-      paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: Colors.BORDER,
+      backgroundColor: Colors.PRIMARY + "12",
+      borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10, marginBottom: 8,
     }}>
-      <Text style={{ fontSize: 14, color: Colors.TEXT }}>
-        {icon}  {label}
-      </Text>
-      <Text style={{ fontSize: 14, fontWeight: "600", color: ok ? Colors.SUCCESS : Colors.ERROR }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+        <Text style={{ fontSize: 16 }}>{icon}</Text>
+        <Text style={{ fontSize: 14, color: Colors.TEXT, fontWeight: "500" }}>{label}</Text>
+      </View>
+      <Text style={{ fontSize: 14, fontWeight: "700", color: ok ? Colors.SUCCESS : Colors.ERROR }}>
         {value}
       </Text>
     </View>
@@ -516,32 +519,36 @@ export default function AdoptionFeed() {
     <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
 
       {/* Header */}
-      <View style={{
-        paddingTop: 56, paddingHorizontal: Sizes.SPACING_LG, paddingBottom: 12,
-        backgroundColor: Colors.BACKGROUND,
-        borderBottomWidth: 1, borderBottomColor: Colors.BORDER,
-        flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-      }}>
+      <LinearGradient
+        colors={[Colors.SECONDARY, Colors.PRIMARY]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={{
+          paddingTop: 56, paddingHorizontal: Sizes.SPACING_LG, paddingBottom: 14,
+          flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+        }}
+      >
         <TouchableOpacity
           onPress={() => router.replace("/")}
-          style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
+          style={{ flexDirection: "row", alignItems: "center", gap: 2 }}
         >
-          <Text style={{ fontSize: 18, color: Colors.TEXT_MUTED }}>‹</Text>
-          <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, fontWeight: "500" }}>Modi</Text>
+          <Text style={{ fontSize: 18, color: "rgba(255,255,255,0.9)" }}>‹</Text>
+          <Text style={{ fontSize: 12, color: "rgba(255,255,255,0.85)", fontWeight: "500" }}> Modi</Text>
         </TouchableOpacity>
-        <Text style={{ fontSize: 22, fontWeight: "800", color: Colors.TEXT }}>🐾 Adoption</Text>
+        <Text style={{ fontSize: 22, fontWeight: "800", color: Colors.WHITE }}>🐾 Adoption</Text>
         <TouchableOpacity
           onPress={() => setFilterVisible(true)}
           style={{
             paddingHorizontal: 14, paddingVertical: 7,
-            borderRadius: Sizes.RADIUS_FULL, borderWidth: 1.5, borderColor: Colors.BORDER,
+            borderRadius: Sizes.RADIUS_FULL,
+            backgroundColor: "rgba(255,255,255,0.25)",
             flexDirection: "row", alignItems: "center", gap: 6,
           }}
         >
           <Text style={{ fontSize: 14 }}>⚙️</Text>
-          <Text style={{ color: Colors.TEXT, fontWeight: "500", fontSize: Sizes.FONT_SM }}>Filter</Text>
+          <Text style={{ color: Colors.WHITE, fontWeight: "600", fontSize: Sizes.FONT_SM }}>Filter</Text>
         </TouchableOpacity>
-      </View>
+      </LinearGradient>
 
       {/* Loading */}
       {loading && (

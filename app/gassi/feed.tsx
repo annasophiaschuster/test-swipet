@@ -16,6 +16,7 @@ import {
   Platform,
 } from "react-native";
 import { router } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
 import { supabase } from "../../lib/supabase";
 import { Colors } from "../../constants/colors";
 import { Sizes } from "../../constants/sizes";
@@ -987,25 +988,28 @@ export default function GassiFeed() {
   return (
     <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
       {/* Header */}
-      <View style={{
-        paddingTop: 56, paddingHorizontal: Sizes.SPACING_LG, paddingBottom: 12,
-        backgroundColor: Colors.BACKGROUND,
-        borderBottomWidth: 1, borderBottomColor: Colors.BORDER,
-        flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-      }}>
+      <LinearGradient
+        colors={[Colors.SECONDARY, Colors.PRIMARY]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={{
+          paddingTop: 56, paddingHorizontal: Sizes.SPACING_LG, paddingBottom: 14,
+          flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+        }}
+      >
         {/* Back to splash */}
         <TouchableOpacity
           onPress={() => router.replace("/")}
-          style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
+          style={{ flexDirection: "row", alignItems: "center", gap: 2 }}
         >
-          <Text style={{ fontSize: 18, color: Colors.TEXT_MUTED }}>‹</Text>
-          <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, fontWeight: "500" }}>Modi</Text>
+          <Text style={{ fontSize: 18, color: "rgba(255,255,255,0.9)" }}>‹</Text>
+          <Text style={{ fontSize: 12, color: "rgba(255,255,255,0.85)", fontWeight: "500" }}> Modi</Text>
         </TouchableOpacity>
 
         {/* Mode toggle */}
         <View style={{
           flexDirection: "row", borderRadius: 99, overflow: "hidden",
-          borderWidth: 1, borderColor: Colors.BORDER,
+          backgroundColor: "rgba(255,255,255,0.2)",
         }}>
           {(["gassidate", "zucht"] as const).map((m) => (
             <TouchableOpacity
@@ -1013,10 +1017,10 @@ export default function GassiFeed() {
               onPress={() => setOwnerSubMode(m)}
               style={{
                 paddingHorizontal: 14, paddingVertical: 7,
-                backgroundColor: ownerSubMode === m ? Colors.SECONDARY : Colors.BACKGROUND,
+                backgroundColor: ownerSubMode === m ? "rgba(255,255,255,0.35)" : "transparent",
               }}
             >
-              <Text style={{ fontSize: 13, fontWeight: "600", color: ownerSubMode === m ? Colors.WHITE : Colors.TEXT_MUTED }}>
+              <Text style={{ fontSize: 13, fontWeight: "600", color: Colors.WHITE }}>
                 {m === "gassidate" ? "🦮 Gassi" : "🌸 Zucht"}
               </Text>
             </TouchableOpacity>
@@ -1029,19 +1033,20 @@ export default function GassiFeed() {
             onPress={() => setHundeModalVisible(true)}
             style={{
               paddingHorizontal: 10, paddingVertical: 7,
-              borderRadius: Sizes.RADIUS_FULL, borderWidth: 1.5, borderColor: Colors.BORDER,
+              borderRadius: Sizes.RADIUS_FULL,
+              backgroundColor: "rgba(255,255,255,0.25)",
               flexDirection: "row", alignItems: "center", gap: 4,
             }}
           >
             <Text style={{ fontSize: 13 }}>🐕</Text>
-            <Text style={{ color: Colors.TEXT, fontWeight: "500", fontSize: 11 }}>
+            <Text style={{ color: Colors.WHITE, fontWeight: "600", fontSize: 11 }}>
               {myDogs.find((d) => d.id === activeDogId)?.name ?? "Hunde"}
             </Text>
           </TouchableOpacity>
         ) : (
           <View style={{ width: 60 }} />
         )}
-      </View>
+      </LinearGradient>
 
       {/* Empty */}
       {partnerCards.length === 0 && (
