@@ -257,7 +257,7 @@ export default function GassiNachrichten() {
                         fontSize: 10, fontWeight: "600",
                         color: item.modus === "gassi" ? Colors.SECONDARY : "#9B59B6",
                       }}>
-                        {item.modus === "gassi" ? "Gassidate" : "Zucht"}
+                        {item.modus === "gassi" ? "Gassi-Date" : "Deck-Date"}
                       </Text>
                     </View>
                     <Text style={{ fontSize: 11, color: Colors.TEXT_MUTED }}>

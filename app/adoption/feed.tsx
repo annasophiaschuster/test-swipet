@@ -403,6 +403,18 @@ export default function AdoptionFeed() {
         query = query.in("groesse_kategorie", currentFilter.groesse);
       if (currentFilter.maxAlterJahre < 15)
         query = query.lte("alter_jahre", currentFilter.maxAlterJahre);
+      if (currentFilter.geschlecht !== "alle")
+        query = query.eq("geschlecht", currentFilter.geschlecht);
+      if (currentFilter.aktivitaetslevel.length > 0)
+        query = query.in("aktivitaetslevel", currentFilter.aktivitaetslevel);
+      if (currentFilter.kinderfreundlich === "ja")
+        query = query.neq("kinderfreundlich", "nein");
+      if (currentFilter.braucht_garten === "nein")
+        query = query.eq("braucht_garten", false);
+      if (currentFilter.braucht_garten === "ja")
+        query = query.eq("braucht_garten", true);
+      if (currentFilter.vertraeglich === "ja")
+        query = query.eq("vertraeglich_mit_tieren", true);
       if (swipedIds.length > 0)
         query = query.not("id", "in", `(${swipedIds.join(",")})`);
 

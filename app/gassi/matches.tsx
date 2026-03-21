@@ -38,7 +38,7 @@ const DEMO_MATCHES: OwnerMatchItem[] = [
     other_pet_tierart: "hund",
     other_pet_photo: null,
     other_owner_name: "Max",
-    last_message: "Match! Gassidate vereinbaren 🐾",
+    last_message: "Match! Gassi-Date vereinbaren 🐾",
     last_message_at: new Date(Date.now() - 45 * 60000).toISOString(),
     match_status: "matched",
   },
@@ -188,7 +188,7 @@ export default function GassiMatchesScreen() {
             Noch keine Gassi-Matches
           </Text>
           <Text style={{ color: Colors.TEXT_MUTED, textAlign: "center", lineHeight: 22 }}>
-            Swipe auf andere Hunde im Gassidate-Feed — bei einem gegenseitigen Like könnt ihr euch verabreden!
+            Swipe auf andere Hunde im Gassi-Date-Feed — bei einem gegenseitigen Like könnt ihr euch verabreden!
           </Text>
         </View>
       ) : (
@@ -288,7 +288,7 @@ export default function GassiMatchesScreen() {
                   </View>
                   <Text style={{ fontSize: Sizes.FONT_SM, color: Colors.TEXT_MUTED, marginTop: 1 }}>
                     {[item.other_owner_name ?? "Hundehalter", item.other_pet_rasse].filter(Boolean).join(" · ")}
-                    {" · "}{item.modus === "gassi" ? "🦮 Gassi" : "🎾 Spieldate"}
+                    {" · "}{item.modus === "gassi" ? "🦮 Gassi-Date" : "🌸 Deck-Date"}
                   </Text>
                   <Text
                     numberOfLines={1}
