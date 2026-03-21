@@ -1,12 +1,13 @@
 import { useState } from "react";
 import {
   View, Text, TextInput, TouchableOpacity, ScrollView,
-  Alert, ActivityIndicator, Switch,
+  Alert, ActivityIndicator, Switch, Image, KeyboardAvoidingView, Platform,
 } from "react-native";
 import { router } from "expo-router";
 import { supabase } from "../../../lib/supabase";
 import { Colors } from "../../../constants/colors";
 import { Sizes } from "../../../constants/sizes";
+import { pickSingleImage, uploadImageToStorage } from "../../../lib/storage";
 
 const TIERARTEN = [{ value: "hund", label: "🐶 Hund" }, { value: "katze", label: "🐱 Katze" }];
 const GROESSEN = [{ value: "klein", label: "Klein" }, { value: "mittel", label: "Mittel" }, { value: "gross", label: "Groß" }, { value: "riese", label: "Riese" }];
@@ -14,7 +15,9 @@ const AKTIVITAET = [{ value: "sportlich", label: "🏃 Sehr aktiv" }, { value: "
 
 export default function TierhalterOnboarding() {
   const [loading, setLoading] = useState(false);
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [name, setName] = useState("");
+  const [beschreibung, setBeschreibung] = useState("");
   const [tierart, setTierart] = useState<"hund" | "katze">("hund");
   const [rasse, setRasse] = useState("");
   const [groesse, setGroesse] = useState("mittel");
@@ -35,6 +38,14 @@ export default function TierhalterOnboarding() {
 
       await supabase.from("profiles").upsert({ id: user.id, role: "tierhalter" });
 
+      // Foto hochladen falls vorhanden
+      let fotoUrl: string | null = null;
+      if (photoUri) {
+        try {
+          fotoUrl = await uploadImageToStorage("pet-photos", `owner-pets/${user.id}.jpg`, photoUri);
+        } catch (_) { /* Foto-Upload Fehler ignorieren */ }
+      }
+
       const { error } = await supabase.from("owner_pets").insert({
         owner_id: user.id,
         name: name.trim(),
@@ -45,6 +56,8 @@ export default function TierhalterOnboarding() {
         aktivitaetslevel: aktivitaet,
         kinderfreundlich,
         vertraeglich_mit_tieren: vertraeglich,
+        foto_url: fotoUrl,
+        beschreibung: beschreibung.trim() || null,
       });
 
       if (error) throw error;
@@ -66,6 +79,36 @@ export default function TierhalterOnboarding() {
       </View>
 
       <ScrollView contentContainerStyle={{ padding: Sizes.SPACING_LG, paddingBottom: 60, gap: 20 }} keyboardShouldPersistTaps="handled">
+
+        {/* Foto */}
+        <Section title="Foto deines Tieres (optional)">
+          <TouchableOpacity
+            onPress={async () => {
+              try {
+                const asset = await pickSingleImage();
+                if (asset) setPhotoUri(asset.uri);
+              } catch (e: any) {
+                Alert.alert("Fehler", e.message);
+              }
+            }}
+            style={{ alignItems: "center" }}
+          >
+            {photoUri ? (
+              <View>
+                <Image source={{ uri: photoUri }} style={{ width: 120, height: 120, borderRadius: 60, borderWidth: 3, borderColor: Colors.SECONDARY }} />
+                <View style={{ position: "absolute", bottom: 0, right: 0, backgroundColor: Colors.SECONDARY, width: 30, height: 30, borderRadius: 15, alignItems: "center", justifyContent: "center" }}>
+                  <Text style={{ color: Colors.WHITE, fontSize: 14 }}>✎</Text>
+                </View>
+              </View>
+            ) : (
+              <View style={{ width: 120, height: 120, borderRadius: 60, borderWidth: 2, borderColor: Colors.BORDER, borderStyle: "dashed", backgroundColor: Colors.SURFACE, alignItems: "center", justifyContent: "center" }}>
+                <Text style={{ fontSize: 36 }}>📷</Text>
+                <Text style={{ color: Colors.TEXT_MUTED, fontSize: 11, marginTop: 4 }}>Foto hinzufügen</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </Section>
+
         <Section title="Mein Tier ist ein…">
           <View style={{ flexDirection: "row", gap: 10 }}>
             {TIERARTEN.map((t) => (
@@ -101,6 +144,23 @@ export default function TierhalterOnboarding() {
         <Section title="Verhalten">
           <ToggleRow label="Kinderfreundlich" value={kinderfreundlich} onToggle={setKinderfreundlich} />
           <ToggleRow label="Verträglich mit anderen Tieren" value={vertraeglich} onToggle={setVertraeglich} />
+        </Section>
+
+        {/* Beschreibung */}
+        <Section title="Beschreibung (optional)">
+          <TextInput
+            value={beschreibung}
+            onChangeText={setBeschreibung}
+            placeholder="Erzähl etwas über dein Tier — Lieblingsrouten, Besonderheiten…"
+            placeholderTextColor={Colors.TEXT_MUTED}
+            multiline
+            numberOfLines={3}
+            style={{
+              backgroundColor: Colors.SURFACE, borderRadius: 12, padding: 12,
+              fontSize: 15, color: Colors.TEXT, minHeight: 90, textAlignVertical: "top",
+              borderWidth: 1, borderColor: Colors.BORDER,
+            }}
+          />
         </Section>
 
         <TouchableOpacity onPress={handleFinish} disabled={loading}

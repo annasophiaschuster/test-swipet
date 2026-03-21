@@ -67,6 +67,11 @@ export default function TabsLayout() {
           tabBarIcon: ({ focused }) => <TabIcon emoji="👤" label="Profil" focused={focused} />,
         }}
       />
+
+      {/* Routen die NICHT in der Tab Bar erscheinen sollen */}
+      <Tabs.Screen name="matches/[matchId]"       options={{ href: null }} />
+      <Tabs.Screen name="matches/owner/[matchId]" options={{ href: null }} />
+      <Tabs.Screen name="swipe/filter"            options={{ href: null }} />
     </Tabs>
   );
 }

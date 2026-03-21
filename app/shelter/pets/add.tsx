@@ -1,20 +1,14 @@
 import { useState } from "react";
 import {
-  View,
-  Text,
-  ScrollView,
-  TextInput,
-  TouchableOpacity,
-  ActivityIndicator,
-  Alert,
-  Switch,
+  View, Text, ScrollView, TextInput, TouchableOpacity,
+  ActivityIndicator, Alert, Switch, Image, FlatList,
 } from "react-native";
 import { router } from "expo-router";
 import { supabase } from "../../../lib/supabase";
 import { Colors } from "../../../constants/colors";
 import { Sizes } from "../../../constants/sizes";
+import { pickMultipleImages, uploadImageToStorage } from "../../../lib/storage";
 
-const TIERARTEN = ["hund", "katze"] as const;
 const GROESSEN = [
   { value: "klein", label: "Klein (< 10 kg)" },
   { value: "mittel", label: "Mittel (10–25 kg)" },
@@ -41,68 +35,119 @@ const KINDERFREUNDLICH = [
   { value: "ab_schulalter", label: "Ab Schulalter" },
   { value: "ab_teenager", label: "Ab Teenager" },
 ];
-const CHARAKTER_OPTIONS = ["verspielt", "verschmust", "ruhig", "treu", "neugierig", "energetisch", "familienfreundlich", "lernfreudig"];
+const CHARAKTER_OPTIONS = [
+  "verspielt", "verschmust", "ruhig", "treu", "neugierig",
+  "energetisch", "familienfreundlich", "lernfreudig",
+];
+
+const MAX_PHOTOS = 5;
 
 export default function AddPetScreen() {
   const [loading, setLoading] = useState(false);
+  const [uploadingPhotos, setUploadingPhotos] = useState(false);
+
+  // Photos
+  const [selectedPhotoUris, setSelectedPhotoUris] = useState<string[]>([]);
 
   // Basic info
-  const [name, setName] = useState("");
-  const [tierart, setTierart] = useState<"hund" | "katze">("hund");
-  const [rasse, setRasse] = useState("");
-  const [groesse, setGroesse] = useState("mittel");
-  const [alterJahre, setAlterJahre] = useState("");
+  const [name, setName]               = useState("");
+  const [rasse, setRasse]             = useState("");
+  const [groesse, setGroesse]         = useState("mittel");
+  const [alterJahre, setAlterJahre]   = useState("");
   const [alterMonate, setAlterMonate] = useState("");
-  const [geschlecht, setGeschlecht] = useState("maennlich");
+  const [geschlecht, setGeschlecht]   = useState("maennlich");
   const [beschreibung, setBeschreibung] = useState("");
 
   // Eigenschaften
-  const [kastriert, setKastriert] = useState(false);
+  const [kastriert, setKastriert]         = useState(false);
   const [brauchtGarten, setBrauchtGarten] = useState(false);
-  const [vertraeglich, setVertraeglich] = useState(true);
+  const [vertraeglich, setVertraeglich]   = useState(true);
   const [kinderfreundlich, setKinderfreundlich] = useState("ja");
-  const [erfahrung, setErfahrung] = useState("anfaenger");
-  const [aktivitaet, setAktivitaet] = useState("mittel");
+  const [erfahrung, setErfahrung]         = useState("anfaenger");
+  const [aktivitaet, setAktivitaet]       = useState("mittel");
   const [charakterTags, setCharakterTags] = useState<string[]>([]);
 
-  const toggleTag = (tag: string) => {
+  const toggleTag = (tag: string) =>
     setCharakterTags((prev) =>
       prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
     );
+
+  const handlePickPhotos = async () => {
+    try {
+      const remaining = MAX_PHOTOS - selectedPhotoUris.length;
+      if (remaining <= 0) {
+        Alert.alert("Maximum erreicht", `Du kannst maximal ${MAX_PHOTOS} Fotos hinzufügen.`);
+        return;
+      }
+      const assets = await pickMultipleImages(remaining);
+      if (assets.length > 0) {
+        setSelectedPhotoUris((prev) => [...prev, ...assets.map((a) => a.uri)].slice(0, MAX_PHOTOS));
+      }
+    } catch (e: any) {
+      Alert.alert("Fehler", e.message);
+    }
   };
+
+  const removePhoto = (index: number) =>
+    setSelectedPhotoUris((prev) => prev.filter((_, i) => i !== index));
 
   const handleSave = async () => {
     if (!name.trim()) {
       Alert.alert("Fehler", "Bitte einen Namen eingeben.");
       return;
     }
-
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { error } = await supabase.from("pets").insert({
-        shelter_id: user.id,
-        name: name.trim(),
-        tierart,
-        rasse: rasse.trim() || null,
-        groesse_kategorie: groesse,
-        alter_jahre: alterJahre ? parseInt(alterJahre) : 0,
-        alter_monate: alterMonate ? parseInt(alterMonate) : 0,
-        geschlecht,
-        beschreibung: beschreibung.trim() || null,
-        kastriert,
-        braucht_garten: brauchtGarten,
-        vertraeglich_mit_tieren: vertraeglich,
-        kinderfreundlich,
-        erfahrung_benoetigt: erfahrung,
-        aktivitaetslevel: aktivitaet,
-        charakter_tags: charakterTags,
-        status: "verfuegbar",
-      });
+      // 1. Pet einfügen
+      const { data: pet, error: petErr } = await supabase
+        .from("pets")
+        .insert({
+          shelter_id: user.id,
+          name: name.trim(),
+          tierart: "hund",
+          rasse: rasse.trim() || null,
+          groesse_kategorie: groesse,
+          alter_jahre: alterJahre ? parseInt(alterJahre) : 0,
+          alter_monate: alterMonate ? parseInt(alterMonate) : 0,
+          geschlecht,
+          beschreibung: beschreibung.trim() || null,
+          kastriert,
+          braucht_garten: brauchtGarten,
+          vertraeglich_mit_tieren: vertraeglich,
+          kinderfreundlich,
+          erfahrung_benoetigt: erfahrung,
+          aktivitaetslevel: aktivitaet,
+          charakter_tags: charakterTags,
+          status: "verfuegbar",
+        })
+        .select("id")
+        .single();
 
-      if (error) throw error;
+      if (petErr) throw petErr;
+
+      // 2. Fotos hochladen
+      if (selectedPhotoUris.length > 0) {
+        setUploadingPhotos(true);
+        const photoRows: { pet_id: string; url: string; position: number }[] = [];
+
+        for (let i = 0; i < selectedPhotoUris.length; i++) {
+          try {
+            const path = `${pet.id}/${i}.jpg`;
+            const publicUrl = await uploadImageToStorage("pet-photos", path, selectedPhotoUris[i]);
+            photoRows.push({ pet_id: pet.id, url: publicUrl, position: i });
+          } catch (uploadErr: any) {
+            console.warn(`Foto ${i + 1} Upload fehlgeschlagen:`, uploadErr.message);
+          }
+        }
+
+        if (photoRows.length > 0) {
+          await supabase.from("pet_photos").insert(photoRows);
+        }
+        setUploadingPhotos(false);
+      }
 
       Alert.alert("Gespeichert! 🎉", `${name} wurde zur Adoption eingetragen.`, [
         { text: "OK", onPress: () => router.back() },
@@ -111,6 +156,7 @@ export default function AddPetScreen() {
       Alert.alert("Fehler", e.message ?? "Speichern fehlgeschlagen.");
     } finally {
       setLoading(false);
+      setUploadingPhotos(false);
     }
   };
 
@@ -121,17 +167,58 @@ export default function AddPetScreen() {
         <TouchableOpacity onPress={() => router.back()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
           <Text style={{ fontSize: 20, color: Colors.PRIMARY }}>‹</Text>
         </TouchableOpacity>
-        <Text style={{ fontSize: 20, fontWeight: "800", color: Colors.TEXT }}>Tier hinzufügen</Text>
+        <Text style={{ fontSize: 20, fontWeight: "800", color: Colors.TEXT }}>Hund hinzufügen</Text>
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: Sizes.SPACING_LG, paddingBottom: 60, gap: 20 }} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={{ padding: Sizes.SPACING_LG, paddingBottom: 80, gap: 20 }} keyboardShouldPersistTaps="handled">
 
-        {/* Tierart */}
-        <Section title="Tierart">
-          <View style={{ flexDirection: "row", gap: 10 }}>
-            {TIERARTEN.map((t) => (
-              <Chip key={t} label={t === "hund" ? "🐶 Hund" : "🐱 Katze"} selected={tierart === t} onPress={() => setTierart(t)} />
+        {/* ── Fotos ── */}
+        <Section title="Fotos">
+          <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, marginBottom: 10 }}>
+            Bis zu {MAX_PHOTOS} Fotos · {selectedPhotoUris.length}/{MAX_PHOTOS} ausgewählt
+          </Text>
+
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 10 }}>
+            {selectedPhotoUris.map((uri, idx) => (
+              <View key={idx} style={{ position: "relative" }}>
+                <Image
+                  source={{ uri }}
+                  style={{ width: 80, height: 80, borderRadius: Sizes.RADIUS_MD, backgroundColor: Colors.SURFACE }}
+                />
+                <TouchableOpacity
+                  onPress={() => removePhoto(idx)}
+                  style={{
+                    position: "absolute", top: -6, right: -6,
+                    width: 22, height: 22, borderRadius: 11,
+                    backgroundColor: Colors.ERROR,
+                    alignItems: "center", justifyContent: "center",
+                  }}
+                >
+                  <Text style={{ color: Colors.WHITE, fontSize: 12, fontWeight: "700" }}>✕</Text>
+                </TouchableOpacity>
+                {idx === 0 && (
+                  <View style={{ position: "absolute", bottom: 4, left: 4, backgroundColor: Colors.PRIMARY, paddingHorizontal: 5, paddingVertical: 2, borderRadius: 4 }}>
+                    <Text style={{ color: Colors.WHITE, fontSize: 9, fontWeight: "700" }}>COVER</Text>
+                  </View>
+                )}
+              </View>
             ))}
+
+            {selectedPhotoUris.length < MAX_PHOTOS && (
+              <TouchableOpacity
+                onPress={handlePickPhotos}
+                style={{
+                  width: 80, height: 80,
+                  borderRadius: Sizes.RADIUS_MD,
+                  borderWidth: 2, borderColor: Colors.BORDER,
+                  borderStyle: "dashed",
+                  alignItems: "center", justifyContent: "center",
+                  backgroundColor: Colors.SURFACE,
+                }}
+              >
+                <Text style={{ fontSize: 28, color: Colors.TEXT_MUTED }}>+</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </Section>
 
@@ -215,7 +302,7 @@ export default function AddPetScreen() {
           <TextInput
             value={beschreibung}
             onChangeText={setBeschreibung}
-            placeholder="Erzähl etwas über das Tier…"
+            placeholder="Erzähl etwas über den Hund…"
             placeholderTextColor={Colors.TEXT_MUTED}
             multiline
             numberOfLines={4}
@@ -230,10 +317,15 @@ export default function AddPetScreen() {
           style={{ height: Sizes.BUTTON_HEIGHT, backgroundColor: Colors.PRIMARY, borderRadius: Sizes.RADIUS_FULL, alignItems: "center", justifyContent: "center", marginTop: 4 }}
         >
           {loading ? (
-            <ActivityIndicator color={Colors.WHITE} />
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+              <ActivityIndicator color={Colors.WHITE} />
+              <Text style={{ color: Colors.WHITE, fontWeight: "600" }}>
+                {uploadingPhotos ? "Fotos werden hochgeladen…" : "Wird gespeichert…"}
+              </Text>
+            </View>
           ) : (
             <Text style={{ color: Colors.WHITE, fontWeight: "700", fontSize: Sizes.FONT_MD }}>
-              🐾 Tier speichern
+              🐾 Hund speichern
             </Text>
           )}
         </TouchableOpacity>
@@ -274,8 +366,7 @@ function Chip({ label, selected, onPress, fullWidth }: { label: string; selected
     <TouchableOpacity
       onPress={onPress}
       style={{
-        paddingHorizontal: 14,
-        paddingVertical: 8,
+        paddingHorizontal: 14, paddingVertical: 8,
         borderRadius: Sizes.RADIUS_FULL,
         backgroundColor: selected ? Colors.PRIMARY : Colors.SURFACE,
         borderWidth: 1.5,
@@ -294,12 +385,7 @@ function ToggleRow({ label, value, onToggle }: { label: string; value: boolean; 
   return (
     <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: Colors.BORDER }}>
       <Text style={{ fontSize: Sizes.FONT_MD, color: Colors.TEXT }}>{label}</Text>
-      <Switch
-        value={value}
-        onValueChange={onToggle}
-        trackColor={{ false: Colors.BORDER, true: Colors.PRIMARY }}
-        thumbColor={Colors.WHITE}
-      />
+      <Switch value={value} onValueChange={onToggle} trackColor={{ false: Colors.BORDER, true: Colors.PRIMARY }} thumbColor={Colors.WHITE} />
     </View>
   );
 }

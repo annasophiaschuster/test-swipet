@@ -1,17 +1,14 @@
 import { useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  Alert,
-  ActivityIndicator,
+  View, Text, TouchableOpacity, ScrollView,
+  Alert, ActivityIndicator, Image,
 } from "react-native";
 import { router } from "expo-router";
 import { supabase } from "../../../lib/supabase";
 import { Colors } from "../../../constants/colors";
 import { Sizes } from "../../../constants/sizes";
 import GradientHeader from "../../../components/GradientHeader";
+import { pickSingleImage, uploadImageToStorage } from "../../../lib/storage";
 
 type Profile = {
   id: string;
@@ -19,21 +16,21 @@ type Profile = {
   role: "adoptant" | "tierhalter" | "tierheim";
   plz: string | null;
   city: string | null;
+  avatar_url: string | null;
 };
 
 const ROLE_LABELS = {
-  adoptant: { label: "Tiersucher", icon: "❤️" },
-  tierhalter: { label: "Tierhalter", icon: "🐾" },
-  tierheim: { label: "Tierheim", icon: "🏠" },
+  adoptant:   { label: "Tiersucher",  icon: "❤️" },
+  tierhalter: { label: "Tierhalter",  icon: "🐾" },
+  tierheim:   { label: "Tierheim",    icon: "🏠" },
 };
 
 export default function ProfilScreen() {
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [profile, setProfile]         = useState<Profile | null>(null);
+  const [loading, setLoading]         = useState(true);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
-  useEffect(() => {
-    loadProfile();
-  }, []);
+  useEffect(() => { loadProfile(); }, []);
 
   const loadProfile = async () => {
     try {
@@ -45,10 +42,30 @@ export default function ProfilScreen() {
         .eq("id", user.id)
         .single();
       setProfile(data);
-    } catch (e) {
-      // ignore
+    } catch (_) {
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAvatarUpload = async () => {
+    try {
+      const asset = await pickSingleImage();
+      if (!asset || !profile) return;
+
+      setUploadingAvatar(true);
+      const publicUrl = await uploadImageToStorage(
+        "avatars",
+        `${profile.id}.jpg`,
+        asset.uri
+      );
+
+      await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("id", profile.id);
+      setProfile((prev) => prev ? { ...prev, avatar_url: publicUrl } : prev);
+    } catch (e: any) {
+      Alert.alert("Fehler", e.message ?? "Upload fehlgeschlagen.");
+    } finally {
+      setUploadingAvatar(false);
     }
   };
 
@@ -75,79 +92,132 @@ export default function ProfilScreen() {
   }
 
   const roleInfo = profile ? ROLE_LABELS[profile.role] : null;
+  const canAddPets = profile?.role === "tierhalter" || profile?.role === "tierheim";
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
       <GradientHeader title="Mein Profil" />
 
       <ScrollView contentContainerStyle={{ padding: Sizes.SPACING_LG }}>
-        {/* Avatar + Name */}
+
+        {/* ── Avatar + Name ── */}
         <View style={{ alignItems: "center", marginTop: 24, marginBottom: 32 }}>
-          <View
-            style={{
-              width: 90,
-              height: 90,
-              borderRadius: 45,
-              backgroundColor: Colors.PRIMARY,
-              alignItems: "center",
-              justifyContent: "center",
-              marginBottom: 12,
-            }}
-          >
-            <Text style={{ fontSize: 36 }}>{roleInfo?.icon ?? "👤"}</Text>
-          </View>
+          <TouchableOpacity onPress={handleAvatarUpload} disabled={uploadingAvatar} style={{ position: "relative", marginBottom: 12 }}>
+            {profile?.avatar_url ? (
+              <Image
+                source={{ uri: profile.avatar_url }}
+                style={{ width: 90, height: 90, borderRadius: 45, borderWidth: 3, borderColor: Colors.PRIMARY }}
+              />
+            ) : (
+              <View style={{ width: 90, height: 90, borderRadius: 45, backgroundColor: Colors.PRIMARY, alignItems: "center", justifyContent: "center" }}>
+                <Text style={{ fontSize: 36 }}>{roleInfo?.icon ?? "👤"}</Text>
+              </View>
+            )}
+
+            {/* Kamera-Badge */}
+            <View style={{
+              position: "absolute", bottom: 0, right: 0,
+              width: 28, height: 28, borderRadius: 14,
+              backgroundColor: uploadingAvatar ? Colors.TEXT_MUTED : Colors.PRIMARY,
+              alignItems: "center", justifyContent: "center",
+              borderWidth: 2, borderColor: Colors.WHITE,
+            }}>
+              {uploadingAvatar
+                ? <ActivityIndicator size="small" color={Colors.WHITE} />
+                : <Text style={{ fontSize: 13 }}>📷</Text>
+              }
+            </View>
+          </TouchableOpacity>
+
           <Text style={{ fontSize: Sizes.FONT_XL, fontWeight: "700", color: Colors.TEXT }}>
             {profile?.name ?? "Kein Name"}
           </Text>
-          <View
-            style={{
-              marginTop: 6,
-              paddingHorizontal: 14,
-              paddingVertical: 4,
-              backgroundColor: "#FFF0F3",
-              borderRadius: Sizes.RADIUS_FULL,
-            }}
-          >
+          <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM, marginTop: 2 }}>
+            Tippe auf das Bild um es zu ändern
+          </Text>
+
+          <View style={{ marginTop: 8, paddingHorizontal: 14, paddingVertical: 4, backgroundColor: "#FFF0F3", borderRadius: Sizes.RADIUS_FULL }}>
             <Text style={{ color: Colors.PRIMARY, fontWeight: "600", fontSize: Sizes.FONT_SM }}>
               {roleInfo?.label}
             </Text>
           </View>
         </View>
 
-        {/* Info Karte */}
-        <View
-          style={{
-            backgroundColor: Colors.SURFACE,
-            borderRadius: Sizes.RADIUS_XL,
-            padding: Sizes.SPACING_MD,
-            marginBottom: 16,
-          }}
-        >
-          {[
-            { label: "Standort", value: profile?.city ?? profile?.plz ?? "Nicht angegeben" },
-          ].map((item) => (
-            <View key={item.label} style={{ paddingVertical: 10 }}>
-              <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM }}>{item.label}</Text>
-              <Text style={{ color: Colors.TEXT, fontWeight: "500", marginTop: 2 }}>{item.value}</Text>
-            </View>
-          ))}
+        {/* ── Info Karte ── */}
+        <View style={{ backgroundColor: Colors.SURFACE, borderRadius: Sizes.RADIUS_XL, padding: Sizes.SPACING_MD, marginBottom: 16 }}>
+          <View style={{ paddingVertical: 10 }}>
+            <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM }}>Standort</Text>
+            <Text style={{ color: Colors.TEXT, fontWeight: "500", marginTop: 2 }}>
+              {profile?.city ?? profile?.plz ?? "Nicht angegeben"}
+            </Text>
+          </View>
         </View>
 
-        {/* Coming soon */}
-        <View
-          style={{
-            backgroundColor: Colors.SURFACE,
-            borderRadius: Sizes.RADIUS_XL,
-            padding: Sizes.SPACING_MD,
-            alignItems: "center",
-            marginBottom: 24,
-          }}
-        >
-          <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM }}>
-            Profil bearbeiten kommt in Schritt 9 ✨
-          </Text>
-        </View>
+        {/* ── Tier hinzufügen (nur Tierhalter + Tierheim) ── */}
+        {canAddPets && (
+          <View style={{ marginBottom: 16 }}>
+            <Text style={{ fontSize: 14, fontWeight: "700", color: Colors.TEXT, marginBottom: 10 }}>
+              Meine Tiere
+            </Text>
 
+            <TouchableOpacity
+              onPress={() => router.push("/shelter/pets/add")}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                backgroundColor: Colors.SURFACE,
+                borderRadius: Sizes.RADIUS_XL,
+                padding: Sizes.SPACING_MD,
+                borderWidth: 1,
+                borderColor: Colors.BORDER,
+                marginBottom: 10,
+              }}
+            >
+              <View style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: "#FFF0F3", alignItems: "center", justifyContent: "center", marginRight: 14 }}>
+                <Text style={{ fontSize: 20 }}>🐾</Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontWeight: "700", color: Colors.TEXT, fontSize: Sizes.FONT_MD }}>
+                  Hund zur Adoption eintragen
+                </Text>
+                <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM, marginTop: 1 }}>
+                  Tier anlegen und Adoptierende finden
+                </Text>
+              </View>
+              <Text style={{ color: Colors.TEXT_MUTED, fontSize: 18 }}>›</Text>
+            </TouchableOpacity>
+
+            {profile?.role === "tierheim" && (
+              <TouchableOpacity
+                onPress={() => router.push("/shelter/pets/index")}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  backgroundColor: Colors.SURFACE,
+                  borderRadius: Sizes.RADIUS_XL,
+                  padding: Sizes.SPACING_MD,
+                  borderWidth: 1,
+                  borderColor: Colors.BORDER,
+                }}
+              >
+                <View style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: "#FFF0F3", alignItems: "center", justifyContent: "center", marginRight: 14 }}>
+                  <Text style={{ fontSize: 20 }}>📋</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontWeight: "700", color: Colors.TEXT, fontSize: Sizes.FONT_MD }}>
+                    Alle meine Tiere
+                  </Text>
+                  <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM, marginTop: 1 }}>
+                    Übersicht und Status verwalten
+                  </Text>
+                </View>
+                <Text style={{ color: Colors.TEXT_MUTED, fontSize: 18 }}>›</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
+
+        {/* ── Logout ── */}
         <TouchableOpacity
           onPress={handleLogout}
           style={{

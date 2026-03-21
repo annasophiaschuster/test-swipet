@@ -133,23 +133,6 @@ export default function FilterModal({
         </View>
 
         <ScrollView contentContainerStyle={{ padding: Sizes.SPACING_LG }}>
-          {/* Tierart */}
-          <Text style={styles.sectionTitle}>Tierart</Text>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", marginBottom: 24 }}>
-            {[
-              { key: "alle", label: "🐾 Alle" },
-              { key: "hund", label: "🐶 Hunde" },
-              { key: "katze", label: "🐱 Katzen" },
-            ].map((o) => (
-              <PillToggle
-                key={o.key}
-                label={o.label}
-                selected={local.tierart === o.key}
-                onPress={() => setLocal({ ...local, tierart: o.key as FilterState["tierart"] })}
-              />
-            ))}
-          </View>
-
           {/* Größe */}
           <Text style={styles.sectionTitle}>Größe</Text>
           <Text style={styles.sectionSubtitle}>Mehrere möglich</Text>

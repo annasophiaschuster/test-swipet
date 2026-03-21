@@ -28,8 +28,18 @@ export default function ShelterDashboard() {
   useFocusEffect(
     useCallback(() => {
       loadStats();
+      checkGuest();
     }, [])
   );
+
+  // Demo-Placeholder für unangemeldete Besucher
+  const DEMO_STATS: DashboardStats = {
+    orgName: "Demo-Tierheim",
+    totalPets: 8,
+    verfuegbarePets: 6,
+    totalMatches: 12,
+    unreadMessages: 3,
+  };
 
   const loadStats = async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
@@ -37,7 +47,11 @@ export default function ShelterDashboard() {
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        // Demo-Modus: Placeholder-Daten anzeigen
+        setStats(DEMO_STATS);
+        return;
+      }
 
       const [shelterRes, petsRes, matchesRes] = await Promise.all([
         supabase.from("shelter_profiles").select("org_name").eq("id", user.id).single(),
@@ -74,9 +88,19 @@ export default function ShelterDashboard() {
     }
   };
 
+  const [isGuest, setIsGuest] = useState(false);
+
   const handleLogout = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { router.push("/auth/login"); return; }
     await supabase.auth.signOut();
     router.replace("/auth/login");
+  };
+
+  // isGuest nach Stats laden setzen
+  const checkGuest = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    setIsGuest(!user);
   };
 
   if (loading) {
@@ -110,7 +134,9 @@ export default function ShelterDashboard() {
             onPress={handleLogout}
             style={{ paddingHorizontal: 14, paddingVertical: 7, borderRadius: Sizes.RADIUS_FULL, backgroundColor: "rgba(255,255,255,0.2)" }}
           >
-            <Text style={{ color: Colors.WHITE, fontSize: 13, fontWeight: "600" }}>Logout</Text>
+            <Text style={{ color: Colors.WHITE, fontSize: 13, fontWeight: "600" }}>
+              {isGuest ? "Anmelden 🔑" : "Logout"}
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -121,6 +147,20 @@ export default function ShelterDashboard() {
           <StatCard value={stats?.totalMatches ?? 0} label="Matches" emoji="❤️" />
         </View>
       </View>
+
+      {/* Demo-Banner */}
+      {isGuest && (
+        <View style={{ marginHorizontal: Sizes.SPACING_LG, marginTop: Sizes.SPACING_LG, padding: 14, backgroundColor: "#FFF8F0", borderRadius: 12, borderWidth: 1, borderColor: "#F0956A40", flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <Text style={{ fontSize: 18 }}>🔒</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 13, fontWeight: "700", color: Colors.TEXT }}>Demo-Ansicht</Text>
+            <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, marginTop: 2 }}>Melde dich an, um dein echtes Tierheim zu verwalten</Text>
+          </View>
+          <TouchableOpacity onPress={() => router.push("/auth/login")} style={{ backgroundColor: Colors.PRIMARY, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 99 }}>
+            <Text style={{ color: "#FFF", fontWeight: "700", fontSize: 12 }}>Login</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* Quick Actions */}
       <View style={{ padding: Sizes.SPACING_LG }}>

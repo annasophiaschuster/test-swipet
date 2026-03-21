@@ -19,9 +19,9 @@ export interface OwnerPetItem {
   owner_city?: string | null;
 }
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
-export const OWNER_CARD_WIDTH = SCREEN_WIDTH - 32;
-export const OWNER_CARD_HEIGHT = SCREEN_WIDTH * 1.15;
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+export const OWNER_CARD_WIDTH  = SCREEN_WIDTH - 32;
+export const OWNER_CARD_HEIGHT = SCREEN_HEIGHT * 0.55;  // Etwas kleiner wegen Gassi-Label
 
 const AKTIVITAET_LABEL: Record<string, string> = {
   sportlich: "🏃 Sehr aktiv",
