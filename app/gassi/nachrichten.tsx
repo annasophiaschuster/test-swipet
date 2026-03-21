@@ -25,6 +25,31 @@ interface ChatItem {
   unread_count: number;
 }
 
+const DEMO_CHATS: ChatItem[] = [
+  {
+    id: "demo-gn-1",
+    modus: "gassi",
+    created_at: new Date(Date.now() - 45 * 60000).toISOString(),
+    other_pet_name: "Kira",
+    other_pet_photo: null,
+    other_owner_name: "Max",
+    last_message: "Hey! Wollen wir morgen im Englischen Garten Gassi gehen? So gegen 10 Uhr?",
+    last_message_at: new Date(Date.now() - 45 * 60000).toISOString(),
+    unread_count: 2,
+  },
+  {
+    id: "demo-gn-2",
+    modus: "gassi",
+    created_at: new Date(Date.now() - 2 * 3600000).toISOString(),
+    other_pet_name: "Cookie",
+    other_pet_photo: null,
+    other_owner_name: "Sarah",
+    last_message: "Super dass wir gematcht haben! Cookie liebt andere Hunde, das wird toll 🐾",
+    last_message_at: new Date(Date.now() - 2 * 3600000).toISOString(),
+    unread_count: 0,
+  },
+];
+
 function formatTime(iso: string | null): string {
   if (!iso) return "";
   const d = new Date(iso);
@@ -36,10 +61,10 @@ function formatTime(iso: string | null): string {
 }
 
 export default function GassiNachrichten() {
-  const [chats, setChats]         = useState<ChatItem[]>([]);
-  const [loading, setLoading]     = useState(true);
+  const [chats, setChats]           = useState<ChatItem[]>([]);
+  const [loading, setLoading]       = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [isGuest, setIsGuest]     = useState(false);
+  const [isGuest, setIsGuest]       = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -55,6 +80,7 @@ export default function GassiNachrichten() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         setIsGuest(true);
+        setChats(DEMO_CHATS);
         setLoading(false);
         setRefreshing(false);
         return;
@@ -77,7 +103,6 @@ export default function GassiNachrichten() {
       const items: ChatItem[] = await Promise.all(
         (data ?? []).map(async (m: any) => {
           const isA = m.pet_a?.owner_id === user.id;
-          const myPet   = isA ? m.pet_a : m.pet_b;
           const otherPet = isA ? m.pet_b : m.pet_a;
 
           const { data: msgs } = await supabase
@@ -125,47 +150,6 @@ export default function GassiNachrichten() {
     );
   }
 
-  if (isGuest) {
-    return (
-      <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
-        <View style={{
-          paddingTop: 56, paddingHorizontal: Sizes.SPACING_LG, paddingBottom: 12,
-          borderBottomWidth: 1, borderBottomColor: Colors.BORDER,
-        }}>
-          <TouchableOpacity
-            onPress={() => router.replace("/")}
-            style={{ flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 8 }}
-          >
-            <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED }}>‹</Text>
-            <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, fontWeight: "500" }}>Modi wechseln</Text>
-          </TouchableOpacity>
-          <Text style={{ fontSize: 26, fontWeight: "800", color: Colors.TEXT }}>💬 Nachrichten</Text>
-        </View>
-        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32 }}>
-          <Text style={{ fontSize: 64, marginBottom: 16 }}>🔒</Text>
-          <Text style={{ fontSize: Sizes.FONT_XL, fontWeight: "700", color: Colors.TEXT, textAlign: "center", marginBottom: 8 }}>
-            Nicht angemeldet
-          </Text>
-          <Text style={{ color: Colors.TEXT_MUTED, textAlign: "center", lineHeight: 22, marginBottom: 24 }}>
-            Melde dich an, um Nachrichten von anderen Hundebesitzern zu lesen.
-          </Text>
-          <TouchableOpacity
-            onPress={() => router.push("/auth/login")}
-            style={{
-              height: Sizes.BUTTON_HEIGHT, paddingHorizontal: 32,
-              backgroundColor: Colors.SECONDARY, borderRadius: Sizes.RADIUS_FULL,
-              alignItems: "center", justifyContent: "center",
-            }}
-          >
-            <Text style={{ color: Colors.WHITE, fontWeight: "700", fontSize: Sizes.FONT_MD }}>
-              Jetzt anmelden
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
-  }
-
   return (
     <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
       <View style={{
@@ -204,7 +188,8 @@ export default function GassiNachrichten() {
           }
           renderItem={({ item }) => (
             <TouchableOpacity
-              onPress={() =>
+              onPress={() => {
+                if (isGuest) { router.push("/auth/login"); return; }
                 router.push({
                   pathname: "/gassi/chat/[matchId]",
                   params: {
@@ -214,8 +199,8 @@ export default function GassiNachrichten() {
                     ownerName: item.other_owner_name ?? "",
                     modus: item.modus,
                   },
-                })
-              }
+                });
+              }}
               style={{
                 flexDirection: "row",
                 alignItems: "center",
@@ -281,6 +266,11 @@ export default function GassiNachrichten() {
                     </Text>
                   </View>
                 </View>
+                {item.other_owner_name && (
+                  <Text style={{ fontSize: Sizes.FONT_SM, color: Colors.TEXT_MUTED, marginTop: 1 }}>
+                    {item.other_owner_name}
+                  </Text>
+                )}
                 <Text
                   numberOfLines={1}
                   style={{

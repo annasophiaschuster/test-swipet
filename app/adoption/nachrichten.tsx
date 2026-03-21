@@ -27,6 +27,35 @@ interface ChatItem {
   unread_count: number;
 }
 
+const DEMO_CHATS: ChatItem[] = [
+  {
+    id: "demo-nc-1",
+    pet_id: "demo-pet-1",
+    shelter_id: "demo-shelter-1",
+    created_at: new Date(Date.now() - 25 * 60000).toISOString(),
+    pet_name: "Bruno",
+    pet_tierart: "hund",
+    pet_photo: null,
+    shelter_name: "Tierheim München",
+    last_message: "Hallo! Wir freuen uns über dein Interesse an Bruno. Wann hättest du Zeit für ein erstes Kennenlernen?",
+    last_message_at: new Date(Date.now() - 25 * 60000).toISOString(),
+    unread_count: 1,
+  },
+  {
+    id: "demo-nc-2",
+    pet_id: "demo-pet-2",
+    shelter_id: "demo-shelter-1",
+    created_at: new Date(Date.now() - 26 * 3600000).toISOString(),
+    pet_name: "Milo",
+    pet_tierart: "hund",
+    pet_photo: null,
+    shelter_name: "Tierheim München",
+    last_message: "Vielen Dank für deine Anfrage zu Milo! Wir melden uns in den nächsten 1–2 Werktagen.",
+    last_message_at: new Date(Date.now() - 20 * 3600000).toISOString(),
+    unread_count: 0,
+  },
+];
+
 function formatTime(iso: string | null): string {
   if (!iso) return "";
   const d = new Date(iso);
@@ -39,10 +68,10 @@ function formatTime(iso: string | null): string {
 }
 
 export default function AdoptionNachrichten() {
-  const [chats, setChats]         = useState<ChatItem[]>([]);
-  const [loading, setLoading]     = useState(true);
+  const [chats, setChats]           = useState<ChatItem[]>([]);
+  const [loading, setLoading]       = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [isGuest, setIsGuest]     = useState(false);
+  const [isGuest, setIsGuest]       = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -58,6 +87,7 @@ export default function AdoptionNachrichten() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         setIsGuest(true);
+        setChats(DEMO_CHATS);
         setLoading(false);
         setRefreshing(false);
         return;
@@ -113,7 +143,6 @@ export default function AdoptionNachrichten() {
         })
       );
 
-      // Only show chats with at least one message or where user wants to chat
       setChats(items);
     } catch (e) {
       console.error("AdoptionNachrichten.loadChats", e);
@@ -127,47 +156,6 @@ export default function AdoptionNachrichten() {
     return (
       <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND, alignItems: "center", justifyContent: "center" }}>
         <ActivityIndicator color={Colors.PRIMARY} size="large" />
-      </View>
-    );
-  }
-
-  if (isGuest) {
-    return (
-      <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
-        <View style={{
-          paddingTop: 56, paddingHorizontal: Sizes.SPACING_LG, paddingBottom: 12,
-          borderBottomWidth: 1, borderBottomColor: Colors.BORDER,
-        }}>
-          <TouchableOpacity
-            onPress={() => router.replace("/")}
-            style={{ flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 8 }}
-          >
-            <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED }}>‹</Text>
-            <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, fontWeight: "500" }}>Modi wechseln</Text>
-          </TouchableOpacity>
-          <Text style={{ fontSize: 26, fontWeight: "800", color: Colors.TEXT }}>💬 Nachrichten</Text>
-        </View>
-        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32 }}>
-          <Text style={{ fontSize: 64, marginBottom: 16 }}>🔒</Text>
-          <Text style={{ fontSize: Sizes.FONT_XL, fontWeight: "700", color: Colors.TEXT, textAlign: "center", marginBottom: 8 }}>
-            Nicht angemeldet
-          </Text>
-          <Text style={{ color: Colors.TEXT_MUTED, textAlign: "center", lineHeight: 22, marginBottom: 24 }}>
-            Melde dich an, um Nachrichten mit Tierheimen zu lesen und zu schreiben.
-          </Text>
-          <TouchableOpacity
-            onPress={() => router.push("/auth/login")}
-            style={{
-              height: Sizes.BUTTON_HEIGHT, paddingHorizontal: 32,
-              backgroundColor: Colors.PRIMARY, borderRadius: Sizes.RADIUS_FULL,
-              alignItems: "center", justifyContent: "center",
-            }}
-          >
-            <Text style={{ color: Colors.WHITE, fontWeight: "700", fontSize: Sizes.FONT_MD }}>
-              Jetzt anmelden
-            </Text>
-          </TouchableOpacity>
-        </View>
       </View>
     );
   }
@@ -211,7 +199,8 @@ export default function AdoptionNachrichten() {
           }
           renderItem={({ item }) => (
             <TouchableOpacity
-              onPress={() =>
+              onPress={() => {
+                if (isGuest) { router.push("/auth/login"); return; }
                 router.push({
                   pathname: "/adoption/chat/[matchId]",
                   params: {
@@ -220,8 +209,8 @@ export default function AdoptionNachrichten() {
                     petPhoto: item.pet_photo ?? "",
                     shelterName: item.shelter_name ?? "",
                   },
-                })
-              }
+                });
+              }}
               style={{
                 flexDirection: "row",
                 alignItems: "center",
