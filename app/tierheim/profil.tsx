@@ -263,28 +263,6 @@ export default function TierheimProfilScreen() {
 
       <ScrollView contentContainerStyle={{ padding: Sizes.SPACING_LG, paddingBottom: 40 }}>
 
-        {/* Demo banner */}
-        {isGuest && (
-          <View style={{
-            marginBottom: 20, padding: 14, backgroundColor: "#FFF8F0",
-            borderRadius: 12, borderWidth: 1, borderColor: "#F0956A40",
-            flexDirection: "row", alignItems: "center", gap: 10,
-          }}>
-            <Text style={{ fontSize: 18 }}>🔒</Text>
-            <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 13, fontWeight: "700", color: Colors.TEXT }}>Demo-Profil</Text>
-              <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, marginTop: 2 }}>
-                Melde dich an um dein echtes Profil zu bearbeiten
-              </Text>
-            </View>
-            <TouchableOpacity
-              onPress={() => router.push("/auth/login")}
-              style={{ backgroundColor: Colors.PRIMARY, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 99 }}
-            >
-              <Text style={{ color: "#FFF", fontWeight: "700", fontSize: 12 }}>Login</Text>
-            </TouchableOpacity>
-          </View>
-        )}
 
         {/* Logo + Name */}
         <View style={{ alignItems: "center", marginBottom: 28 }}>

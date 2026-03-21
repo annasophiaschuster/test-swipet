@@ -222,30 +222,6 @@ export default function TierheimDashboard() {
         </View>
       </View>
 
-      {/* Demo Banner */}
-      {isGuest && (
-        <View style={{
-          marginHorizontal: Sizes.SPACING_LG, marginTop: Sizes.SPACING_LG,
-          padding: 14, backgroundColor: "#FFF8F0", borderRadius: 12,
-          borderWidth: 1, borderColor: "#F0956A40",
-          flexDirection: "row", alignItems: "center", gap: 10,
-        }}>
-          <Text style={{ fontSize: 18 }}>🔒</Text>
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 13, fontWeight: "700", color: Colors.TEXT }}>Demo-Ansicht</Text>
-            <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, marginTop: 2 }}>
-              Melde dich an, um dein echtes Tierheim zu verwalten
-            </Text>
-          </View>
-          <TouchableOpacity
-            onPress={() => router.push("/auth/login")}
-            style={{ backgroundColor: Colors.PRIMARY, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 99 }}
-          >
-            <Text style={{ color: "#FFF", fontWeight: "700", fontSize: 12 }}>Login</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
       {/* Quick Actions */}
       <View style={{ padding: Sizes.SPACING_LG, paddingBottom: 8 }}>
         <Text style={{ fontSize: 16, fontWeight: "700", color: Colors.TEXT, marginBottom: 12 }}>

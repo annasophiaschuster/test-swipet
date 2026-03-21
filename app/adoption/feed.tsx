@@ -543,24 +543,6 @@ export default function AdoptionFeed() {
         </TouchableOpacity>
       </View>
 
-      {/* Guest Banner */}
-      {isGuest && (
-        <View style={{
-          marginHorizontal: 16, marginTop: 12,
-          backgroundColor: "rgba(240,149,106,0.12)", borderRadius: 10,
-          paddingHorizontal: 14, paddingVertical: 8,
-          flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-          borderWidth: 1, borderColor: "rgba(240,149,106,0.3)",
-        }}>
-          <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, flex: 1 }}>
-            🐾 Demo-Modus — <Text style={{ fontWeight: "600" }}>Anmelden</Text> um Anfragen zu speichern
-          </Text>
-          <TouchableOpacity onPress={() => router.push("/auth/login")}>
-            <Text style={{ fontSize: 12, fontWeight: "700", color: Colors.PRIMARY }}>Login →</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
       {/* Loading */}
       {loading && (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>

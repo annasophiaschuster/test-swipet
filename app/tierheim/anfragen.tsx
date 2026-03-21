@@ -260,27 +260,6 @@ export default function TierheimAnfragenScreen() {
         </Text>
       </View>
 
-      {/* Demo banner */}
-      {isGuest && (
-        <View style={{
-          marginHorizontal: Sizes.SPACING_LG, marginTop: Sizes.SPACING_MD,
-          padding: 12, backgroundColor: "#FFF8F0", borderRadius: 10,
-          borderWidth: 1, borderColor: "#F0956A40",
-          flexDirection: "row", alignItems: "center", gap: 10,
-        }}>
-          <Text style={{ fontSize: 16 }}>🔒</Text>
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 12, fontWeight: "700", color: Colors.TEXT }}>Demo-Ansicht</Text>
-            <Text style={{ fontSize: 11, color: Colors.TEXT_MUTED }}>Melde dich an für echte Anfragen</Text>
-          </View>
-          <TouchableOpacity
-            onPress={() => router.push("/auth/login")}
-            style={{ backgroundColor: Colors.PRIMARY, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 99 }}
-          >
-            <Text style={{ color: "#FFF", fontWeight: "700", fontSize: 11 }}>Login</Text>
-          </TouchableOpacity>
-        </View>
-      )}
 
       {anfragen.length === 0 ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32 }}>
