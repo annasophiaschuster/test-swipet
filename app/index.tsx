@@ -53,7 +53,7 @@ export default function SplashScreen() {
         <DemoButton
           icon="🔍"
           title="Hundesuchende"
-          subtitle="Finde deinen perfekten Hund zur Adoption"
+          subtitle="Finde deinen perfekten Hund"
           onPress={() => router.push("/adoption/feed")}
         />
         <DemoButton
