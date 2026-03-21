@@ -51,21 +51,21 @@ export default function SplashScreen() {
       {/* ── BUTTONS ── immer sichtbar, nur Einblend-Animation */}
       <Animated.View style={[styles.buttonsSection, { opacity: buttonsAnim, transform: [{ translateY: buttonsSlide }] }]}>
         <DemoButton
-          icon="🏠"
-          title="Adoption"
-          subtitle="Finde deinen Traumhund"
+          icon="🔍"
+          title="Hundesuchende"
+          subtitle="Finde deinen perfekten Hund zur Adoption"
           onPress={() => router.push("/adoption/feed")}
         />
         <DemoButton
           icon="🦮"
-          title="Gassidate & Zucht"
-          subtitle="Für Hundebesitzer"
+          title="Hundehaber"
+          subtitle="Gassidate & Zucht für Hundebesitzer"
           onPress={() => router.push("/gassi/feed")}
         />
         <DemoButton
           icon="🏢"
           title="Tierheim"
-          subtitle="Dashboard & Verwaltung"
+          subtitle="Tiere verwalten & Anfragen bearbeiten"
           onPress={() => router.push("/tierheim/dashboard")}
         />
 
