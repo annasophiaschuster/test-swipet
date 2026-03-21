@@ -1,8 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { View, Text, Animated, Image, TouchableOpacity, StyleSheet } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { supabase } from "../lib/supabase";
 
 export default function SplashScreen() {
   const fadeAnim    = useRef(new Animated.Value(0)).current;
@@ -11,41 +10,19 @@ export default function SplashScreen() {
   const buttonsAnim = useRef(new Animated.Value(0)).current;
   const buttonsSlide = useRef(new Animated.Value(30)).current;
 
-  const [showButtons, setShowButtons] = useState(false);
-
   useEffect(() => {
-    // Logo-Animation
+    // Logo einblenden, dann Slogan, dann Buttons
     Animated.parallel([
       Animated.timing(fadeAnim,  { toValue: 1, duration: 500, useNativeDriver: true }),
       Animated.spring(scaleAnim, { toValue: 1, tension: 50, friction: 7, useNativeDriver: true }),
     ]).start(() =>
-      Animated.timing(sloganAnim, { toValue: 1, duration: 400, delay: 100, useNativeDriver: true }).start()
-    );
-
-    // Nach 2 s: Auth prüfen
-    const timer = setTimeout(async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        const { data: profile } = await supabase
-          .from("profiles").select("role").eq("id", session.user.id).single();
-        if (profile?.role === "tierheim") {
-          router.replace("/tierheim/dashboard");
-        } else if (profile?.role === "tierhalter") {
-          router.replace("/gassi/feed");
-        } else {
-          router.replace("/adoption/feed");
-        }
-      } else {
-        // Demo-Modus: Buttons anzeigen
-        setShowButtons(true);
+      Animated.timing(sloganAnim, { toValue: 1, duration: 400, delay: 100, useNativeDriver: true }).start(() =>
         Animated.parallel([
-          Animated.timing(buttonsAnim,  { toValue: 1, duration: 420, useNativeDriver: true }),
-          Animated.timing(buttonsSlide, { toValue: 0, duration: 380, useNativeDriver: true }),
-        ]).start();
-      }
-    }, 2000);
-
-    return () => clearTimeout(timer);
+          Animated.timing(buttonsAnim,  { toValue: 1, duration: 420, delay: 100, useNativeDriver: true }),
+          Animated.timing(buttonsSlide, { toValue: 0, duration: 380, delay: 100, useNativeDriver: true }),
+        ]).start()
+      )
+    );
   }, []);
 
   return (
@@ -71,37 +48,34 @@ export default function SplashScreen() {
         </Animated.View>
       </View>
 
-      {/* ── DEMO-BUTTONS ── */}
-      {showButtons && (
-        <Animated.View style={[styles.buttonsSection, { opacity: buttonsAnim, transform: [{ translateY: buttonsSlide }] }]}>
+      {/* ── BUTTONS ── immer sichtbar, nur Einblend-Animation */}
+      <Animated.View style={[styles.buttonsSection, { opacity: buttonsAnim, transform: [{ translateY: buttonsSlide }] }]}>
+        <DemoButton
+          icon="🏠"
+          title="Adoption"
+          subtitle="Finde deinen Traumhund"
+          onPress={() => router.push("/adoption/feed")}
+        />
+        <DemoButton
+          icon="🦮"
+          title="Gassidate & Zucht"
+          subtitle="Für Hundebesitzer"
+          onPress={() => router.push("/gassi/feed")}
+        />
+        <DemoButton
+          icon="🏢"
+          title="Tierheim"
+          subtitle="Dashboard & Verwaltung"
+          onPress={() => router.push("/tierheim/dashboard")}
+        />
 
-          <DemoButton
-            icon="🏠"
-            title="Adoption"
-            subtitle="Finde deinen Traumhund"
-            onPress={() => router.push("/adoption/feed")}
-          />
-          <DemoButton
-            icon="🦮"
-            title="Gassidate & Zucht"
-            subtitle="Für Hundebesitzer"
-            onPress={() => router.push("/gassi/feed")}
-          />
-          <DemoButton
-            icon="🏢"
-            title="Tierheim"
-            subtitle="Dashboard & Verwaltung"
-            onPress={() => router.push("/tierheim/dashboard")}
-          />
-
-          <TouchableOpacity
-            onPress={() => router.push("/auth/login")}
-            style={styles.loginLink}
-          >
-            <Text style={styles.loginLinkText}>Bereits registriert? Anmelden →</Text>
-          </TouchableOpacity>
-        </Animated.View>
-      )}
+        <TouchableOpacity
+          onPress={() => router.push("/auth/login")}
+          style={styles.loginLink}
+        >
+          <Text style={styles.loginLinkText}>Bereits registriert? Anmelden →</Text>
+        </TouchableOpacity>
+      </Animated.View>
     </LinearGradient>
   );
 }
