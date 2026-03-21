@@ -522,7 +522,14 @@ export default function AdoptionFeed() {
         borderBottomWidth: 1, borderBottomColor: Colors.BORDER,
         flexDirection: "row", alignItems: "center", justifyContent: "space-between",
       }}>
-        <Text style={{ fontSize: 26, fontWeight: "800", color: Colors.TEXT }}>🐾 Adoption</Text>
+        <TouchableOpacity
+          onPress={() => router.replace("/")}
+          style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
+        >
+          <Text style={{ fontSize: 18, color: Colors.TEXT_MUTED }}>‹</Text>
+          <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, fontWeight: "500" }}>Modi</Text>
+        </TouchableOpacity>
+        <Text style={{ fontSize: 22, fontWeight: "800", color: Colors.TEXT }}>🐾 Adoption</Text>
         <TouchableOpacity
           onPress={() => setFilterVisible(true)}
           style={{

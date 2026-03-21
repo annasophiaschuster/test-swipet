@@ -12,7 +12,6 @@ import { router } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { Colors } from "../../constants/colors";
 import { Sizes } from "../../constants/sizes";
-import GradientHeader from "../../components/GradientHeader";
 import { pickSingleImage, uploadImageToStorage } from "../../lib/storage";
 
 type Profile = {
@@ -135,7 +134,19 @@ export default function AdoptionProfilScreen() {
   if (isGuest) {
     return (
       <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
-        <GradientHeader title="Mein Profil" />
+        <View style={{
+          paddingTop: 56, paddingHorizontal: Sizes.SPACING_LG, paddingBottom: 12,
+          borderBottomWidth: 1, borderBottomColor: Colors.BORDER,
+        }}>
+          <TouchableOpacity
+            onPress={() => router.replace("/")}
+            style={{ flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 8 }}
+          >
+            <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED }}>‹</Text>
+            <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, fontWeight: "500" }}>Modi wechseln</Text>
+          </TouchableOpacity>
+          <Text style={{ fontSize: 26, fontWeight: "800", color: Colors.TEXT }}>👤 Profil</Text>
+        </View>
         <GuestState />
       </View>
     );
@@ -145,7 +156,19 @@ export default function AdoptionProfilScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
-      <GradientHeader title="Mein Profil" />
+      <View style={{
+        paddingTop: 56, paddingHorizontal: Sizes.SPACING_LG, paddingBottom: 12,
+        borderBottomWidth: 1, borderBottomColor: Colors.BORDER,
+      }}>
+        <TouchableOpacity
+          onPress={() => router.replace("/")}
+          style={{ flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 8 }}
+        >
+          <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED }}>‹</Text>
+          <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, fontWeight: "500" }}>Modi wechseln</Text>
+        </TouchableOpacity>
+        <Text style={{ fontSize: 26, fontWeight: "800", color: Colors.TEXT }}>👤 Profil</Text>
+      </View>
 
       <ScrollView contentContainerStyle={{ padding: Sizes.SPACING_LG }}>
 

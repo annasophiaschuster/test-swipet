@@ -237,8 +237,15 @@ export default function TierheimProfilScreen() {
       <View style={{
         paddingTop: 56, paddingHorizontal: Sizes.SPACING_LG, paddingBottom: 14,
         borderBottomWidth: 1, borderBottomColor: Colors.BORDER,
-        flexDirection: "row", alignItems: "center", justifyContent: "space-between",
       }}>
+        <TouchableOpacity
+          onPress={() => router.replace("/")}
+          style={{ flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 8 }}
+        >
+          <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED }}>‹</Text>
+          <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, fontWeight: "500" }}>Modi wechseln</Text>
+        </TouchableOpacity>
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
         <Text style={{ fontSize: 20, fontWeight: "800", color: Colors.TEXT }}>👤 Profil</Text>
         {!isGuest && (
           <TouchableOpacity
@@ -251,6 +258,7 @@ export default function TierheimProfilScreen() {
             <Text style={{ fontSize: 13, fontWeight: "600", color: Colors.TEXT }}>✏️ Bearbeiten</Text>
           </TouchableOpacity>
         )}
+        </View>
       </View>
 
       <ScrollView contentContainerStyle={{ padding: Sizes.SPACING_LG, paddingBottom: 40 }}>

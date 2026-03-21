@@ -89,6 +89,13 @@ export default function GassiProfilScreen() {
             borderBottomColor: Colors.BORDER,
           }}
         >
+          <TouchableOpacity
+            onPress={() => router.replace("/")}
+            style={{ flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 8 }}
+          >
+            <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED }}>‹</Text>
+            <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, fontWeight: "500" }}>Modi wechseln</Text>
+          </TouchableOpacity>
           <Text style={{ fontSize: 26, fontWeight: "800", color: Colors.TEXT }}>👤 Profil</Text>
         </View>
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32 }}>
@@ -149,6 +156,13 @@ export default function GassiProfilScreen() {
           borderBottomColor: Colors.BORDER,
         }}
       >
+        <TouchableOpacity
+          onPress={() => router.replace("/")}
+          style={{ flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 8 }}
+        >
+          <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED }}>‹</Text>
+          <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, fontWeight: "500" }}>Modi wechseln</Text>
+        </TouchableOpacity>
         <Text style={{ fontSize: 26, fontWeight: "800", color: Colors.TEXT }}>👤 Profil</Text>
       </View>
 

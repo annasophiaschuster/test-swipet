@@ -236,6 +236,13 @@ export default function TierheimAnfragenScreen() {
         paddingTop: 56, paddingHorizontal: Sizes.SPACING_LG, paddingBottom: 12,
         borderBottomWidth: 1, borderBottomColor: Colors.BORDER,
       }}>
+        <TouchableOpacity
+          onPress={() => router.replace("/")}
+          style={{ flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 8 }}
+        >
+          <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED }}>‹</Text>
+          <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, fontWeight: "500" }}>Modi wechseln</Text>
+        </TouchableOpacity>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
           <Text style={{ fontSize: 20, fontWeight: "800", color: Colors.TEXT }}>🔔 Anfragen</Text>
           {totalUnread > 0 && (

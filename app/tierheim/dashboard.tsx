@@ -186,6 +186,13 @@ export default function TierheimDashboard() {
       }}>
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
           <View>
+            <TouchableOpacity
+              onPress={() => router.replace("/")}
+              style={{ flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 6 }}
+            >
+              <Text style={{ fontSize: 16, color: "rgba(255,255,255,0.7)" }}>‹</Text>
+              <Text style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", fontWeight: "500" }}>Modi wechseln</Text>
+            </TouchableOpacity>
             <Text style={{ color: "rgba(255,255,255,0.8)", fontSize: 13, fontWeight: "500" }}>
               🏠 Tierheim Dashboard
             </Text>

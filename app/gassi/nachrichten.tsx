@@ -132,6 +132,13 @@ export default function GassiNachrichten() {
           paddingTop: 56, paddingHorizontal: Sizes.SPACING_LG, paddingBottom: 12,
           borderBottomWidth: 1, borderBottomColor: Colors.BORDER,
         }}>
+          <TouchableOpacity
+            onPress={() => router.replace("/")}
+            style={{ flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 8 }}
+          >
+            <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED }}>‹</Text>
+            <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, fontWeight: "500" }}>Modi wechseln</Text>
+          </TouchableOpacity>
           <Text style={{ fontSize: 26, fontWeight: "800", color: Colors.TEXT }}>💬 Nachrichten</Text>
         </View>
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32 }}>
@@ -165,6 +172,13 @@ export default function GassiNachrichten() {
         paddingTop: 56, paddingHorizontal: Sizes.SPACING_LG, paddingBottom: 12,
         borderBottomWidth: 1, borderBottomColor: Colors.BORDER,
       }}>
+        <TouchableOpacity
+          onPress={() => router.replace("/")}
+          style={{ flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 8 }}
+        >
+          <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED }}>‹</Text>
+          <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, fontWeight: "500" }}>Modi wechseln</Text>
+        </TouchableOpacity>
         <Text style={{ fontSize: 26, fontWeight: "800", color: Colors.TEXT }}>💬 Nachrichten</Text>
         <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM, marginTop: 2 }}>
           {chats.length} Gespräch{chats.length !== 1 ? "e" : ""}

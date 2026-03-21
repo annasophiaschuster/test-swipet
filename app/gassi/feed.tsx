@@ -22,8 +22,13 @@ import { Sizes } from "../../constants/sizes";
 
 const { width: W } = Dimensions.get("window");
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Constants & Labels
+// ─────────────────────────────────────────────────────────────────────────────
+
 const GROESSE_OPTIONS = ["klein", "mittel", "gross", "riese"] as const;
 const AKTIV_OPTIONS   = ["ruhig", "mittel", "sportlich"] as const;
+const GESCHLECHT_OPTIONS = ["männlich", "weiblich", "divers"] as const;
 
 const GROESSE_LABEL: Record<string, string> = {
   klein: "Klein (< 10 kg)",
@@ -38,10 +43,50 @@ const AKTIV_LABEL: Record<string, string> = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Demo Owner Profiles (3 Musterdaten)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const DEMO_OWNERS = [
+  {
+    name: "Max",
+    alter: 28,
+    geschlecht: "männlich",
+    bio: "Laufe gerne durch Parks und liebe lange Morgenspaziergänge. Mein Hund ist mein bester Freund!",
+    stadt: "München, Schwabing",
+    avatar_url: null as string | null,
+  },
+  {
+    name: "Sophie",
+    alter: 32,
+    geschlecht: "weiblich",
+    bio: "Leidenschaftliche Hundemama seit 5 Jahren. Liebe Outdoor-Aktivitäten und freue mich über neue Hundekontakte.",
+    stadt: "Hamburg, Altona",
+    avatar_url: null as string | null,
+  },
+  {
+    name: "Jonas",
+    alter: 25,
+    geschlecht: "männlich",
+    bio: "Täglich 2 Stunden aktiv — mein Hund und ich sind unzertrennlich. Suche regelmäßige Gassipartner.",
+    stadt: "Berlin, Prenzlauer Berg",
+    avatar_url: null as string | null,
+  },
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Types
 // ─────────────────────────────────────────────────────────────────────────────
 
-interface PartnerDog {
+interface OwnerInfo {
+  name: string;
+  alter: number;
+  geschlecht: string;
+  bio: string | null;
+  stadt: string;
+  avatar_url: string | null;
+}
+
+interface PartnerCard {
   id: string;
   name: string;
   rasse: string | null;
@@ -50,9 +95,11 @@ interface PartnerDog {
   kinderfreundlich: boolean;
   vertraeglich_mit_tieren: boolean;
   aktivitaetslevel: string | null;
-  foto_url: string | null;
-  owner_name: string | null;
-  owner_city: string | null;
+  charakter_tags: string[];
+  beschreibung: string | null;
+  photos: string[];
+  modus: "gassidate" | "zucht";
+  owner: OwnerInfo;
 }
 
 interface MyDog {
@@ -66,17 +113,13 @@ interface MyDog {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SwipeCard — Tinder-style partner dog card
+// SwipeCard — interleaved layout with owner section
 // ─────────────────────────────────────────────────────────────────────────────
 
 function SwipeCard({
-  dog,
-  modus,
-  saving,
-  onAction,
+  card, saving, onAction,
 }: {
-  dog: PartnerDog;
-  modus: "gassidate" | "zucht";
+  card: PartnerCard;
   saving: boolean;
   onAction: (r: "ja" | "nein") => void;
 }) {
@@ -143,6 +186,8 @@ function SwipeCard({
     },
   })).current;
 
+  const { owner } = card;
+
   return (
     <Animated.View
       style={{
@@ -172,60 +217,144 @@ function SwipeCard({
       </Animated.View>
 
       <ScrollView showsVerticalScrollIndicator={false} bounces style={{ flex: 1 }}>
-        {/* Hauptfoto */}
-        <View style={{ height: W * 1.05, position: "relative" }}>
-          {dog.foto_url ? (
-            <Image source={{ uri: dog.foto_url }} style={{ width: W, height: W * 1.05 }} resizeMode="cover" />
+
+        {/* 1. Hauptfoto */}
+        <View style={{ height: W * 1.1, position: "relative" }}>
+          {card.photos[0] ? (
+            <Image source={{ uri: card.photos[0] }} style={{ width: W, height: W * 1.1 }} resizeMode="cover" />
           ) : (
-            <View style={{ width: W, height: W * 1.05, backgroundColor: Colors.SURFACE, alignItems: "center", justifyContent: "center" }}>
+            <View style={{ width: W, height: W * 1.1, backgroundColor: Colors.SURFACE, alignItems: "center", justifyContent: "center" }}>
               <Text style={{ fontSize: 96 }}>🐶</Text>
             </View>
           )}
           {/* Modus badge */}
           <View style={{
             position: "absolute", top: 14, left: 14,
-            backgroundColor: modus === "gassidate" ? Colors.SECONDARY : "#9B59B6",
+            backgroundColor: card.modus === "gassidate" ? Colors.SECONDARY : "#9B59B6",
             paddingHorizontal: 12, paddingVertical: 5, borderRadius: 99,
           }}>
             <Text style={{ color: "#FFF", fontSize: 12, fontWeight: "700" }}>
-              {modus === "gassidate" ? "🦮 Gassidate" : "🌸 Zucht"}
+              {card.modus === "gassidate" ? "🦮 Gassidate" : "🌸 Zucht"}
             </Text>
           </View>
+          {card.photos.length > 1 && (
+            <View style={{
+              position: "absolute", top: 14, right: 14,
+              backgroundColor: "rgba(0,0,0,0.45)", borderRadius: 99, paddingHorizontal: 10, paddingVertical: 4,
+            }}>
+              <Text style={{ color: "#FFF", fontSize: 12, fontWeight: "600" }}>1 / {card.photos.length}</Text>
+            </View>
+          )}
         </View>
 
-        {/* Name + Info */}
+        {/* 2. Hund: Name + Alter + Rasse + Größe + Beschreibung */}
         <View style={{ padding: 20, paddingBottom: 16 }}>
-          <View style={{ flexDirection: "row", alignItems: "baseline", gap: 10, marginBottom: 6 }}>
-            <Text style={{ fontSize: 32, fontWeight: "800", color: Colors.TEXT }}>{dog.name}</Text>
-            {dog.alter_jahre && (
-              <Text style={{ fontSize: 17, color: Colors.TEXT_MUTED }}>
-                {dog.alter_jahre} {dog.alter_jahre === 1 ? "Jahr" : "Jahre"}
+          <View style={{ flexDirection: "row", alignItems: "baseline", gap: 10, marginBottom: 4 }}>
+            <Text style={{ fontSize: 30, fontWeight: "800", color: Colors.TEXT }}>{card.name}</Text>
+            {card.alter_jahre && (
+              <Text style={{ fontSize: 16, color: Colors.TEXT_MUTED }}>
+                {card.alter_jahre} {card.alter_jahre === 1 ? "Jahr" : "Jahre"}
               </Text>
             )}
           </View>
-          {dog.rasse && (
-            <Text style={{ fontSize: 15, color: Colors.TEXT_MUTED, marginBottom: 6 }}>
-              {dog.rasse}{dog.groesse_kategorie ? ` · ${GROESSE_LABEL[dog.groesse_kategorie] ?? dog.groesse_kategorie}` : ""}
-            </Text>
-          )}
-          {dog.owner_city && (
-            <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED }}>📍 {dog.owner_city}</Text>
+          <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED, marginBottom: card.beschreibung ? 12 : 0 }}>
+            {[card.rasse, card.groesse_kategorie ? GROESSE_LABEL[card.groesse_kategorie] : null]
+              .filter(Boolean).join(" · ")}
+          </Text>
+          {card.beschreibung && (
+            <Text style={{ fontSize: 15, color: Colors.TEXT, lineHeight: 23 }}>{card.beschreibung}</Text>
           )}
         </View>
 
-        {/* Eigenschaften */}
-        <View style={{ paddingHorizontal: 20, paddingBottom: 16 }}>
+        {/* 3. Besitzer-Sektion */}
+        <View style={{
+          marginHorizontal: 16, marginBottom: 4,
+          padding: 16, backgroundColor: Colors.SURFACE, borderRadius: 18,
+          borderWidth: 1, borderColor: Colors.BORDER,
+        }}>
+          <Text style={{ fontSize: 12, fontWeight: "700", color: Colors.TEXT_MUTED, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>
+            Besitzer
+          </Text>
+          <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 14 }}>
+            {/* Avatar */}
+            {owner.avatar_url ? (
+              <Image
+                source={{ uri: owner.avatar_url }}
+                style={{ width: 60, height: 60, borderRadius: 30, backgroundColor: Colors.BORDER }}
+              />
+            ) : (
+              <View style={{
+                width: 60, height: 60, borderRadius: 30,
+                backgroundColor: Colors.SECONDARY + "22",
+                alignItems: "center", justifyContent: "center",
+                borderWidth: 2, borderColor: Colors.SECONDARY + "40",
+              }}>
+                <Text style={{ fontSize: 26 }}>👤</Text>
+              </View>
+            )}
+            <View style={{ flex: 1 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 2 }}>
+                <Text style={{ fontSize: 18, fontWeight: "700", color: Colors.TEXT }}>{owner.name}</Text>
+                <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED }}>
+                  {owner.alter} · {owner.geschlecht === "männlich" ? "♂" : owner.geschlecht === "weiblich" ? "♀" : "⚧"}
+                </Text>
+              </View>
+              <Text style={{ fontSize: 13, color: Colors.TEXT_MUTED, marginBottom: 6 }}>
+                📍 {owner.stadt}
+              </Text>
+              {owner.bio && (
+                <Text style={{ fontSize: 14, color: Colors.TEXT, lineHeight: 21, fontStyle: "italic" }}>
+                  "{owner.bio}"
+                </Text>
+              )}
+            </View>
+          </View>
+        </View>
+
+        {/* 4. Zweites Foto */}
+        {card.photos[1] && (
+          <Image source={{ uri: card.photos[1] }} style={{ width: W, height: W * 0.72, marginTop: 12 }} resizeMode="cover" />
+        )}
+
+        {/* 5. Charakter-Tags */}
+        {card.charakter_tags && card.charakter_tags.length > 0 && (
+          <View style={{ padding: 20, paddingTop: 18 }}>
+            <Text style={{ fontSize: 13, fontWeight: "700", color: Colors.TEXT_MUTED, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>
+              Charakter
+            </Text>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+              {card.charakter_tags.map((tag) => (
+                <View key={tag} style={{
+                  paddingHorizontal: 14, paddingVertical: 8,
+                  backgroundColor: Colors.SECONDARY + "15", borderRadius: 99,
+                  borderWidth: 1, borderColor: Colors.SECONDARY + "40",
+                }}>
+                  <Text style={{ fontSize: 13, color: Colors.SECONDARY, fontWeight: "600" }}>{tag}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* 6. Drittes Foto */}
+        {card.photos[2] && (
+          <Image source={{ uri: card.photos[2] }} style={{ width: W, height: W * 0.72 }} resizeMode="cover" />
+        )}
+
+        {/* 7. Eigenschaften */}
+        <View style={{ padding: 20, paddingTop: 18 }}>
           <Text style={{ fontSize: 13, fontWeight: "700", color: Colors.TEXT_MUTED, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>
             Eigenschaften
           </Text>
           {[
-            { icon: "🏃", label: "Aktivität", value: AKTIV_LABEL[dog.aktivitaetslevel ?? ""] ?? "–" },
-            { icon: "👦", label: "Kinderfreundlich", value: dog.kinderfreundlich ? "Ja" : "Nein" },
-            { icon: "🐾", label: "Verträglich mit Tieren", value: dog.vertraeglich_mit_tieren ? "Ja" : "Nein" },
+            { icon: "🏃", label: "Aktivitätslevel", value: AKTIV_LABEL[card.aktivitaetslevel ?? ""] ?? "–" },
+            { icon: "🐾", label: "Verträgl. mit Tieren", value: card.vertraeglich_mit_tieren ? "Ja" : "Nein" },
+            { icon: "👦", label: "Kindergeeignet", value: card.kinderfreundlich ? "Ja" : "Nein" },
+            { icon: "🎯", label: "Modus", value: card.modus === "gassidate" ? "🦮 Gassidate" : "🌸 Zucht" },
           ].map((row) => (
             <View key={row.label} style={{
               flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-              paddingVertical: 9, borderBottomWidth: 1, borderBottomColor: Colors.BORDER,
+              paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: Colors.BORDER,
             }}>
               <Text style={{ fontSize: 14, color: Colors.TEXT }}>{row.icon}  {row.label}</Text>
               <Text style={{ fontSize: 14, fontWeight: "600", color: Colors.TEXT }}>{row.value}</Text>
@@ -233,18 +362,7 @@ function SwipeCard({
           ))}
         </View>
 
-        {/* Besitzer-Info */}
-        {dog.owner_name && (
-          <View style={{ marginHorizontal: 20, marginBottom: 8, padding: 14, backgroundColor: Colors.SURFACE, borderRadius: 14, flexDirection: "row", alignItems: "center", gap: 12 }}>
-            <Text style={{ fontSize: 26 }}>👤</Text>
-            <View>
-              <Text style={{ fontSize: 14, fontWeight: "700", color: Colors.TEXT }}>{dog.owner_name}</Text>
-              {dog.owner_city && <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, marginTop: 2 }}>📍 {dog.owner_city}</Text>}
-            </View>
-          </View>
-        )}
-
-        {/* Buttons */}
+        {/* 8. Like / Nope Buttons */}
         <View style={{ flexDirection: "row", gap: 14, padding: 20, paddingTop: 20, paddingBottom: 44 }}>
           <TouchableOpacity
             onPress={() => flyOff("nein")}
@@ -278,30 +396,180 @@ function SwipeCard({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Hund Registrieren Screen
+// ProfileSetupScreen — owner registration (Pflichtfelder)
 // ─────────────────────────────────────────────────────────────────────────────
 
-function RegisterDogScreen({ onDone, onBack }: { onDone: () => void; onBack: () => void }) {
-  const [name, setName]           = useState("");
-  const [rasse, setRasse]         = useState("");
-  const [alterJahre, setAlterJahre] = useState("");
-  const [groesse, setGroesse]     = useState<typeof GROESSE_OPTIONS[number] | null>(null);
-  const [aktiv, setAktiv]         = useState<typeof AKTIV_OPTIONS[number] | null>(null);
-  const [modus, setModus]         = useState<"gassidate" | "zucht">("gassidate");
-  const [saving, setSaving]       = useState(false);
+function ProfileSetupScreen({ onDone }: { onDone: (profile: OwnerInfo) => void }) {
+  const [name, setName]         = useState("");
+  const [alter, setAlter]       = useState("");
+  const [geschlecht, setGeschlecht] = useState<"männlich" | "weiblich" | "divers" | null>(null);
+  const [bio, setBio]           = useState("");
+  const [stadt, setStadt]       = useState("");
+  const [saving, setSaving]     = useState(false);
 
   const handleSave = async () => {
-    if (!name.trim()) {
-      Alert.alert("Name fehlt", "Bitte gib deinem Hund einen Namen.");
-      return;
-    }
+    if (!name.trim()) { Alert.alert("Pflichtfeld", "Bitte gib deinen Vornamen ein."); return; }
+    if (!alter.trim() || isNaN(Number(alter))) { Alert.alert("Pflichtfeld", "Bitte gib dein Alter ein."); return; }
+    if (!geschlecht) { Alert.alert("Pflichtfeld", "Bitte wähle dein Geschlecht."); return; }
+    if (!stadt.trim()) { Alert.alert("Pflichtfeld", "Bitte gib deinen Stadtteil / deine Stadt ein."); return; }
+
     setSaving(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push("/auth/login");
-        return;
+      if (user) {
+        await supabase.from("profiles").upsert({
+          id: user.id,
+          name: name.trim(),
+          city: stadt.trim(),
+        });
       }
+    } catch (e) {
+      console.error("ProfileSetupScreen.handleSave", e);
+    } finally {
+      setSaving(false);
+    }
+
+    onDone({
+      name: name.trim(),
+      alter: parseInt(alter),
+      geschlecht,
+      bio: bio.trim() || null,
+      stadt: stadt.trim(),
+      avatar_url: null,
+    });
+  };
+
+  return (
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}
+    >
+      <View style={{
+        paddingTop: 56, paddingHorizontal: Sizes.SPACING_LG, paddingBottom: 14,
+        flexDirection: "row", alignItems: "center", gap: 12,
+        borderBottomWidth: 1, borderBottomColor: Colors.BORDER,
+      }}>
+        <TouchableOpacity onPress={() => router.replace("/")} style={{ padding: 4 }}>
+          <Text style={{ fontSize: 24, color: Colors.SECONDARY }}>‹</Text>
+        </TouchableOpacity>
+        <View>
+          <Text style={{ fontSize: 20, fontWeight: "800", color: Colors.TEXT }}>👤 Dein Profil</Text>
+          <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, marginTop: 1 }}>Damit andere dich kennenlernen können</Text>
+        </View>
+      </View>
+
+      <ScrollView contentContainerStyle={{ padding: Sizes.SPACING_LG, paddingBottom: 60 }}>
+        {/* Avatar Placeholder */}
+        <View style={{ alignItems: "center", marginBottom: 28 }}>
+          <View style={{
+            width: 90, height: 90, borderRadius: 45,
+            backgroundColor: Colors.SECONDARY + "18",
+            alignItems: "center", justifyContent: "center",
+            borderWidth: 2, borderStyle: "dashed", borderColor: Colors.SECONDARY,
+          }}>
+            <Text style={{ fontSize: 36 }}>📸</Text>
+          </View>
+          <Text style={{ fontSize: 13, color: Colors.TEXT_MUTED, marginTop: 8 }}>Profilfoto (kommt bald)</Text>
+        </View>
+
+        {/* Vorname */}
+        <Text style={fieldLabel}>Vorname *</Text>
+        <TextInput
+          value={name} onChangeText={setName}
+          placeholder="z.B. Max" placeholderTextColor={Colors.TEXT_MUTED}
+          style={inputStyle}
+        />
+
+        {/* Alter */}
+        <Text style={fieldLabel}>Alter *</Text>
+        <TextInput
+          value={alter} onChangeText={setAlter}
+          placeholder="z.B. 28" keyboardType="numeric"
+          placeholderTextColor={Colors.TEXT_MUTED}
+          style={inputStyle}
+        />
+
+        {/* Geschlecht */}
+        <Text style={fieldLabel}>Geschlecht *</Text>
+        <View style={{ flexDirection: "row", gap: 8, marginBottom: 20 }}>
+          {GESCHLECHT_OPTIONS.map((g) => (
+            <TouchableOpacity
+              key={g}
+              onPress={() => setGeschlecht(g as any)}
+              style={{
+                flex: 1, paddingVertical: 10, borderRadius: 12, borderWidth: 1.5,
+                alignItems: "center",
+                borderColor: geschlecht === g ? Colors.SECONDARY : Colors.BORDER,
+                backgroundColor: geschlecht === g ? Colors.SECONDARY + "12" : Colors.BACKGROUND,
+              }}
+            >
+              <Text style={{ fontSize: 18 }}>
+                {g === "männlich" ? "♂" : g === "weiblich" ? "♀" : "⚧"}
+              </Text>
+              <Text style={{ fontSize: 11, color: geschlecht === g ? Colors.SECONDARY : Colors.TEXT_MUTED, fontWeight: "600", marginTop: 3 }}>
+                {g}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Stadt/Stadtteil */}
+        <Text style={fieldLabel}>Stadt / Stadtteil *</Text>
+        <TextInput
+          value={stadt} onChangeText={setStadt}
+          placeholder="z.B. München, Schwabing"
+          placeholderTextColor={Colors.TEXT_MUTED}
+          style={inputStyle}
+        />
+
+        {/* Bio */}
+        <Text style={fieldLabel}>Kurze Bio (optional)</Text>
+        <TextInput
+          value={bio} onChangeText={setBio}
+          placeholder="Ich bin... (wird auf deiner Karte angezeigt)"
+          placeholderTextColor={Colors.TEXT_MUTED}
+          multiline numberOfLines={3}
+          style={[inputStyle, { height: 80, textAlignVertical: "top" }]}
+        />
+
+        <TouchableOpacity
+          onPress={handleSave}
+          disabled={saving}
+          style={{
+            height: Sizes.BUTTON_HEIGHT, borderRadius: Sizes.RADIUS_FULL,
+            backgroundColor: Colors.SECONDARY,
+            alignItems: "center", justifyContent: "center", marginTop: 8,
+          }}
+        >
+          {saving
+            ? <ActivityIndicator color={Colors.WHITE} />
+            : <Text style={{ color: Colors.WHITE, fontWeight: "700", fontSize: 17 }}>Weiter →</Text>
+          }
+        </TouchableOpacity>
+      </ScrollView>
+    </KeyboardAvoidingView>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RegisterDogScreen
+// ─────────────────────────────────────────────────────────────────────────────
+
+function RegisterDogScreen({ onDone, onBack }: { onDone: () => void; onBack: () => void }) {
+  const [name, setName]         = useState("");
+  const [rasse, setRasse]       = useState("");
+  const [alterJahre, setAlterJahre] = useState("");
+  const [groesse, setGroesse]   = useState<typeof GROESSE_OPTIONS[number] | null>(null);
+  const [aktiv, setAktiv]       = useState<typeof AKTIV_OPTIONS[number] | null>(null);
+  const [modus, setModus]       = useState<"gassidate" | "zucht">("gassidate");
+  const [saving, setSaving]     = useState(false);
+
+  const handleSave = async () => {
+    if (!name.trim()) { Alert.alert("Name fehlt", "Bitte gib deinem Hund einen Namen."); return; }
+    setSaving(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { router.push("/auth/login"); return; }
 
       const { error } = await supabase.from("owner_pets").insert({
         owner_id: user.id,
@@ -314,7 +582,6 @@ function RegisterDogScreen({ onDone, onBack }: { onDone: () => void; onBack: () 
         kinderfreundlich: false,
         vertraeglich_mit_tieren: false,
       });
-
       if (error) throw error;
       onDone();
     } catch (e: any) {
@@ -329,7 +596,6 @@ function RegisterDogScreen({ onDone, onBack }: { onDone: () => void; onBack: () 
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}
     >
-      {/* Header */}
       <View style={{
         paddingTop: 56, paddingHorizontal: Sizes.SPACING_LG, paddingBottom: 14,
         flexDirection: "row", alignItems: "center", gap: 12,
@@ -338,184 +604,86 @@ function RegisterDogScreen({ onDone, onBack }: { onDone: () => void; onBack: () 
         <TouchableOpacity onPress={onBack} style={{ padding: 4 }}>
           <Text style={{ fontSize: 24, color: Colors.SECONDARY }}>‹</Text>
         </TouchableOpacity>
-        <Text style={{ fontSize: 20, fontWeight: "800", color: Colors.TEXT }}>🐕 Hund registrieren</Text>
+        <View>
+          <Text style={{ fontSize: 20, fontWeight: "800", color: Colors.TEXT }}>🐕 Hund registrieren</Text>
+          <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, marginTop: 1 }}>Schritt 2 von 2</Text>
+        </View>
       </View>
 
       <ScrollView contentContainerStyle={{ padding: Sizes.SPACING_LG, paddingBottom: 60 }}>
-        {/* Name */}
         <Text style={fieldLabel}>Name *</Text>
-        <TextInput
-          value={name}
-          onChangeText={setName}
-          placeholder="z.B. Buddy"
-          placeholderTextColor={Colors.TEXT_MUTED}
-          style={inputStyle}
-        />
+        <TextInput value={name} onChangeText={setName} placeholder="z.B. Buddy" placeholderTextColor={Colors.TEXT_MUTED} style={inputStyle} />
 
-        {/* Rasse */}
         <Text style={fieldLabel}>Rasse</Text>
-        <TextInput
-          value={rasse}
-          onChangeText={setRasse}
-          placeholder="z.B. Labrador"
-          placeholderTextColor={Colors.TEXT_MUTED}
-          style={inputStyle}
-        />
+        <TextInput value={rasse} onChangeText={setRasse} placeholder="z.B. Labrador" placeholderTextColor={Colors.TEXT_MUTED} style={inputStyle} />
 
-        {/* Alter */}
         <Text style={fieldLabel}>Alter (Jahre)</Text>
-        <TextInput
-          value={alterJahre}
-          onChangeText={setAlterJahre}
-          placeholder="z.B. 3"
-          keyboardType="numeric"
-          placeholderTextColor={Colors.TEXT_MUTED}
-          style={inputStyle}
-        />
+        <TextInput value={alterJahre} onChangeText={setAlterJahre} placeholder="z.B. 3" keyboardType="numeric" placeholderTextColor={Colors.TEXT_MUTED} style={inputStyle} />
 
-        {/* Größe */}
         <Text style={fieldLabel}>Größe</Text>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 20 }}>
           {GROESSE_OPTIONS.map((g) => (
-            <TouchableOpacity
-              key={g}
-              onPress={() => setGroesse(g)}
-              style={{
-                paddingHorizontal: 14, paddingVertical: 8,
-                borderRadius: 99, borderWidth: 1.5,
-                borderColor: groesse === g ? Colors.SECONDARY : Colors.BORDER,
-                backgroundColor: groesse === g ? Colors.SECONDARY + "15" : Colors.BACKGROUND,
-              }}
+            <TouchableOpacity key={g} onPress={() => setGroesse(g)}
+              style={{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: 99, borderWidth: 1.5, borderColor: groesse === g ? Colors.SECONDARY : Colors.BORDER, backgroundColor: groesse === g ? Colors.SECONDARY + "15" : Colors.BACKGROUND }}
             >
-              <Text style={{
-                fontSize: 13, fontWeight: "600",
-                color: groesse === g ? Colors.SECONDARY : Colors.TEXT_MUTED,
-              }}>
+              <Text style={{ fontSize: 13, fontWeight: "600", color: groesse === g ? Colors.SECONDARY : Colors.TEXT_MUTED }}>
                 {GROESSE_LABEL[g]}
               </Text>
             </TouchableOpacity>
           ))}
         </View>
 
-        {/* Aktivitätslevel */}
         <Text style={fieldLabel}>Aktivitätslevel</Text>
-        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 20 }}>
+        <View style={{ flexDirection: "row", gap: 8, marginBottom: 20 }}>
           {AKTIV_OPTIONS.map((a) => (
-            <TouchableOpacity
-              key={a}
-              onPress={() => setAktiv(a)}
-              style={{
-                paddingHorizontal: 14, paddingVertical: 8,
-                borderRadius: 99, borderWidth: 1.5,
-                borderColor: aktiv === a ? Colors.SECONDARY : Colors.BORDER,
-                backgroundColor: aktiv === a ? Colors.SECONDARY + "15" : Colors.BACKGROUND,
-              }}
+            <TouchableOpacity key={a} onPress={() => setAktiv(a)}
+              style={{ flex: 1, paddingVertical: 10, borderRadius: 12, borderWidth: 1.5, alignItems: "center", borderColor: aktiv === a ? Colors.SECONDARY : Colors.BORDER, backgroundColor: aktiv === a ? Colors.SECONDARY + "15" : Colors.BACKGROUND }}
             >
-              <Text style={{
-                fontSize: 13, fontWeight: "600",
-                color: aktiv === a ? Colors.SECONDARY : Colors.TEXT_MUTED,
-              }}>
+              <Text style={{ fontSize: 12, fontWeight: "600", color: aktiv === a ? Colors.SECONDARY : Colors.TEXT_MUTED }}>
                 {AKTIV_LABEL[a]}
               </Text>
             </TouchableOpacity>
           ))}
         </View>
 
-        {/* Modus */}
         <Text style={fieldLabel}>Modus</Text>
         <View style={{ flexDirection: "row", gap: 10, marginBottom: 32 }}>
-          <TouchableOpacity
-            onPress={() => setModus("gassidate")}
-            style={{
-              flex: 1, padding: 14, borderRadius: 14, borderWidth: 2,
-              borderColor: modus === "gassidate" ? Colors.SECONDARY : Colors.BORDER,
-              backgroundColor: modus === "gassidate" ? Colors.SECONDARY + "10" : Colors.BACKGROUND,
-              alignItems: "center",
-            }}
+          <TouchableOpacity onPress={() => setModus("gassidate")}
+            style={{ flex: 1, padding: 14, borderRadius: 14, borderWidth: 2, alignItems: "center", borderColor: modus === "gassidate" ? Colors.SECONDARY : Colors.BORDER, backgroundColor: modus === "gassidate" ? Colors.SECONDARY + "10" : Colors.BACKGROUND }}
           >
             <Text style={{ fontSize: 24, marginBottom: 4 }}>🦮</Text>
             <Text style={{ fontWeight: "700", color: modus === "gassidate" ? Colors.SECONDARY : Colors.TEXT }}>Gassidate</Text>
-            <Text style={{ fontSize: 11, color: Colors.TEXT_MUTED, textAlign: "center", marginTop: 2 }}>
-              Gemeinsam Gassi gehen
-            </Text>
+            <Text style={{ fontSize: 11, color: Colors.TEXT_MUTED, textAlign: "center", marginTop: 2 }}>Gemeinsam Gassi gehen</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => setModus("zucht")}
-            style={{
-              flex: 1, padding: 14, borderRadius: 14, borderWidth: 2,
-              borderColor: modus === "zucht" ? "#9B59B6" : Colors.BORDER,
-              backgroundColor: modus === "zucht" ? "#9B59B620" : Colors.BACKGROUND,
-              alignItems: "center",
-            }}
+          <TouchableOpacity onPress={() => setModus("zucht")}
+            style={{ flex: 1, padding: 14, borderRadius: 14, borderWidth: 2, alignItems: "center", borderColor: modus === "zucht" ? "#9B59B6" : Colors.BORDER, backgroundColor: modus === "zucht" ? "#9B59B620" : Colors.BACKGROUND }}
           >
             <Text style={{ fontSize: 24, marginBottom: 4 }}>🌸</Text>
             <Text style={{ fontWeight: "700", color: modus === "zucht" ? "#9B59B6" : Colors.TEXT }}>Zucht</Text>
-            <Text style={{ fontSize: 11, color: Colors.TEXT_MUTED, textAlign: "center", marginTop: 2 }}>
-              Nachwuchs finden
-            </Text>
+            <Text style={{ fontSize: 11, color: Colors.TEXT_MUTED, textAlign: "center", marginTop: 2 }}>Nachwuchs finden</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Save Button */}
-        <TouchableOpacity
-          onPress={handleSave}
-          disabled={saving}
-          style={{
-            height: Sizes.BUTTON_HEIGHT, borderRadius: Sizes.RADIUS_FULL,
-            backgroundColor: Colors.SECONDARY,
-            alignItems: "center", justifyContent: "center",
-          }}
+        <TouchableOpacity onPress={handleSave} disabled={saving}
+          style={{ height: Sizes.BUTTON_HEIGHT, borderRadius: Sizes.RADIUS_FULL, backgroundColor: Colors.SECONDARY, alignItems: "center", justifyContent: "center" }}
         >
-          {saving
-            ? <ActivityIndicator color={Colors.WHITE} />
-            : <Text style={{ color: Colors.WHITE, fontWeight: "700", fontSize: 17 }}>Hund anlegen →</Text>
-          }
+          {saving ? <ActivityIndicator color={Colors.WHITE} /> : <Text style={{ color: Colors.WHITE, fontWeight: "700", fontSize: 17 }}>Hund anlegen →</Text>}
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
-const fieldLabel = {
-  fontSize: 13,
-  fontWeight: "700" as const,
-  color: Colors.TEXT_MUTED,
-  textTransform: "uppercase" as const,
-  letterSpacing: 0.8,
-  marginBottom: 8,
-};
-const inputStyle = {
-  borderWidth: 1.5,
-  borderColor: Colors.BORDER,
-  borderRadius: 12,
-  paddingHorizontal: 16,
-  paddingVertical: 12,
-  fontSize: 15,
-  color: Colors.TEXT,
-  backgroundColor: Colors.BACKGROUND,
-  marginBottom: 18,
-};
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Meine Hunde Modal
 // ─────────────────────────────────────────────────────────────────────────────
 
 function MeineHundeModal({
-  visible,
-  dogs,
-  activeDogId,
-  onClose,
-  onSelectDog,
-  onAddDog,
-  onChangeModus,
+  visible, dogs, activeDogId, onClose, onSelectDog, onAddDog, onChangeModus,
 }: {
-  visible: boolean;
-  dogs: MyDog[];
-  activeDogId: string | null;
-  onClose: () => void;
-  onSelectDog: (id: string) => void;
-  onAddDog: () => void;
-  onChangeModus: (dog: MyDog) => void;
+  visible: boolean; dogs: MyDog[]; activeDogId: string | null;
+  onClose: () => void; onSelectDog: (id: string) => void;
+  onAddDog: () => void; onChangeModus: (dog: MyDog) => void;
 }) {
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
@@ -533,15 +701,12 @@ function MeineHundeModal({
 
         <ScrollView contentContainerStyle={{ padding: Sizes.SPACING_LG, gap: 10 }}>
           {dogs.map((dog) => (
-            <View
-              key={dog.id}
-              style={{
-                borderRadius: 16, borderWidth: 2,
-                borderColor: activeDogId === dog.id ? Colors.SECONDARY : Colors.BORDER,
-                backgroundColor: activeDogId === dog.id ? Colors.SECONDARY + "08" : Colors.BACKGROUND,
-                overflow: "hidden",
-              }}
-            >
+            <View key={dog.id} style={{
+              borderRadius: 16, borderWidth: 2,
+              borderColor: activeDogId === dog.id ? Colors.SECONDARY : Colors.BORDER,
+              backgroundColor: activeDogId === dog.id ? Colors.SECONDARY + "08" : Colors.BACKGROUND,
+              overflow: "hidden",
+            }}>
               <TouchableOpacity
                 onPress={() => onSelectDog(dog.id)}
                 style={{ flexDirection: "row", alignItems: "center", padding: 14, gap: 12 }}
@@ -555,44 +720,27 @@ function MeineHundeModal({
                 )}
                 <View style={{ flex: 1 }}>
                   <Text style={{ fontSize: 16, fontWeight: "700", color: Colors.TEXT }}>{dog.name}</Text>
-                  <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, marginTop: 2 }}>
-                    {dog.rasse ?? "Mischling"}
-                  </Text>
+                  <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, marginTop: 2 }}>{dog.rasse ?? "Mischling"}</Text>
                 </View>
                 <View style={{
                   backgroundColor: dog.modus === "gassidate" ? Colors.SECONDARY + "22" : "#F3EDFF",
                   paddingHorizontal: 10, paddingVertical: 4, borderRadius: 99,
                 }}>
-                  <Text style={{
-                    fontSize: 11, fontWeight: "700",
-                    color: dog.modus === "gassidate" ? Colors.SECONDARY : "#9B59B6",
-                  }}>
+                  <Text style={{ fontSize: 11, fontWeight: "700", color: dog.modus === "gassidate" ? Colors.SECONDARY : "#9B59B6" }}>
                     {dog.modus === "gassidate" ? "Gassidate" : "Zucht"}
                   </Text>
                 </View>
               </TouchableOpacity>
-
-              {/* Actions */}
-              <View style={{
-                flexDirection: "row", paddingHorizontal: 14, paddingBottom: 12, gap: 8,
-              }}>
+              <View style={{ flexDirection: "row", paddingHorizontal: 14, paddingBottom: 12, gap: 8 }}>
                 <TouchableOpacity
                   onPress={() => onChangeModus(dog)}
-                  style={{
-                    flex: 1, height: 32, borderRadius: 99,
-                    borderWidth: 1, borderColor: Colors.BORDER,
-                    alignItems: "center", justifyContent: "center",
-                  }}
+                  style={{ flex: 1, height: 32, borderRadius: 99, borderWidth: 1, borderColor: Colors.BORDER, alignItems: "center", justifyContent: "center" }}
                 >
-                  <Text style={{ fontSize: 12, color: Colors.TEXT }}>
-                    ⇄ Modus ändern
-                  </Text>
+                  <Text style={{ fontSize: 12, color: Colors.TEXT }}>⇄ Modus ändern</Text>
                 </TouchableOpacity>
               </View>
             </View>
           ))}
-
-          {/* Add new dog */}
           <TouchableOpacity
             onPress={onAddDog}
             style={{
@@ -611,51 +759,88 @@ function MeineHundeModal({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Styles
+// ─────────────────────────────────────────────────────────────────────────────
+
+const fieldLabel = {
+  fontSize: 13, fontWeight: "700" as const, color: Colors.TEXT_MUTED,
+  textTransform: "uppercase" as const, letterSpacing: 0.8, marginBottom: 8,
+};
+const inputStyle = {
+  borderWidth: 1.5, borderColor: Colors.BORDER, borderRadius: 12,
+  paddingHorizontal: 16, paddingVertical: 12, fontSize: 15, color: Colors.TEXT,
+  backgroundColor: Colors.BACKGROUND, marginBottom: 18,
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Main Feed Screen
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function GassiFeed() {
-  const [isGuest, setIsGuest]             = useState(false);
-  const [myDogs, setMyDogs]               = useState<MyDog[]>([]);
-  const [activeDogId, setActiveDogId]     = useState<string | null>(null);
-  const [ownerSubMode, setOwnerSubMode]   = useState<"gassidate" | "zucht">("gassidate");
+  const [isGuest, setIsGuest]               = useState(false);
+  const [myOwnerProfile, setMyOwnerProfile] = useState<OwnerInfo | null>(null);
+  const [myDogs, setMyDogs]                 = useState<MyDog[]>([]);
+  const [activeDogId, setActiveDogId]       = useState<string | null>(null);
+  const [ownerSubMode, setOwnerSubMode]     = useState<"gassidate" | "zucht">("gassidate");
 
-  const [partnerDogs, setPartnerDogs]     = useState<PartnerDog[]>([]);
-  const [dogIndex, setDogIndex]           = useState(0);
+  const [partnerCards, setPartnerCards]     = useState<PartnerCard[]>([]);
+  const [cardIndex, setCardIndex]           = useState(0);
 
+  const [showProfileSetup, setShowProfileSetup] = useState(false);
+  const [showRegister, setShowRegister]         = useState(false);
   const [hundeModalVisible, setHundeModalVisible] = useState(false);
-  const [showRegister, setShowRegister]   = useState(false);
-  const [loading, setLoading]             = useState(true);
-  const [saving, setSaving]               = useState(false);
 
-  const [matchVisible, setMatchVisible]   = useState(false);
-  const [matchDog, setMatchDog]           = useState<PartnerDog | null>(null);
+  const [loading, setLoading]               = useState(true);
+  const [saving, setSaving]                 = useState(false);
+
+  const [matchVisible, setMatchVisible]     = useState(false);
+  const [matchCard, setMatchCard]           = useState<PartnerCard | null>(null);
   const matchScale   = useRef(new Animated.Value(0)).current;
   const matchOpacity = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => {
-    loadUserInfo();
-  }, []);
+  useEffect(() => { loadUserInfo(); }, []);
 
   useEffect(() => {
-    if (myDogs.length > 0 && !showRegister) {
-      loadPartnerDogs();
+    if (!showProfileSetup && !showRegister && (myDogs.length > 0 || isGuest)) {
+      loadPartnerCards();
     }
-  }, [activeDogId, ownerSubMode, myDogs.length, showRegister]);
+  }, [activeDogId, ownerSubMode, isGuest, showProfileSetup, showRegister]);
 
   const loadUserInfo = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
+
       if (!user) {
         setIsGuest(true);
-        // Load demo partner dogs for guests
-        await loadPartnerDogs(true);
         setLoading(false);
         return;
       }
 
       setIsGuest(false);
 
+      // Load profile
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("name, city, avatar_url")
+        .eq("id", user.id)
+        .single();
+
+      if (!profile?.name || !profile?.city) {
+        setShowProfileSetup(true);
+        setLoading(false);
+        return;
+      }
+
+      setMyOwnerProfile({
+        name: profile.name,
+        alter: 0, // stored locally; not in DB
+        geschlecht: "–",
+        bio: null,
+        stadt: profile.city,
+        avatar_url: profile.avatar_url ?? null,
+      });
+
+      // Load my dogs
       const { data: dogs } = await supabase
         .from("owner_pets")
         .select("id, name, rasse, groesse_kategorie, alter_jahre, foto_url")
@@ -663,17 +848,12 @@ export default function GassiFeed() {
         .order("created_at", { ascending: true });
 
       if (!dogs || dogs.length === 0) {
-        // No dogs registered → show registration
         setShowRegister(true);
         setLoading(false);
         return;
       }
 
-      const myDogList: MyDog[] = dogs.map((d: any) => ({
-        ...d,
-        modus: "gassidate", // default modus
-      }));
-
+      const myDogList: MyDog[] = dogs.map((d: any) => ({ ...d, modus: "gassidate" }));
       setMyDogs(myDogList);
       setActiveDogId(myDogList[0].id);
     } catch (e) {
@@ -683,25 +863,25 @@ export default function GassiFeed() {
     }
   };
 
-  const loadPartnerDogs = async (guestMode = false) => {
+  const loadPartnerCards = async () => {
     try {
-      // For all modes: load from pets table as demo partner dogs
+      // Load dogs from Supabase and pair with rotating demo owners
       const { data, error } = await supabase
         .from("pets")
-        .select(`
-          id, name, rasse, groesse_kategorie, alter_jahre,
-          aktivitaetslevel, kinderfreundlich, vertraeglich_mit_tieren,
-          shelter:profiles!shelter_id(name, city),
-          pet_photos(url, position)
-        `)
+        .select("id, name, rasse, groesse_kategorie, alter_jahre, aktivitaetslevel, kinderfreundlich, vertraeglich_mit_tieren, charakter_tags, beschreibung, pet_photos(url, position)")
         .eq("status", "verfuegbar")
         .order("created_at", { ascending: false })
         .limit(20);
 
       if (error) throw error;
 
-      const dogs: PartnerDog[] = (data ?? []).map((p: any) => {
-        const photos = (p.pet_photos ?? []).sort((a: any, b: any) => a.position - b.position);
+      const cards: PartnerCard[] = (data ?? []).map((p: any, i: number) => {
+        const photos = (p.pet_photos ?? [])
+          .sort((a: any, b: any) => a.position - b.position)
+          .map((ph: any) => ph.url);
+
+        const owner = DEMO_OWNERS[i % DEMO_OWNERS.length];
+
         return {
           id: p.id,
           name: p.name,
@@ -711,52 +891,47 @@ export default function GassiFeed() {
           kinderfreundlich: !!p.kinderfreundlich,
           vertraeglich_mit_tieren: !!p.vertraeglich_mit_tieren,
           aktivitaetslevel: p.aktivitaetslevel,
-          foto_url: photos[0]?.url ?? null,
-          owner_name: p.shelter?.name ?? null,
-          owner_city: p.shelter?.city ?? null,
+          charakter_tags: p.charakter_tags ?? [],
+          beschreibung: p.beschreibung,
+          photos,
+          modus: ownerSubMode,
+          owner,
         };
       });
 
-      setPartnerDogs(dogs);
-      setDogIndex(0);
+      setPartnerCards(cards);
+      setCardIndex(0);
     } catch (e) {
-      console.error("GassiFeed.loadPartnerDogs", e);
+      console.error("GassiFeed.loadPartnerCards", e);
     }
   };
 
   const handleAction = async (richtung: "ja" | "nein") => {
-    const dog = partnerDogs[dogIndex];
-    if (!dog) return;
-
-    if (isGuest) {
-      goToNext();
-      return;
-    }
+    const card = partnerCards[cardIndex];
+    if (!card) return;
 
     if (richtung === "ja") {
-      setSaving(true);
-      try {
-        // Show match celebration (in demo mode, always show match)
-        setMatchDog(dog);
-        setMatchVisible(true);
-        matchScale.setValue(0);
-        matchOpacity.setValue(0);
-        Animated.parallel([
-          Animated.spring(matchScale, { toValue: 1, tension: 60, friction: 8, useNativeDriver: true }),
-          Animated.timing(matchOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
-        ]).start();
-      } catch (e) {
-        console.error("GassiFeed.handleAction", e);
-      } finally {
-        setSaving(false);
-      }
+      setMatchCard(card);
+      setMatchVisible(true);
+      matchScale.setValue(0);
+      matchOpacity.setValue(0);
+      Animated.parallel([
+        Animated.spring(matchScale, { toValue: 1, tension: 60, friction: 8, useNativeDriver: true }),
+        Animated.timing(matchOpacity, { toValue: 1, duration: 300, useNativeDriver: true }),
+      ]).start();
     }
     goToNext();
   };
 
   const goToNext = () => {
-    if (dogIndex + 1 < partnerDogs.length) setDogIndex(dogIndex + 1);
-    else loadPartnerDogs();
+    if (cardIndex + 1 < partnerCards.length) setCardIndex(cardIndex + 1);
+    else loadPartnerCards();
+  };
+
+  const handleProfileSetupDone = (profile: OwnerInfo) => {
+    setMyOwnerProfile(profile);
+    setShowProfileSetup(false);
+    setShowRegister(true);
   };
 
   const handleRegisterDone = async () => {
@@ -774,9 +949,7 @@ export default function GassiFeed() {
           text: `→ ${dog.modus === "gassidate" ? "Zucht" : "Gassidate"}`,
           onPress: () => {
             setMyDogs((prev) => prev.map((d) =>
-              d.id === dog.id
-                ? { ...d, modus: d.modus === "gassidate" ? "zucht" : "gassidate" }
-                : d
+              d.id === dog.id ? { ...d, modus: d.modus === "gassidate" ? "zucht" : "gassidate" } : d
             ));
           },
         },
@@ -785,18 +958,20 @@ export default function GassiFeed() {
     );
   };
 
-  // ── Registration flow ─────────────────────────────────────────────────────
+  // ── Flows ─────────────────────────────────────────────────────────────────
+
+  if (showProfileSetup) {
+    return <ProfileSetupScreen onDone={handleProfileSetupDone} />;
+  }
 
   if (showRegister) {
     return (
       <RegisterDogScreen
         onDone={handleRegisterDone}
-        onBack={() => router.back()}
+        onBack={() => setShowProfileSetup(true)}
       />
     );
   }
-
-  // ── Loading ───────────────────────────────────────────────────────────────
 
   if (loading) {
     return (
@@ -806,7 +981,7 @@ export default function GassiFeed() {
     );
   }
 
-  const currentDog = partnerDogs[dogIndex];
+  const currentCard = partnerCards[cardIndex];
   const activeModus = myDogs.find((d) => d.id === activeDogId)?.modus ?? ownerSubMode;
 
   return (
@@ -818,54 +993,54 @@ export default function GassiFeed() {
         borderBottomWidth: 1, borderBottomColor: Colors.BORDER,
         flexDirection: "row", alignItems: "center", justifyContent: "space-between",
       }}>
-        <View>
-          <Text style={{ fontSize: 22, fontWeight: "800", color: Colors.TEXT }}>🦮 Gassidate</Text>
-          <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, marginTop: 1 }}>
-            {activeModus === "gassidate" ? "Gassipartner finden" : "Zuchtpartner finden"}
-          </Text>
-        </View>
-        <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
-          {/* Sub-mode toggle */}
-          <View style={{
-            flexDirection: "row", borderRadius: 99, overflow: "hidden",
-            borderWidth: 1, borderColor: Colors.BORDER,
-          }}>
-            {(["gassidate", "zucht"] as const).map((m) => (
-              <TouchableOpacity
-                key={m}
-                onPress={() => setOwnerSubMode(m)}
-                style={{
-                  paddingHorizontal: 12, paddingVertical: 6,
-                  backgroundColor: activeModus === m ? Colors.SECONDARY : Colors.BACKGROUND,
-                }}
-              >
-                <Text style={{
-                  fontSize: 12, fontWeight: "600",
-                  color: activeModus === m ? Colors.WHITE : Colors.TEXT_MUTED,
-                }}>
-                  {m === "gassidate" ? "Gassi" : "Zucht"}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+        {/* Back to splash */}
+        <TouchableOpacity
+          onPress={() => router.replace("/")}
+          style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
+        >
+          <Text style={{ fontSize: 18, color: Colors.TEXT_MUTED }}>‹</Text>
+          <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, fontWeight: "500" }}>Modi</Text>
+        </TouchableOpacity>
 
-          {/* Meine Hunde button (only for logged-in users with dogs) */}
-          {!isGuest && myDogs.length > 0 && (
+        {/* Mode toggle */}
+        <View style={{
+          flexDirection: "row", borderRadius: 99, overflow: "hidden",
+          borderWidth: 1, borderColor: Colors.BORDER,
+        }}>
+          {(["gassidate", "zucht"] as const).map((m) => (
             <TouchableOpacity
-              onPress={() => setHundeModalVisible(true)}
+              key={m}
+              onPress={() => setOwnerSubMode(m)}
               style={{
-                paddingHorizontal: 12, paddingVertical: 7,
-                borderRadius: Sizes.RADIUS_FULL, borderWidth: 1.5, borderColor: Colors.BORDER,
-                flexDirection: "row", alignItems: "center", gap: 5,
+                paddingHorizontal: 14, paddingVertical: 7,
+                backgroundColor: ownerSubMode === m ? Colors.SECONDARY : Colors.BACKGROUND,
               }}
             >
-              <Text style={{ fontSize: 13 }}>🐕</Text>
-              <Text style={{ color: Colors.TEXT, fontWeight: "500", fontSize: 12 }}>
-                {myDogs.find((d) => d.id === activeDogId)?.name ?? "Hunde"}
+              <Text style={{ fontSize: 13, fontWeight: "600", color: ownerSubMode === m ? Colors.WHITE : Colors.TEXT_MUTED }}>
+                {m === "gassidate" ? "🦮 Gassi" : "🌸 Zucht"}
               </Text>
             </TouchableOpacity>
-          )}
+          ))}
         </View>
+
+        {/* Meine Hunde button */}
+        {!isGuest && myDogs.length > 0 ? (
+          <TouchableOpacity
+            onPress={() => setHundeModalVisible(true)}
+            style={{
+              paddingHorizontal: 10, paddingVertical: 7,
+              borderRadius: Sizes.RADIUS_FULL, borderWidth: 1.5, borderColor: Colors.BORDER,
+              flexDirection: "row", alignItems: "center", gap: 4,
+            }}
+          >
+            <Text style={{ fontSize: 13 }}>🐕</Text>
+            <Text style={{ color: Colors.TEXT, fontWeight: "500", fontSize: 11 }}>
+              {myDogs.find((d) => d.id === activeDogId)?.name ?? "Hunde"}
+            </Text>
+          </TouchableOpacity>
+        ) : (
+          <View style={{ width: 60 }} />
+        )}
       </View>
 
       {/* Guest Banner */}
@@ -878,7 +1053,7 @@ export default function GassiFeed() {
           borderWidth: 1, borderColor: "rgba(240,149,106,0.3)",
         }}>
           <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, flex: 1 }}>
-            🦮 Demo-Modus — <Text style={{ fontWeight: "600" }}>Anmelden</Text> um echte Matches zu speichern
+            🦮 Demo-Modus — <Text style={{ fontWeight: "600" }}>Anmelden</Text> um Matches zu speichern
           </Text>
           <TouchableOpacity onPress={() => router.push("/auth/login")}>
             <Text style={{ fontSize: 12, fontWeight: "700", color: Colors.SECONDARY }}>Login →</Text>
@@ -886,23 +1061,16 @@ export default function GassiFeed() {
         </View>
       )}
 
-      {/* No partner dogs */}
-      {partnerDogs.length === 0 && (
+      {/* Empty */}
+      {partnerCards.length === 0 && (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32 }}>
           <Text style={{ fontSize: 64, marginBottom: 16 }}>🐾</Text>
           <Text style={{ fontSize: Sizes.FONT_XL, fontWeight: "700", color: Colors.TEXT, textAlign: "center", marginBottom: 8 }}>
             Keine Partner in der Nähe
           </Text>
-          <Text style={{ color: Colors.TEXT_MUTED, textAlign: "center", lineHeight: 22, marginBottom: 24 }}>
-            Schau später nochmal vorbei!
-          </Text>
           <TouchableOpacity
-            onPress={() => loadPartnerDogs()}
-            style={{
-              height: Sizes.BUTTON_HEIGHT, paddingHorizontal: 28,
-              backgroundColor: Colors.SECONDARY, borderRadius: Sizes.RADIUS_FULL,
-              alignItems: "center", justifyContent: "center",
-            }}
+            onPress={() => loadPartnerCards()}
+            style={{ height: Sizes.BUTTON_HEIGHT, paddingHorizontal: 28, backgroundColor: Colors.SECONDARY, borderRadius: Sizes.RADIUS_FULL, alignItems: "center", justifyContent: "center" }}
           >
             <Text style={{ color: Colors.WHITE, fontWeight: "700" }}>Nochmal laden</Text>
           </TouchableOpacity>
@@ -910,11 +1078,10 @@ export default function GassiFeed() {
       )}
 
       {/* Feed */}
-      {partnerDogs.length > 0 && currentDog && (
+      {partnerCards.length > 0 && currentCard && (
         <SwipeCard
-          key={`dog-${dogIndex}`}
-          dog={currentDog}
-          modus={activeModus}
+          key={`card-${cardIndex}`}
+          card={currentCard}
           saving={saving}
           onAction={handleAction}
         />
@@ -926,14 +1093,8 @@ export default function GassiFeed() {
         dogs={myDogs}
         activeDogId={activeDogId}
         onClose={() => setHundeModalVisible(false)}
-        onSelectDog={(id) => {
-          setActiveDogId(id);
-          setHundeModalVisible(false);
-        }}
-        onAddDog={() => {
-          setHundeModalVisible(false);
-          setShowRegister(true);
-        }}
+        onSelectDog={(id) => { setActiveDogId(id); setHundeModalVisible(false); }}
+        onAddDog={() => { setHundeModalVisible(false); setShowRegister(true); }}
         onChangeModus={handleChangeModus}
       />
 
@@ -948,32 +1109,22 @@ export default function GassiFeed() {
             alignItems: "center", width: "82%", transform: [{ scale: matchScale }],
           }}>
             <Text style={{ fontSize: 52, marginBottom: 8 }}>🎉</Text>
-            <Text style={{ fontSize: 28, fontWeight: "800", color: Colors.SECONDARY, marginBottom: 4 }}>
-              Es ist ein Match!
-            </Text>
-            {matchDog?.foto_url && (
-              <Image
-                source={{ uri: matchDog.foto_url }}
-                style={{ width: 100, height: 100, borderRadius: 50, marginVertical: 16, borderWidth: 3, borderColor: Colors.SECONDARY }}
-              />
+            <Text style={{ fontSize: 28, fontWeight: "800", color: Colors.SECONDARY, marginBottom: 4 }}>Match!</Text>
+            {matchCard?.photos[0] && (
+              <Image source={{ uri: matchCard.photos[0] }} style={{ width: 100, height: 100, borderRadius: 50, marginVertical: 16, borderWidth: 3, borderColor: Colors.SECONDARY }} />
             )}
-            <Text style={{ fontSize: 18, fontWeight: "700", color: Colors.TEXT, marginBottom: 4 }}>
-              {matchDog?.name}
+            <Text style={{ fontSize: 18, fontWeight: "700", color: Colors.TEXT, marginBottom: 2 }}>{matchCard?.name}</Text>
+            <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED, marginBottom: 4 }}>
+              Besitzer: {matchCard?.owner.name} · {matchCard?.owner.stadt}
             </Text>
             <Text style={{ color: Colors.TEXT_MUTED, textAlign: "center", marginBottom: 24, lineHeight: 20 }}>
-              Ihr habt euch beide geliked — schreibt euch!
+              Ihr habt euch gegenseitig geliked — schreibt euch!
             </Text>
             <TouchableOpacity
               onPress={() => setMatchVisible(false)}
-              style={{
-                width: "100%", height: Sizes.BUTTON_HEIGHT,
-                backgroundColor: Colors.SECONDARY, borderRadius: Sizes.RADIUS_FULL,
-                alignItems: "center", justifyContent: "center", marginBottom: 10,
-              }}
+              style={{ width: "100%", height: Sizes.BUTTON_HEIGHT, backgroundColor: Colors.SECONDARY, borderRadius: Sizes.RADIUS_FULL, alignItems: "center", justifyContent: "center", marginBottom: 10 }}
             >
-              <Text style={{ color: Colors.WHITE, fontWeight: "700", fontSize: Sizes.FONT_MD }}>
-                💬 Nachricht schreiben
-              </Text>
+              <Text style={{ color: Colors.WHITE, fontWeight: "700", fontSize: Sizes.FONT_MD }}>💬 Nachricht schreiben</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setMatchVisible(false)} style={{ paddingVertical: 10 }}>
               <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM }}>Weiter swipen</Text>
