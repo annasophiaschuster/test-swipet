@@ -12,8 +12,10 @@ import { router } from "expo-router";
 import { supabase } from "../../../lib/supabase";
 import { Colors } from "../../../constants/colors";
 import { Sizes } from "../../../constants/sizes";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 export default function TierheimOnboarding() {
+  const { t } = useLanguage();
   const [orgName, setOrgName] = useState("");
   const [adresse, setAdresse] = useState("");
   const [telefon, setTelefon] = useState("");
@@ -22,13 +24,13 @@ export default function TierheimOnboarding() {
 
   const handleFinish = async () => {
     if (!orgName) {
-      Alert.alert("Fehler", "Bitte den Namen des Tierheims eingeben.");
+      Alert.alert(t.err_generic, t.onb_shelter_err_name);
       return;
     }
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Nicht angemeldet");
+      if (!user) throw new Error(t.err_not_logged_in);
       const { error } = await supabase.from("shelter_profiles").insert({
         id: user.id,
         org_name: orgName,
@@ -39,7 +41,7 @@ export default function TierheimOnboarding() {
       if (error) throw error;
       router.replace("/tierheim/dashboard");
     } catch (error: any) {
-      Alert.alert("Fehler", error.message);
+      Alert.alert(t.err_generic, error.message);
     } finally {
       setLoading(false);
     }
@@ -49,17 +51,17 @@ export default function TierheimOnboarding() {
     <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
       <ScrollView contentContainerStyle={{ padding: Sizes.SPACING_LG, paddingTop: 60 }}>
         <Text style={{ fontSize: 28, fontWeight: "700", color: Colors.TEXT, marginBottom: 8 }}>
-          🏠 Tierheim einrichten
+          {t.onb_shelter_title}
         </Text>
         <Text style={{ color: Colors.TEXT_MUTED, marginBottom: 28 }}>
-          Erzähl uns von deinem Tierheim
+          {t.onb_shelter_sub}
         </Text>
 
         <View style={{ gap: 14 }}>
           {[
-            { label: "Name des Tierheims *", value: orgName, setter: setOrgName, placeholder: "z.B. Tierheim München" },
-            { label: "Adresse", value: adresse, setter: setAdresse, placeholder: "Straße, PLZ, Stadt" },
-            { label: "Telefon", value: telefon, setter: setTelefon, placeholder: "+49 ..." },
+            { label: t.onb_shelter_name, value: orgName, setter: setOrgName, placeholder: t.onb_shelter_name_placeholder },
+            { label: t.onb_shelter_address, value: adresse, setter: setAdresse, placeholder: t.onb_shelter_address_placeholder },
+            { label: t.onb_shelter_phone, value: telefon, setter: setTelefon, placeholder: t.onb_shelter_phone_placeholder },
           ].map((field) => (
             <View key={field.label}>
               <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM, marginBottom: 6 }}>{field.label}</Text>
@@ -83,7 +85,7 @@ export default function TierheimOnboarding() {
           ))}
 
           <View>
-            <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM, marginBottom: 6 }}>Beschreibung</Text>
+            <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM, marginBottom: 6 }}>{t.onb_shelter_desc}</Text>
             <TextInput
               style={{
                 minHeight: 100,
@@ -96,7 +98,7 @@ export default function TierheimOnboarding() {
                 color: Colors.TEXT,
                 backgroundColor: Colors.SURFACE,
               }}
-              placeholder="Erzähle etwas über euer Tierheim..."
+              placeholder={t.onb_shelter_desc_placeholder}
               placeholderTextColor={Colors.TEXT_MUTED}
               value={beschreibung}
               onChangeText={setBeschreibung}
@@ -121,7 +123,7 @@ export default function TierheimOnboarding() {
               <ActivityIndicator color={Colors.WHITE} />
             ) : (
               <Text style={{ color: Colors.WHITE, fontSize: Sizes.FONT_MD, fontWeight: "600" }}>
-                Tierheim einrichten 🏠
+                {t.onb_shelter_btn}
               </Text>
             )}
           </TouchableOpacity>

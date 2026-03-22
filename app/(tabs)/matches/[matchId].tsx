@@ -15,6 +15,7 @@ import { supabase } from "../../../lib/supabase";
 import { Colors } from "../../../constants/colors";
 import { Sizes } from "../../../constants/sizes";
 import { sendAdoptionMessageNotification } from "../../../lib/notifications";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 interface Message {
   id: string;
@@ -24,6 +25,7 @@ interface Message {
 }
 
 export default function ChatScreen() {
+  const { t, lang } = useLanguage();
   const { matchId, petName, petPhoto, shelterName } = useLocalSearchParams<{
     matchId: string;
     petName: string;
@@ -121,16 +123,18 @@ export default function ChatScreen() {
 
   const formatTime = (iso: string) => {
     const d = new Date(iso);
-    return d.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+    const locale = lang === "en" ? "en-US" : "de-DE";
+    return d.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
   };
 
   const formatDateSeparator = (iso: string) => {
     const d = new Date(iso);
     const now = new Date();
+    const locale = lang === "en" ? "en-US" : "de-DE";
     const diffDays = Math.floor((now.getTime() - d.getTime()) / 86400000);
-    if (diffDays === 0) return "Heute";
-    if (diffDays === 1) return "Gestern";
-    return d.toLocaleDateString("de-DE", { day: "2-digit", month: "long" });
+    if (diffDays === 0) return t.adoption_chat_today;
+    if (diffDays === 1) return t.adoption_chat_yesterday;
+    return d.toLocaleDateString(locale, { day: "2-digit", month: "long" });
   };
 
   // Group messages by day
@@ -193,7 +197,7 @@ export default function ChatScreen() {
             {petName}
           </Text>
           <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED }}>
-            {shelterName || "Tierheim"}
+            {shelterName || t.adoption_chat_shelter_fallback}
           </Text>
         </View>
       </View>
@@ -218,7 +222,7 @@ export default function ChatScreen() {
               <View style={{ alignItems: "center", paddingTop: 40 }}>
                 <Text style={{ fontSize: 40, marginBottom: 12 }}>👋</Text>
                 <Text style={{ color: Colors.TEXT_MUTED, textAlign: "center", lineHeight: 22 }}>
-                  Ihr habt ein Match! Schreib dem Tierheim{"\n"}eine erste Nachricht über {petName}.
+                  {t.adoption_chat_match_cta(petName ?? "")}
                 </Text>
               </View>
             }
@@ -304,7 +308,7 @@ export default function ChatScreen() {
           <TextInput
             value={inputText}
             onChangeText={setInputText}
-            placeholder={`Nachricht über ${petName}…`}
+            placeholder={t.adoption_chat_placeholder(petName ?? "")}
             placeholderTextColor={Colors.TEXT_MUTED}
             multiline
             style={{

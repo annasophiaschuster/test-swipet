@@ -15,6 +15,7 @@ import { supabase } from "../../../lib/supabase";
 import { Colors } from "../../../constants/colors";
 import { Sizes } from "../../../constants/sizes";
 import { sendAdoptionMessageNotification } from "../../../lib/notifications";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 interface Message {
   id: string;
@@ -26,16 +27,16 @@ interface Message {
 const DEMO_USER_ID = "demo-amir";
 const DEMO_SHELTER_ID = "demo-tierheim";
 
-const DEMO_MESSAGES_A1: Message[] = [
-  { id: "dm-a1-1", sender_id: DEMO_SHELTER_ID, text: "Hallo Amir! Vielen Dank für dein Interesse an Bruno 🐾", created_at: new Date(Date.now() - 60 * 60000).toISOString() },
-  { id: "dm-a1-2", sender_id: DEMO_USER_ID,    text: "Hallo! Bruno hat mich sofort begeistert. Wie läuft der Prozess ab?", created_at: new Date(Date.now() - 55 * 60000).toISOString() },
-  { id: "dm-a1-3", sender_id: DEMO_SHELTER_ID, text: "Super! Wir würden dich gerne zu einem Kennenlernen einladen.", created_at: new Date(Date.now() - 40 * 60000).toISOString() },
-  { id: "dm-a1-4", sender_id: DEMO_USER_ID,    text: "Das klingt wunderbar! Wann wäre das möglich?", created_at: new Date(Date.now() - 35 * 60000).toISOString() },
-  { id: "dm-a1-5", sender_id: DEMO_SHELTER_ID, text: "Wie wäre es am Samstag um 11 Uhr?", created_at: new Date(Date.now() - 28 * 60000).toISOString() },
-  { id: "dm-a1-6", sender_id: DEMO_USER_ID,    text: "Perfekt, ich freue mich! 🐕", created_at: new Date(Date.now() - 25 * 60000).toISOString() },
-];
-
 export default function AdoptionChatScreen() {
+  const { t, lang } = useLanguage();
+  const DEMO_MESSAGES_A1: Message[] = [
+    { id: "dm-a1-1", sender_id: DEMO_SHELTER_ID, text: t.adoption_chat_demo_msg1, created_at: new Date(Date.now() - 60 * 60000).toISOString() },
+    { id: "dm-a1-2", sender_id: DEMO_USER_ID,    text: t.adoption_chat_demo_msg2, created_at: new Date(Date.now() - 55 * 60000).toISOString() },
+    { id: "dm-a1-3", sender_id: DEMO_SHELTER_ID, text: t.adoption_chat_demo_msg3, created_at: new Date(Date.now() - 40 * 60000).toISOString() },
+    { id: "dm-a1-4", sender_id: DEMO_USER_ID,    text: t.adoption_chat_demo_msg4, created_at: new Date(Date.now() - 35 * 60000).toISOString() },
+    { id: "dm-a1-5", sender_id: DEMO_SHELTER_ID, text: t.adoption_chat_demo_msg5, created_at: new Date(Date.now() - 28 * 60000).toISOString() },
+    { id: "dm-a1-6", sender_id: DEMO_USER_ID,    text: t.adoption_chat_demo_msg6, created_at: new Date(Date.now() - 25 * 60000).toISOString() },
+  ];
   const { matchId, petName, petPhoto, shelterName } = useLocalSearchParams<{
     matchId: string;
     petName: string;
@@ -151,18 +152,19 @@ export default function AdoptionChatScreen() {
     }
   };
 
+  const locale = lang === "en" ? "en-US" : "de-DE";
   const formatTime = (iso: string) => {
     const d = new Date(iso);
-    return d.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+    return d.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
   };
 
   const formatDateSeparator = (iso: string) => {
     const d = new Date(iso);
     const now = new Date();
     const diffDays = Math.floor((now.getTime() - d.getTime()) / 86400000);
-    if (diffDays === 0) return "Heute";
-    if (diffDays === 1) return "Gestern";
-    return d.toLocaleDateString("de-DE", { day: "2-digit", month: "long" });
+    if (diffDays === 0) return t.adoption_chat_today;
+    if (diffDays === 1) return t.adoption_chat_yesterday;
+    return d.toLocaleDateString(locale, { day: "2-digit", month: "long" });
   };
 
   const messagesWithSeparators = messages.reduce<
@@ -218,7 +220,7 @@ export default function AdoptionChatScreen() {
             {petName}
           </Text>
           <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED }}>
-            {shelterName || "Tierheim"}
+            {shelterName || t.adoption_chat_shelter_fallback}
           </Text>
         </View>
       </View>
@@ -243,7 +245,7 @@ export default function AdoptionChatScreen() {
               <View style={{ alignItems: "center", paddingTop: 40 }}>
                 <Text style={{ fontSize: 40, marginBottom: 12 }}>👋</Text>
                 <Text style={{ color: Colors.TEXT_MUTED, textAlign: "center", lineHeight: 22 }}>
-                  Ihr habt ein Match! Schreib dem Tierheim{"\n"}eine erste Nachricht über {petName}.
+                  {t.adoption_chat_match_cta(petName ?? "")}
                 </Text>
               </View>
             }
@@ -313,7 +315,7 @@ export default function AdoptionChatScreen() {
           <TextInput
             value={inputText}
             onChangeText={setInputText}
-            placeholder={`Nachricht über ${petName}…`}
+            placeholder={t.adoption_chat_placeholder(petName ?? "")}
             placeholderTextColor={Colors.TEXT_MUTED}
             multiline
             style={{

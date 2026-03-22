@@ -14,6 +14,7 @@ import { supabase } from "../../lib/supabase";
 import { Colors } from "../../constants/colors";
 import { Sizes } from "../../constants/sizes";
 import GradientHeader from "../../components/GradientHeader";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 interface Pet {
   id: string;
@@ -27,19 +28,21 @@ interface Pet {
   pet_photos: { url: string; position: number }[];
 }
 
-const STATUS_CONFIG: Record<string, { bg: string; label: string }> = {
-  verfuegbar: { bg: Colors.SUCCESS,     label: "Verfügbar"  },
-  reserviert: { bg: Colors.WARNING,     label: "Reserviert" },
-  vermittelt: { bg: Colors.TEXT_MUTED,  label: "Vermittelt" },
-};
-
-function formatAlter(jahre?: number | null, monate?: number | null): string {
-  if (jahre && jahre >= 1) return jahre === 1 ? "1 Jahr" : `${jahre} Jahre`;
-  if (monate) return `${monate} Monate`;
-  return "Welpe";
+function formatAlter(jahre?: number | null, monate?: number | null, puppy?: string, year?: string, years?: string, months?: string): string {
+  if (jahre && jahre >= 1) return jahre === 1 ? `1 ${year ?? "Jahr"}` : `${jahre} ${years ?? "Jahre"}`;
+  if (monate) return `${monate} ${months ?? "Monate"}`;
+  return puppy ?? "Welpe";
 }
 
 export default function TierheimHundeScreen() {
+  const { t } = useLanguage();
+
+  const STATUS_CONFIG: Record<string, { bg: string; label: string }> = {
+    verfuegbar: { bg: Colors.SUCCESS,    label: t.tierheim_dogs_verfuegbar },
+    reserviert: { bg: Colors.WARNING,    label: t.tierheim_dogs_reserviert },
+    vermittelt: { bg: Colors.TEXT_MUTED, label: t.tierheim_dogs_vermittelt },
+  };
+
   const [pets, setPets]         = useState<Pet[]>([]);
   const [loading, setLoading]   = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -89,15 +92,15 @@ export default function TierheimHundeScreen() {
 
   const handleStatusChange = async (pet: Pet) => {
     if (isGuest) {
-      Alert.alert("Demo-Ansicht", "Melde dich an um den Status zu ändern.");
+      Alert.alert(t.tierheim_dogs_demo_title, t.tierheim_dogs_demo_msg);
       return;
     }
     const allStatuses = ["verfuegbar", "reserviert", "vermittelt"];
     const options = allStatuses.filter((s) => s !== pet.status);
 
     Alert.alert(
-      `Status von ${pet.name}`,
-      `Aktuell: ${STATUS_CONFIG[pet.status]?.label ?? pet.status}`,
+      `${t.tierheim_dogs_status_title} ${pet.name}`,
+      `${t.tierheim_dogs_status_current} ${STATUS_CONFIG[pet.status]?.label ?? pet.status}`,
       [
         ...options.map((status) => ({
           text: `→ ${STATUS_CONFIG[status]?.label ?? status}`,
@@ -110,22 +113,22 @@ export default function TierheimHundeScreen() {
             }
           },
         })),
-        { text: "Abbrechen", style: "cancel" },
+        { text: t.tierheim_dogs_cancel, style: "cancel" as const },
       ]
     );
   };
 
   const handleDelete = (pet: Pet) => {
     if (isGuest) {
-      Alert.alert("Demo-Ansicht", "Melde dich an um Tiere zu löschen.");
+      Alert.alert(t.tierheim_dogs_demo_title, t.tierheim_dogs_demo_delete_msg);
       return;
     }
     Alert.alert(
-      `${pet.name} löschen?`,
-      "Alle Fotos und Matches werden ebenfalls gelöscht.",
+      `${pet.name} ${t.tierheim_dogs_delete_title}`,
+      t.tierheim_dogs_delete_msg,
       [
         {
-          text: "Löschen",
+          text: t.tierheim_dogs_delete_btn,
           style: "destructive",
           onPress: async () => {
             try {
@@ -136,7 +139,7 @@ export default function TierheimHundeScreen() {
             }
           },
         },
-        { text: "Abbrechen", style: "cancel" },
+        { text: t.tierheim_dogs_cancel, style: "cancel" },
       ]
     );
   };
@@ -154,13 +157,13 @@ export default function TierheimHundeScreen() {
       <GradientHeader
         title="🐕 Meine Hunde"
         showBack
-        backLabel="Modi wechseln"
+        backLabel={t.comp_switch_modes}
         onBack={() => router.replace("/")}
         rightElement={
           <TouchableOpacity
             onPress={() => {
               if (isGuest) {
-                Alert.alert("Demo-Ansicht", "Melde dich an um Hunde hinzuzufügen.");
+                Alert.alert(t.tierheim_dogs_demo_title, t.tierheim_dogs_demo_add_msg);
                 return;
               }
               router.push("/shelter/pets/add");
@@ -179,10 +182,10 @@ export default function TierheimHundeScreen() {
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32 }}>
           <Text style={{ fontSize: 52, marginBottom: 16 }}>🐾</Text>
           <Text style={{ fontSize: Sizes.FONT_XL, fontWeight: "700", color: Colors.TEXT, textAlign: "center", marginBottom: 8 }}>
-            Noch keine Tiere
+            {t.tierheim_dogs_empty_title}
           </Text>
           <Text style={{ color: Colors.TEXT_MUTED, textAlign: "center", marginBottom: 24 }}>
-            Trage deinen ersten Hund ein und finde ein neues Zuhause!
+            {t.tierheim_dogs_empty_sub}
           </Text>
           <TouchableOpacity
             onPress={() => router.push("/shelter/pets/add")}
@@ -192,7 +195,7 @@ export default function TierheimHundeScreen() {
               alignItems: "center", justifyContent: "center",
             }}
           >
-            <Text style={{ color: Colors.WHITE, fontWeight: "700" }}>Tier hinzufügen</Text>
+            <Text style={{ color: Colors.WHITE, fontWeight: "700" }}>{t.tierheim_dogs_add_btn}</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -250,7 +253,7 @@ export default function TierheimHundeScreen() {
                       </View>
                     </View>
                     <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM }}>
-                      {[item.rasse, formatAlter(item.alter_jahre, item.alter_monate)].filter(Boolean).join(" · ")}
+                      {[item.rasse, formatAlter(item.alter_jahre, item.alter_monate, t.tierheim_dogs_puppy, t.tierheim_dogs_year, t.tierheim_dogs_years, t.tierheim_dogs_months)].filter(Boolean).join(" · ")}
                     </Text>
                   </View>
                 </View>
@@ -266,7 +269,7 @@ export default function TierheimHundeScreen() {
                     }}
                   >
                     <Text style={{ fontSize: 12, color: Colors.TEXT, fontWeight: "500" }}>
-                      ⇄ Status ändern
+                      {t.tierheim_dogs_status_change}
                     </Text>
                   </TouchableOpacity>
                   {!isGuest && (

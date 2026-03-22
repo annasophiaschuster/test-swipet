@@ -8,41 +8,45 @@ import { supabase } from "../../../lib/supabase";
 import { Colors } from "../../../constants/colors";
 import { Sizes } from "../../../constants/sizes";
 import { pickMultipleImages, uploadImageToStorage } from "../../../lib/storage";
-
-const GROESSEN = [
-  { value: "klein", label: "Klein (< 10 kg)" },
-  { value: "mittel", label: "Mittel (10–25 kg)" },
-  { value: "gross", label: "Groß (25–45 kg)" },
-  { value: "riese", label: "Riese (> 45 kg)" },
-];
-const GESCHLECHTER = [
-  { value: "maennlich", label: "Männlich" },
-  { value: "weiblich", label: "Weiblich" },
-];
-const ERFAHRUNG = [
-  { value: "anfaenger", label: "🌱 Anfänger" },
-  { value: "fortgeschritten", label: "⭐ Fortgeschrittene" },
-  { value: "profi", label: "🏆 Nur Profis" },
-];
-const AKTIVITAET = [
-  { value: "sportlich", label: "🏃 Sehr aktiv" },
-  { value: "mittel", label: "🚶 Mäßig aktiv" },
-  { value: "ruhig", label: "🛋 Ruhig" },
-];
-const KINDERFREUNDLICH = [
-  { value: "ja", label: "Ja" },
-  { value: "nein", label: "Nein" },
-  { value: "ab_schulalter", label: "Ab Schulalter" },
-  { value: "ab_teenager", label: "Ab Teenager" },
-];
-const CHARAKTER_OPTIONS = [
-  "verspielt", "verschmust", "ruhig", "treu", "neugierig",
-  "energetisch", "familienfreundlich", "lernfreudig",
-];
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 const MAX_PHOTOS = 5;
 
 export default function AddPetScreen() {
+  const { t } = useLanguage();
+
+  const GROESSEN = [
+    { value: "klein", label: t.shelter_size_small },
+    { value: "mittel", label: t.shelter_size_medium },
+    { value: "gross", label: t.shelter_size_large },
+    { value: "riese", label: t.shelter_size_giant },
+  ];
+  const GESCHLECHTER = [
+    { value: "maennlich", label: t.shelter_gender_male },
+    { value: "weiblich", label: t.shelter_gender_female },
+  ];
+  const ERFAHRUNG = [
+    { value: "anfaenger", label: t.shelter_exp_beginner },
+    { value: "fortgeschritten", label: t.shelter_exp_intermediate },
+    { value: "profi", label: t.shelter_exp_pro },
+  ];
+  const AKTIVITAET = [
+    { value: "sportlich", label: t.shelter_activity_very },
+    { value: "mittel", label: t.shelter_activity_medium },
+    { value: "ruhig", label: t.shelter_activity_calm },
+  ];
+  const KINDERFREUNDLICH = [
+    { value: "ja", label: t.shelter_children_yes },
+    { value: "nein", label: t.shelter_children_no },
+    { value: "ab_schulalter", label: t.shelter_children_school },
+    { value: "ab_teenager", label: t.shelter_children_teen },
+  ];
+  const CHARAKTER_OPTIONS = [
+    t.shelter_traits_playful, t.shelter_traits_cuddly, t.shelter_traits_calm,
+    t.shelter_traits_loyal, t.shelter_traits_curious, t.shelter_traits_energetic,
+    t.shelter_traits_family, t.shelter_traits_eager,
+  ];
+
   const [loading, setLoading] = useState(false);
   const [uploadingPhotos, setUploadingPhotos] = useState(false);
 
@@ -76,7 +80,7 @@ export default function AddPetScreen() {
     try {
       const remaining = MAX_PHOTOS - selectedPhotoUris.length;
       if (remaining <= 0) {
-        Alert.alert("Maximum erreicht", `Du kannst maximal ${MAX_PHOTOS} Fotos hinzufügen.`);
+        Alert.alert(t.shelter_max_photos, t.shelter_max_photos_msg(MAX_PHOTOS));
         return;
       }
       const assets = await pickMultipleImages(remaining);
@@ -84,7 +88,7 @@ export default function AddPetScreen() {
         setSelectedPhotoUris((prev) => [...prev, ...assets.map((a) => a.uri)].slice(0, MAX_PHOTOS));
       }
     } catch (e: any) {
-      Alert.alert("Fehler", e.message);
+      Alert.alert(t.err_generic, e.message);
     }
   };
 
@@ -93,7 +97,7 @@ export default function AddPetScreen() {
 
   const handleSave = async () => {
     if (!name.trim()) {
-      Alert.alert("Fehler", "Bitte einen Namen eingeben.");
+      Alert.alert(t.err_generic, t.shelter_add_err_name);
       return;
     }
     setLoading(true);
@@ -149,11 +153,11 @@ export default function AddPetScreen() {
         setUploadingPhotos(false);
       }
 
-      Alert.alert("Gespeichert! 🎉", `${name} wurde zur Adoption eingetragen.`, [
+      Alert.alert(t.shelter_add_saved_title, t.shelter_add_saved_msg(name), [
         { text: "OK", onPress: () => router.back() },
       ]);
     } catch (e: any) {
-      Alert.alert("Fehler", e.message ?? "Speichern fehlgeschlagen.");
+      Alert.alert(t.err_generic, e.message ?? t.gassi_profil_save_failed);
     } finally {
       setLoading(false);
       setUploadingPhotos(false);
@@ -167,15 +171,15 @@ export default function AddPetScreen() {
         <TouchableOpacity onPress={() => router.back()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
           <Text style={{ fontSize: 20, color: Colors.PRIMARY }}>‹</Text>
         </TouchableOpacity>
-        <Text style={{ fontSize: 20, fontWeight: "800", color: Colors.TEXT }}>Hund hinzufügen</Text>
+        <Text style={{ fontSize: 20, fontWeight: "800", color: Colors.TEXT }}>{t.shelter_add_title}</Text>
       </View>
 
       <ScrollView contentContainerStyle={{ padding: Sizes.SPACING_LG, paddingBottom: 80, gap: 20 }} keyboardShouldPersistTaps="handled">
 
-        {/* ── Fotos ── */}
-        <Section title="Fotos">
+        {/* ── Photos ── */}
+        <Section title={t.shelter_add_section_photos}>
           <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, marginBottom: 10 }}>
-            Bis zu {MAX_PHOTOS} Fotos · {selectedPhotoUris.length}/{MAX_PHOTOS} ausgewählt
+            {t.shelter_add_photos_count(selectedPhotoUris.length, MAX_PHOTOS)}
           </Text>
 
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 10 }}>
@@ -222,22 +226,22 @@ export default function AddPetScreen() {
           </View>
         </Section>
 
-        {/* Grunddaten */}
-        <Section title="Grunddaten">
-          <InputField label="Name *" value={name} onChangeText={setName} placeholder="z.B. Max" />
-          <InputField label="Rasse" value={rasse} onChangeText={setRasse} placeholder="z.B. Labrador Retriever" />
+        {/* Basic Info */}
+        <Section title={t.shelter_add_section_basics}>
+          <InputField label={t.shelter_add_label_name} value={name} onChangeText={setName} placeholder={t.shelter_add_placeholder_name} />
+          <InputField label={t.shelter_add_label_breed} value={rasse} onChangeText={setRasse} placeholder={t.shelter_add_placeholder_breed} />
           <View style={{ flexDirection: "row", gap: 10 }}>
             <View style={{ flex: 1 }}>
-              <InputField label="Alter (Jahre)" value={alterJahre} onChangeText={setAlterJahre} placeholder="0" keyboardType="numeric" />
+              <InputField label={t.shelter_add_label_age_years} value={alterJahre} onChangeText={setAlterJahre} placeholder="0" keyboardType="numeric" />
             </View>
             <View style={{ flex: 1 }}>
-              <InputField label="Alter (Monate)" value={alterMonate} onChangeText={setAlterMonate} placeholder="0" keyboardType="numeric" />
+              <InputField label={t.shelter_add_label_age_months} value={alterMonate} onChangeText={setAlterMonate} placeholder="0" keyboardType="numeric" />
             </View>
           </View>
         </Section>
 
-        {/* Geschlecht */}
-        <Section title="Geschlecht">
+        {/* Gender */}
+        <Section title={t.shelter_add_section_gender}>
           <View style={{ flexDirection: "row", gap: 10 }}>
             {GESCHLECHTER.map((g) => (
               <Chip key={g.value} label={g.label} selected={geschlecht === g.value} onPress={() => setGeschlecht(g.value)} />
@@ -245,8 +249,8 @@ export default function AddPetScreen() {
           </View>
         </Section>
 
-        {/* Größe */}
-        <Section title="Größe">
+        {/* Size */}
+        <Section title={t.shelter_add_section_size}>
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
             {GROESSEN.map((g) => (
               <Chip key={g.value} label={g.label} selected={groesse === g.value} onPress={() => setGroesse(g.value)} />
@@ -254,8 +258,8 @@ export default function AddPetScreen() {
           </View>
         </Section>
 
-        {/* Charakter */}
-        <Section title="Charakter-Tags">
+        {/* Character Tags */}
+        <Section title={t.shelter_add_section_char}>
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
             {CHARAKTER_OPTIONS.map((tag) => (
               <Chip key={tag} label={tag} selected={charakterTags.includes(tag)} onPress={() => toggleTag(tag)} />
@@ -263,15 +267,15 @@ export default function AddPetScreen() {
           </View>
         </Section>
 
-        {/* Eigenschaften */}
-        <Section title="Eigenschaften">
-          <ToggleRow label="Kastriert" value={kastriert} onToggle={setKastriert} />
-          <ToggleRow label="Braucht Garten" value={brauchtGarten} onToggle={setBrauchtGarten} />
-          <ToggleRow label="Verträglich mit anderen Tieren" value={vertraeglich} onToggle={setVertraeglich} />
+        {/* Properties */}
+        <Section title={t.shelter_add_section_props}>
+          <ToggleRow label={t.shelter_neutered} value={kastriert} onToggle={setKastriert} />
+          <ToggleRow label={t.shelter_add_label_garden} value={brauchtGarten} onToggle={setBrauchtGarten} />
+          <ToggleRow label={t.shelter_add_label_animals} value={vertraeglich} onToggle={setVertraeglich} />
         </Section>
 
-        {/* Kinderfreundlich */}
-        <Section title="Kinderfreundlich">
+        {/* Child-friendly */}
+        <Section title={t.shelter_add_section_children}>
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
             {KINDERFREUNDLICH.map((k) => (
               <Chip key={k.value} label={k.label} selected={kinderfreundlich === k.value} onPress={() => setKinderfreundlich(k.value)} />
@@ -279,8 +283,8 @@ export default function AddPetScreen() {
           </View>
         </Section>
 
-        {/* Erfahrung */}
-        <Section title="Benötigte Erfahrung">
+        {/* Required Experience */}
+        <Section title={t.shelter_add_section_exp}>
           <View style={{ gap: 8 }}>
             {ERFAHRUNG.map((e) => (
               <Chip key={e.value} label={e.label} selected={erfahrung === e.value} onPress={() => setErfahrung(e.value)} fullWidth />
@@ -288,8 +292,8 @@ export default function AddPetScreen() {
           </View>
         </Section>
 
-        {/* Aktivität */}
-        <Section title="Aktivitätslevel">
+        {/* Activity Level */}
+        <Section title={t.shelter_add_section_activity}>
           <View style={{ gap: 8 }}>
             {AKTIVITAET.map((a) => (
               <Chip key={a.value} label={a.label} selected={aktivitaet === a.value} onPress={() => setAktivitaet(a.value)} fullWidth />
@@ -297,12 +301,12 @@ export default function AddPetScreen() {
           </View>
         </Section>
 
-        {/* Beschreibung */}
-        <Section title="Beschreibung">
+        {/* Description */}
+        <Section title={t.shelter_add_section_desc}>
           <TextInput
             value={beschreibung}
             onChangeText={setBeschreibung}
-            placeholder="Erzähl etwas über den Hund…"
+            placeholder={t.shelter_add_placeholder_desc}
             placeholderTextColor={Colors.TEXT_MUTED}
             multiline
             numberOfLines={4}
@@ -320,12 +324,12 @@ export default function AddPetScreen() {
             <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
               <ActivityIndicator color={Colors.WHITE} />
               <Text style={{ color: Colors.WHITE, fontWeight: "600" }}>
-                {uploadingPhotos ? "Fotos werden hochgeladen…" : "Wird gespeichert…"}
+                {uploadingPhotos ? t.shelter_add_uploading : t.shelter_add_saving}
               </Text>
             </View>
           ) : (
             <Text style={{ color: Colors.WHITE, fontWeight: "700", fontSize: Sizes.FONT_MD }}>
-              🐾 Hund speichern
+              {t.shelter_add_save_btn}
             </Text>
           )}
         </TouchableOpacity>

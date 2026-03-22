@@ -15,15 +15,17 @@ import { Link, router } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { Colors } from "../../constants/colors";
 import { Sizes } from "../../constants/sizes";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 export default function LoginScreen() {
+  const { t } = useLanguage();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
     if (!email.trim() || !password) {
-      Alert.alert("Fehlende Angaben", "Bitte E-Mail und Passwort eingeben.");
+      Alert.alert(t.login_err_missing, t.login_err_missing_msg);
       return;
     }
     setLoading(true);
@@ -34,7 +36,6 @@ export default function LoginScreen() {
       });
       if (error) throw error;
 
-      // Rolle prüfen → richtiges Ziel
       const { data: profile } = await supabase
         .from("profiles")
         .select("role")
@@ -49,7 +50,7 @@ export default function LoginScreen() {
         router.replace("/adoption/feed");
       }
     } catch (error: any) {
-      Alert.alert("Login fehlgeschlagen", error.message);
+      Alert.alert(t.login_err_failed, error.message);
     } finally {
       setLoading(false);
     }
@@ -65,7 +66,6 @@ export default function LoginScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {/* Gradient Header */}
         <LinearGradient
           colors={[Colors.SECONDARY, Colors.PRIMARY]}
           start={{ x: 0, y: 0 }}
@@ -81,22 +81,21 @@ export default function LoginScreen() {
             🐾 SWIPET
           </Text>
           <Text style={{ color: Colors.WHITE, opacity: 0.85, marginTop: 4, fontSize: 14 }}>
-            Willkommen zurück!
+            {t.login_welcome_back}
           </Text>
         </LinearGradient>
 
-        {/* Form */}
         <View style={{ padding: Sizes.SPACING_LG, paddingTop: 32, flex: 1 }}>
           <Text style={{ fontSize: 26, fontWeight: "700", color: Colors.TEXT, marginBottom: 24 }}>
-            Anmelden
+            {t.login_title}
           </Text>
 
           <View style={{ gap: 14 }}>
             <View>
-              <Text style={styles.label}>E-Mail</Text>
+              <Text style={styles.label}>{t.login_email}</Text>
               <TextInput
                 style={styles.input}
-                placeholder="deine@email.de"
+                placeholder={t.login_email_placeholder}
                 placeholderTextColor={Colors.TEXT_MUTED}
                 value={email}
                 onChangeText={setEmail}
@@ -107,7 +106,7 @@ export default function LoginScreen() {
             </View>
 
             <View>
-              <Text style={styles.label}>Passwort</Text>
+              <Text style={styles.label}>{t.login_password}</Text>
               <TextInput
                 style={styles.input}
                 placeholder="••••••••"
@@ -126,23 +125,21 @@ export default function LoginScreen() {
               {loading ? (
                 <ActivityIndicator color={Colors.WHITE} />
               ) : (
-                <Text style={styles.primaryButtonText}>Anmelden</Text>
+                <Text style={styles.primaryButtonText}>{t.login_btn}</Text>
               )}
             </TouchableOpacity>
           </View>
 
-          {/* Divider */}
           <View style={{ flexDirection: "row", alignItems: "center", marginVertical: 24 }}>
             <View style={{ flex: 1, height: 1, backgroundColor: Colors.BORDER }} />
-            <Text style={{ marginHorizontal: 12, color: Colors.TEXT_MUTED, fontSize: 13 }}>oder</Text>
+            <Text style={{ marginHorizontal: 12, color: Colors.TEXT_MUTED, fontSize: 13 }}>{t.login_or}</Text>
             <View style={{ flex: 1, height: 1, backgroundColor: Colors.BORDER }} />
           </View>
 
-          {/* Social Buttons */}
           <View style={{ gap: 12 }}>
             <TouchableOpacity style={styles.socialButton}>
               <Text style={{ fontSize: 20 }}>G</Text>
-              <Text style={styles.socialButtonText}>Mit Google anmelden</Text>
+              <Text style={styles.socialButtonText}>{t.login_google}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -150,7 +147,7 @@ export default function LoginScreen() {
             >
               <Text style={{ fontSize: 20 }}>🍎</Text>
               <Text style={[styles.socialButtonText, { color: Colors.WHITE }]}>
-                Mit Apple anmelden
+                {t.login_apple}
               </Text>
             </TouchableOpacity>
           </View>
@@ -158,8 +155,8 @@ export default function LoginScreen() {
           <View style={{ alignItems: "center", marginTop: 32, marginBottom: 16 }}>
             <Link href="/auth/register">
               <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM }}>
-                Noch kein Konto?{" "}
-                <Text style={{ color: Colors.PRIMARY, fontWeight: "700" }}>Registrieren</Text>
+                {t.login_no_account}{" "}
+                <Text style={{ color: Colors.PRIMARY, fontWeight: "700" }}>{t.login_register}</Text>
               </Text>
             </Link>
           </View>

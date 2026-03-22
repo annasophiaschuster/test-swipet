@@ -14,6 +14,7 @@ import { supabase } from "../../lib/supabase";
 import { Colors } from "../../constants/colors";
 import { Sizes } from "../../constants/sizes";
 import GradientHeader from "../../components/GradientHeader";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 interface AnfrageItem {
   id: string;
@@ -30,68 +31,71 @@ interface AnfrageItem {
   unread_count: number;
 }
 
-const DEMO_ANFRAGEN: AnfrageItem[] = [
-  {
-    id: "demo-1",
-    status: "pending",
-    created_at: new Date(Date.now() - 3600000).toISOString(),
-    pet_name: "Buddy",
-    pet_tierart: "hund",
-    pet_photo: null,
-    adoptant_name: "Anna M.",
-    adoptant_city: "München",
-    last_message: "Hallo! Wir würden Buddy gerne kennenlernen.",
-    last_message_at: new Date(Date.now() - 3600000).toISOString(),
-    last_message_is_mine: false,
-    unread_count: 2,
-  },
-  {
-    id: "demo-2",
-    status: "accepted",
-    created_at: new Date(Date.now() - 86400000).toISOString(),
-    pet_name: "Luna",
-    pet_tierart: "hund",
-    pet_photo: null,
-    adoptant_name: "Tom K.",
-    adoptant_city: "Hamburg",
-    last_message: "Wann können wir vorbeikommen?",
-    last_message_at: new Date(Date.now() - 86400000).toISOString(),
-    last_message_is_mine: false,
-    unread_count: 0,
-  },
-  {
-    id: "demo-3",
-    status: "pending",
-    created_at: new Date(Date.now() - 172800000).toISOString(),
-    pet_name: "Max",
-    pet_tierart: "hund",
-    pet_photo: null,
-    adoptant_name: "Julia S.",
-    adoptant_city: "Berlin",
-    last_message: null,
-    last_message_at: null,
-    last_message_is_mine: false,
-    unread_count: 0,
-  },
-];
-
-function formatTime(iso: string | null): string {
+function formatTime(iso: string | null, yesterday: string, lang: string): string {
   if (!iso) return "";
+  const locale = lang === "en" ? "en-US" : "de-DE";
   const d = new Date(iso);
   const now = new Date();
   const diffDays = Math.floor((now.getTime() - d.getTime()) / 86400000);
-  if (diffDays === 0) return d.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
-  if (diffDays === 1) return "Gestern";
-  return d.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" });
+  if (diffDays === 0) return d.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
+  if (diffDays === 1) return yesterday;
+  return d.toLocaleDateString(locale, { day: "2-digit", month: "2-digit" });
 }
 
-const STATUS_STYLE: Record<string, { bg: string; color: string; label: string }> = {
-  pending:  { bg: Colors.WARNING + "22",   color: "#B8860B", label: "Ausstehend" },
-  accepted: { bg: Colors.SUCCESS + "22",   color: Colors.SUCCESS, label: "Angenommen" },
-  rejected: { bg: Colors.ERROR   + "22",   color: Colors.ERROR,   label: "Abgelehnt"  },
-};
-
 export default function TierheimAnfragenScreen() {
+  const { t, lang } = useLanguage();
+
+  const DEMO_ANFRAGEN: AnfrageItem[] = [
+    {
+      id: "demo-1",
+      status: "pending",
+      created_at: new Date(Date.now() - 3600000).toISOString(),
+      pet_name: "Buddy",
+      pet_tierart: "hund",
+      pet_photo: null,
+      adoptant_name: t.tierheim_req_demo_name1,
+      adoptant_city: t.tierheim_req_demo_city1,
+      last_message: t.tierheim_req_demo_msg1,
+      last_message_at: new Date(Date.now() - 3600000).toISOString(),
+      last_message_is_mine: false,
+      unread_count: 2,
+    },
+    {
+      id: "demo-2",
+      status: "accepted",
+      created_at: new Date(Date.now() - 86400000).toISOString(),
+      pet_name: "Luna",
+      pet_tierart: "hund",
+      pet_photo: null,
+      adoptant_name: t.tierheim_req_demo_name2,
+      adoptant_city: t.tierheim_req_demo_city2,
+      last_message: t.tierheim_req_demo_msg2,
+      last_message_at: new Date(Date.now() - 86400000).toISOString(),
+      last_message_is_mine: false,
+      unread_count: 0,
+    },
+    {
+      id: "demo-3",
+      status: "pending",
+      created_at: new Date(Date.now() - 172800000).toISOString(),
+      pet_name: "Max",
+      pet_tierart: "hund",
+      pet_photo: null,
+      adoptant_name: t.tierheim_req_demo_name3,
+      adoptant_city: t.tierheim_req_demo_city3,
+      last_message: null,
+      last_message_at: null,
+      last_message_is_mine: false,
+      unread_count: 0,
+    },
+  ];
+
+  const STATUS_STYLE: Record<string, { bg: string; color: string; label: string }> = {
+    pending:  { bg: Colors.WARNING + "22",   color: "#B8860B", label: t.tierheim_req_pending },
+    accepted: { bg: Colors.SUCCESS + "22",   color: Colors.SUCCESS, label: t.tierheim_req_accepted },
+    rejected: { bg: Colors.ERROR   + "22",   color: Colors.ERROR,   label: t.tierheim_req_rejected },
+  };
+
   const [anfragen, setAnfragen]   = useState<AnfrageItem[]>([]);
   const [loading, setLoading]     = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -179,7 +183,7 @@ export default function TierheimAnfragenScreen() {
 
   const handleAccept = async (anfrage: AnfrageItem) => {
     if (isGuest) {
-      Alert.alert("Demo-Ansicht", "Melde dich an um Anfragen zu bearbeiten.");
+      Alert.alert(t.tierheim_req_demo_view, t.tierheim_req_demo_login_msg);
       return;
     }
     try {
@@ -195,15 +199,15 @@ export default function TierheimAnfragenScreen() {
 
   const handleReject = async (anfrage: AnfrageItem) => {
     if (isGuest) {
-      Alert.alert("Demo-Ansicht", "Melde dich an um Anfragen zu bearbeiten.");
+      Alert.alert(t.tierheim_req_demo_view, t.tierheim_req_demo_login_msg);
       return;
     }
     Alert.alert(
-      "Anfrage ablehnen",
-      `Anfrage von ${anfrage.adoptant_name ?? "Unbekannt"} für ${anfrage.pet_name} ablehnen?`,
+      t.tierheim_req_reject_title,
+      `${t.tierheim_req_from} ${anfrage.adoptant_name ?? t.tierheim_req_unknown} ${t.tierheim_req_reject_title.toLowerCase()} ${anfrage.pet_name}?`,
       [
         {
-          text: "Ablehnen",
+          text: t.tierheim_req_reject_btn.replace("✕ ", ""),
           style: "destructive",
           onPress: async () => {
             try {
@@ -217,7 +221,7 @@ export default function TierheimAnfragenScreen() {
             }
           },
         },
-        { text: "Abbrechen", style: "cancel" },
+        { text: t.tierheim_req_cancel, style: "cancel" },
       ]
     );
   };
@@ -234,9 +238,9 @@ export default function TierheimAnfragenScreen() {
     <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
       <GradientHeader
         title="🔔 Anfragen"
-        subtitle={`${anfragen.length} Interessent${anfragen.length !== 1 ? "en" : ""}`}
+        subtitle={`${anfragen.length} ${anfragen.length !== 1 ? t.tierheim_req_subtitle_plural : t.tierheim_req_subtitle_singular}`}
         showBack
-        backLabel="Modi wechseln"
+        backLabel={t.comp_switch_modes}
         onBack={() => router.replace("/")}
         rightElement={totalUnread > 0 ? (
           <View style={{
@@ -254,10 +258,10 @@ export default function TierheimAnfragenScreen() {
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32 }}>
           <Text style={{ fontSize: 52, marginBottom: 16 }}>💌</Text>
           <Text style={{ fontSize: Sizes.FONT_XL, fontWeight: "700", color: Colors.TEXT, textAlign: "center", marginBottom: 8 }}>
-            Noch keine Anfragen
+            {t.tierheim_req_empty_title}
           </Text>
           <Text style={{ color: Colors.TEXT_MUTED, textAlign: "center", lineHeight: 22 }}>
-            Sobald jemand eines eurer Tiere liked, erscheint hier eine Anfrage.
+            {t.tierheim_req_empty_sub}
           </Text>
         </View>
       ) : (
@@ -286,7 +290,7 @@ export default function TierheimAnfragenScreen() {
                         matchId: item.id,
                         petName: item.pet_name,
                         petPhoto: item.pet_photo ?? "",
-                        adoptantName: item.adoptant_name ?? "Interessent",
+                        adoptantName: item.adoptant_name ?? t.tierheim_req_guest_nav,
                       },
                     });
                   }}
@@ -340,12 +344,12 @@ export default function TierheimAnfragenScreen() {
                           </Text>
                         </View>
                         <Text style={{ fontSize: 11, color: Colors.TEXT_MUTED }}>
-                          {formatTime(item.last_message_at ?? item.created_at)}
+                          {formatTime(item.last_message_at ?? item.created_at, t.tierheim_req_yesterday, lang)}
                         </Text>
                       </View>
                     </View>
                     <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, marginBottom: 3 }}>
-                      von {item.adoptant_name ?? "Unbekannt"}
+                      {t.tierheim_req_from} {item.adoptant_name ?? t.tierheim_req_unknown}
                       {item.adoptant_city ? ` · ${item.adoptant_city}` : ""}
                     </Text>
                     <Text
@@ -359,8 +363,8 @@ export default function TierheimAnfragenScreen() {
                         fontWeight: item.unread_count > 0 ? "600" : "400",
                       }}
                     >
-                      {item.last_message_is_mine ? "Du: " : ""}
-                      {item.last_message ?? "Neuer Match — schreib eine Begrüßung!"}
+                      {item.last_message_is_mine ? t.tierheim_req_you : ""}
+                      {item.last_message ?? t.tierheim_req_new_match}
                     </Text>
                   </View>
                 </TouchableOpacity>
@@ -377,7 +381,7 @@ export default function TierheimAnfragenScreen() {
                         backgroundColor: Colors.ERROR + "10",
                       }}
                     >
-                      <Text style={{ fontSize: 13, fontWeight: "600", color: Colors.ERROR }}>✕ Ablehnen</Text>
+                      <Text style={{ fontSize: 13, fontWeight: "600", color: Colors.ERROR }}>{t.tierheim_req_reject_btn}</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       onPress={() => handleAccept(item)}
@@ -387,7 +391,7 @@ export default function TierheimAnfragenScreen() {
                         alignItems: "center", justifyContent: "center",
                       }}
                     >
-                      <Text style={{ fontSize: 13, fontWeight: "700", color: Colors.WHITE }}>✓ Annehmen</Text>
+                      <Text style={{ fontSize: 13, fontWeight: "700", color: Colors.WHITE }}>{t.tierheim_req_accept_btn}</Text>
                     </TouchableOpacity>
                   </View>
                 )}

@@ -3,6 +3,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { Colors } from "../constants/colors";
 import { Sizes } from "../constants/sizes";
+import { useLanguage } from "../contexts/LanguageContext";
 
 interface GradientHeaderProps {
   title: string;
@@ -17,10 +18,12 @@ export default function GradientHeader({
   title,
   subtitle,
   showBack = false,
-  backLabel = "Zurück",
+  backLabel,
   onBack,
   rightElement,
 }: GradientHeaderProps) {
+  const { t } = useLanguage();
+  const resolvedBackLabel = backLabel ?? t.comp_back;
   const handleBack = onBack ?? (() => router.back());
   return (
     <LinearGradient
@@ -37,7 +40,7 @@ export default function GradientHeader({
         {showBack ? (
           <TouchableOpacity onPress={handleBack} style={{ flexDirection: "row", alignItems: "center", gap: 2 }}>
             <Text style={{ color: Colors.WHITE, opacity: 0.9, fontSize: 15 }}>‹</Text>
-            <Text style={{ color: Colors.WHITE, opacity: 0.85, fontSize: 12, fontWeight: "500" }}> {backLabel}</Text>
+            <Text style={{ color: Colors.WHITE, opacity: 0.85, fontSize: 12, fontWeight: "500" }}> {resolvedBackLabel}</Text>
           </TouchableOpacity>
         ) : (
           <View />

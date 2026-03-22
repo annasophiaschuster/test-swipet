@@ -2,8 +2,11 @@ import { useEffect, useRef } from "react";
 import { View, Text, Animated, Image, TouchableOpacity, StyleSheet } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
+import { useLanguage, type Lang } from "../contexts/LanguageContext";
 
 export default function SplashScreen() {
+  const { lang, setLang, t } = useLanguage();
+
   const fadeAnim    = useRef(new Animated.Value(0)).current;
   const scaleAnim   = useRef(new Animated.Value(0.82)).current;
   const sloganAnim  = useRef(new Animated.Value(0)).current;
@@ -11,7 +14,6 @@ export default function SplashScreen() {
   const buttonsSlide = useRef(new Animated.Value(30)).current;
 
   useEffect(() => {
-    // Logo einblenden, dann Slogan, dann Buttons
     Animated.parallel([
       Animated.timing(fadeAnim,  { toValue: 1, duration: 500, useNativeDriver: true }),
       Animated.spring(scaleAnim, { toValue: 1, tension: 50, friction: 7, useNativeDriver: true }),
@@ -31,6 +33,26 @@ export default function SplashScreen() {
       start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
       style={{ flex: 1 }}
     >
+      {/* ── Language Toggle (top right) ── */}
+      <View style={styles.langToggleContainer}>
+        {(["de", "en"] as Lang[]).map((l, i) => (
+          <TouchableOpacity
+            key={l}
+            onPress={() => setLang(l)}
+            style={[
+              styles.langBtn,
+              lang === l && styles.langBtnActive,
+              i === 0 && { borderTopLeftRadius: 10, borderBottomLeftRadius: 10 },
+              i === 1 && { borderTopRightRadius: 10, borderBottomRightRadius: 10 },
+            ]}
+          >
+            <Text style={[styles.langBtnText, lang === l && styles.langBtnTextActive]}>
+              {l.toUpperCase()}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
       {/* ── LOGO ── */}
       <View style={styles.logoSection}>
         <Animated.View style={{ alignItems: "center", opacity: fadeAnim, transform: [{ scale: scaleAnim }] }}>
@@ -48,24 +70,24 @@ export default function SplashScreen() {
         </Animated.View>
       </View>
 
-      {/* ── BUTTONS ── immer sichtbar, nur Einblend-Animation */}
+      {/* ── BUTTONS ── */}
       <Animated.View style={[styles.buttonsSection, { opacity: buttonsAnim, transform: [{ translateY: buttonsSlide }] }]}>
         <DemoButton
           icon="🔍"
-          title="Hundesuchende"
-          subtitle="Finde deinen perfekten Hund"
+          title={t.splash_dog_seeker_title}
+          subtitle={t.splash_dog_seeker_sub}
           onPress={() => router.push("/adoption/feed")}
         />
         <DemoButton
           icon="🦮"
-          title="Hundehaber"
-          subtitle="Gassidate & Zucht für Hundebesitzer"
+          title={t.splash_dog_owner_title}
+          subtitle={t.splash_dog_owner_sub}
           onPress={() => router.push("/gassi/feed")}
         />
         <DemoButton
           icon="🏢"
-          title="Tierheim"
-          subtitle="Tiere verwalten & Anfragen bearbeiten"
+          title={t.splash_shelter_title}
+          subtitle={t.splash_shelter_sub}
           onPress={() => router.push("/tierheim/dashboard")}
         />
 
@@ -73,14 +95,14 @@ export default function SplashScreen() {
           onPress={() => router.push("/auth/login")}
           style={styles.loginLink}
         >
-          <Text style={styles.loginLinkText}>Bereits registriert? Anmelden →</Text>
+          <Text style={styles.loginLinkText}>{t.splash_login_link}</Text>
         </TouchableOpacity>
       </Animated.View>
     </LinearGradient>
   );
 }
 
-// ── Demo-Button Komponente ──────────────────────────────────────────────────
+// ── Demo-Button ──────────────────────────────────────────────────────────────
 
 function DemoButton({
   icon, title, subtitle, onPress,
@@ -99,9 +121,37 @@ function DemoButton({
   );
 }
 
-// ── Styles ──────────────────────────────────────────────────────────────────
+// ── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
+  langToggleContainer: {
+    position: "absolute",
+    top: 56,
+    right: 20,
+    flexDirection: "row",
+    zIndex: 10,
+    borderRadius: 10,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.5)",
+  },
+  langBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    backgroundColor: "rgba(255,255,255,0.15)",
+  },
+  langBtnActive: {
+    backgroundColor: "rgba(255,255,255,0.9)",
+  },
+  langBtnText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "rgba(255,255,255,0.85)",
+    letterSpacing: 0.5,
+  },
+  langBtnTextActive: {
+    color: "#E27289",
+  },
   logoSection: {
     flex: 1,
     alignItems: "center",

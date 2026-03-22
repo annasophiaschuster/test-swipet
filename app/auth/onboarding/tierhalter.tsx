@@ -8,12 +8,24 @@ import { supabase } from "../../../lib/supabase";
 import { Colors } from "../../../constants/colors";
 import { Sizes } from "../../../constants/sizes";
 import { pickSingleImage, uploadImageToStorage } from "../../../lib/storage";
-
-const TIERARTEN = [{ value: "hund", label: "🐶 Hund" }, { value: "katze", label: "🐱 Katze" }];
-const GROESSEN = [{ value: "klein", label: "Klein" }, { value: "mittel", label: "Mittel" }, { value: "gross", label: "Groß" }, { value: "riese", label: "Riese" }];
-const AKTIVITAET = [{ value: "sportlich", label: "🏃 Sehr aktiv" }, { value: "mittel", label: "🚶 Mäßig aktiv" }, { value: "ruhig", label: "🛋 Ruhig" }];
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 export default function TierhalterOnboarding() {
+  const { t } = useLanguage();
+
+  const TIERARTEN = [{ value: "hund", label: t.onb_th_dog }, { value: "katze", label: t.onb_th_cat }];
+  const GROESSEN = [
+    { value: "klein", label: t.onb_th_size_small },
+    { value: "mittel", label: t.onb_th_size_medium },
+    { value: "gross", label: t.onb_th_size_large },
+    { value: "riese", label: t.onb_th_size_giant },
+  ];
+  const AKTIVITAET = [
+    { value: "sportlich", label: t.onb_th_activity_very },
+    { value: "mittel", label: t.onb_th_activity_medium },
+    { value: "ruhig", label: t.onb_th_activity_calm },
+  ];
+
   const [loading, setLoading] = useState(false);
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [name, setName] = useState("");
@@ -28,7 +40,7 @@ export default function TierhalterOnboarding() {
 
   const handleFinish = async () => {
     if (!name.trim()) {
-      Alert.alert("Fehler", "Bitte einen Namen für dein Tier eingeben.");
+      Alert.alert(t.err_generic, t.onb_th_err_name);
       return;
     }
     setLoading(true);
@@ -63,7 +75,7 @@ export default function TierhalterOnboarding() {
       if (error) throw error;
       router.replace("/gassi/feed");
     } catch (e: any) {
-      Alert.alert("Fehler", e.message ?? "Registrierung fehlgeschlagen.");
+      Alert.alert(t.err_generic, e.message ?? t.register_err_failed);
     } finally {
       setLoading(false);
     }
@@ -72,23 +84,23 @@ export default function TierhalterOnboarding() {
   return (
     <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
       <View style={{ paddingTop: 60, paddingHorizontal: Sizes.SPACING_LG, paddingBottom: 16, backgroundColor: Colors.SECONDARY }}>
-        <Text style={{ fontSize: 28, fontWeight: "800", color: Colors.WHITE }}>Dein Haustier</Text>
+        <Text style={{ fontSize: 28, fontWeight: "800", color: Colors.WHITE }}>{t.onb_th_title}</Text>
         <Text style={{ color: "rgba(255,255,255,0.85)", marginTop: 4, lineHeight: 20 }}>
-          Erzähl uns von deinem Tier — wir finden passende Gassi- und Spieldate-Partner!
+          {t.onb_th_sub}
         </Text>
       </View>
 
       <ScrollView contentContainerStyle={{ padding: Sizes.SPACING_LG, paddingBottom: 60, gap: 20 }} keyboardShouldPersistTaps="handled">
 
         {/* Foto */}
-        <Section title="Foto deines Tieres (optional)">
+        <Section title={t.onb_th_photo}>
           <TouchableOpacity
             onPress={async () => {
               try {
                 const asset = await pickSingleImage();
                 if (asset) setPhotoUri(asset.uri);
               } catch (e: any) {
-                Alert.alert("Fehler", e.message);
+                Alert.alert(t.err_generic, e.message);
               }
             }}
             style={{ alignItems: "center" }}
@@ -103,13 +115,13 @@ export default function TierhalterOnboarding() {
             ) : (
               <View style={{ width: 120, height: 120, borderRadius: 60, borderWidth: 2, borderColor: Colors.BORDER, borderStyle: "dashed", backgroundColor: Colors.SURFACE, alignItems: "center", justifyContent: "center" }}>
                 <Text style={{ fontSize: 36 }}>📷</Text>
-                <Text style={{ color: Colors.TEXT_MUTED, fontSize: 11, marginTop: 4 }}>Foto hinzufügen</Text>
+                <Text style={{ color: Colors.TEXT_MUTED, fontSize: 11, marginTop: 4 }}>{t.onb_th_add_photo}</Text>
               </View>
             )}
           </TouchableOpacity>
         </Section>
 
-        <Section title="Mein Tier ist ein…">
+        <Section title={t.onb_th_type}>
           <View style={{ flexDirection: "row", gap: 10 }}>
             {TIERARTEN.map((t) => (
               <Chip key={t.value} label={t.label} selected={tierart === t.value} onPress={() => setTierart(t.value as "hund" | "katze")} color={Colors.SECONDARY} />
@@ -117,41 +129,41 @@ export default function TierhalterOnboarding() {
           </View>
         </Section>
 
-        <Section title="Name *">
-          <TextInput value={name} onChangeText={setName} placeholder="z.B. Bella" placeholderTextColor={Colors.TEXT_MUTED}
+        <Section title={t.onb_th_name}>
+          <TextInput value={name} onChangeText={setName} placeholder={t.onb_th_name_placeholder} placeholderTextColor={Colors.TEXT_MUTED}
             style={{ height: Sizes.INPUT_HEIGHT, backgroundColor: Colors.SURFACE, borderRadius: Sizes.RADIUS_MD, paddingHorizontal: 14, fontSize: Sizes.FONT_MD, color: Colors.TEXT, borderWidth: 1, borderColor: Colors.BORDER }} />
         </Section>
 
-        <Section title="Rasse & Alter">
-          <TextInput value={rasse} onChangeText={setRasse} placeholder="Rasse (optional)" placeholderTextColor={Colors.TEXT_MUTED}
+        <Section title={t.onb_th_breed_age}>
+          <TextInput value={rasse} onChangeText={setRasse} placeholder={t.onb_th_breed_placeholder} placeholderTextColor={Colors.TEXT_MUTED}
             style={{ height: Sizes.INPUT_HEIGHT, backgroundColor: Colors.SURFACE, borderRadius: Sizes.RADIUS_MD, paddingHorizontal: 14, fontSize: Sizes.FONT_MD, color: Colors.TEXT, borderWidth: 1, borderColor: Colors.BORDER, marginBottom: 10 }} />
-          <TextInput value={alterJahre} onChangeText={setAlterJahre} placeholder="Alter in Jahren" placeholderTextColor={Colors.TEXT_MUTED} keyboardType="numeric"
+          <TextInput value={alterJahre} onChangeText={setAlterJahre} placeholder={t.onb_th_age_placeholder} placeholderTextColor={Colors.TEXT_MUTED} keyboardType="numeric"
             style={{ height: Sizes.INPUT_HEIGHT, backgroundColor: Colors.SURFACE, borderRadius: Sizes.RADIUS_MD, paddingHorizontal: 14, fontSize: Sizes.FONT_MD, color: Colors.TEXT, borderWidth: 1, borderColor: Colors.BORDER }} />
         </Section>
 
-        <Section title="Größe">
+        <Section title={t.onb_th_size}>
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
             {GROESSEN.map((g) => <Chip key={g.value} label={g.label} selected={groesse === g.value} onPress={() => setGroesse(g.value)} color={Colors.SECONDARY} />)}
           </View>
         </Section>
 
-        <Section title="Wie aktiv ist dein Tier?">
+        <Section title={t.onb_th_activity}>
           <View style={{ gap: 8 }}>
             {AKTIVITAET.map((a) => <Chip key={a.value} label={a.label} selected={aktivitaet === a.value} onPress={() => setAktivitaet(a.value)} color={Colors.SECONDARY} fullWidth />)}
           </View>
         </Section>
 
-        <Section title="Verhalten">
-          <ToggleRow label="Kinderfreundlich" value={kinderfreundlich} onToggle={setKinderfreundlich} />
-          <ToggleRow label="Verträglich mit anderen Tieren" value={vertraeglich} onToggle={setVertraeglich} />
+        <Section title={t.onb_th_behavior}>
+          <ToggleRow label={t.onb_th_child_friendly} value={kinderfreundlich} onToggle={setKinderfreundlich} />
+          <ToggleRow label={t.onb_th_animal_friendly} value={vertraeglich} onToggle={setVertraeglich} />
         </Section>
 
-        {/* Beschreibung */}
-        <Section title="Beschreibung (optional)">
+        {/* Description */}
+        <Section title={t.onb_th_desc}>
           <TextInput
             value={beschreibung}
             onChangeText={setBeschreibung}
-            placeholder="Erzähl etwas über dein Tier — Lieblingsrouten, Besonderheiten…"
+            placeholder={t.onb_th_desc_placeholder}
             placeholderTextColor={Colors.TEXT_MUTED}
             multiline
             numberOfLines={3}
@@ -165,7 +177,7 @@ export default function TierhalterOnboarding() {
 
         <TouchableOpacity onPress={handleFinish} disabled={loading}
           style={{ height: Sizes.BUTTON_HEIGHT, backgroundColor: Colors.SECONDARY, borderRadius: Sizes.RADIUS_FULL, alignItems: "center", justifyContent: "center" }}>
-          {loading ? <ActivityIndicator color={Colors.WHITE} /> : <Text style={{ color: Colors.WHITE, fontWeight: "700", fontSize: Sizes.FONT_MD }}>🐾 Los geht's!</Text>}
+          {loading ? <ActivityIndicator color={Colors.WHITE} /> : <Text style={{ color: Colors.WHITE, fontWeight: "700", fontSize: Sizes.FONT_MD }}>{t.onb_th_btn}</Text>}
         </TouchableOpacity>
       </ScrollView>
     </View>

@@ -20,6 +20,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { supabase } from "../../lib/supabase";
 import { Colors } from "../../constants/colors";
 import { Sizes } from "../../constants/sizes";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 const { width: W } = Dimensions.get("window");
 
@@ -31,48 +32,13 @@ const GROESSE_OPTIONS = ["klein", "mittel", "gross", "riese"] as const;
 const AKTIV_OPTIONS   = ["ruhig", "mittel", "sportlich"] as const;
 const GESCHLECHT_OPTIONS = ["männlich", "weiblich", "divers"] as const;
 
-const GROESSE_LABEL: Record<string, string> = {
-  klein: "Klein (< 10 kg)",
-  mittel: "Mittel (10–25 kg)",
-  gross: "Groß (25–40 kg)",
-  riese: "Riese (> 40 kg)",
-};
-const AKTIV_LABEL: Record<string, string> = {
-  ruhig: "🛋 Ruhig",
-  mittel: "🚶 Mäßig aktiv",
-  sportlich: "🏃 Sehr aktiv",
-};
+// Labels are built dynamically inside the component using translations
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Demo Owner Profiles (3 Musterdaten)
 // ─────────────────────────────────────────────────────────────────────────────
 
-const DEMO_OWNERS = [
-  {
-    name: "Max",
-    alter: 28,
-    geschlecht: "männlich",
-    bio: "Laufe gerne durch Parks und liebe lange Morgenspaziergänge. Mein Hund ist mein bester Freund!",
-    stadt: "München, Schwabing",
-    avatar_url: null as string | null,
-  },
-  {
-    name: "Sophie",
-    alter: 32,
-    geschlecht: "weiblich",
-    bio: "Leidenschaftliche Hundemama seit 5 Jahren. Liebe Outdoor-Aktivitäten und freue mich über neue Hundekontakte.",
-    stadt: "Hamburg, Altona",
-    avatar_url: null as string | null,
-  },
-  {
-    name: "Jonas",
-    alter: 25,
-    geschlecht: "männlich",
-    bio: "Täglich 2 Stunden aktiv — mein Hund und ich sind unzertrennlich. Suche regelmäßige Gassipartner.",
-    stadt: "Berlin, Prenzlauer Berg",
-    avatar_url: null as string | null,
-  },
-];
+// DEMO_OWNERS is built inside the component using translations
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -124,6 +90,14 @@ function SwipeCard({
   saving: boolean;
   onAction: (r: "ja" | "nein") => void;
 }) {
+  const { t } = useLanguage();
+  const GROESSE_LABEL: Record<string, string> = {
+    klein: t.gassi_size_small, mittel: t.gassi_size_medium,
+    gross: t.gassi_size_large, riese: t.gassi_size_giant,
+  };
+  const AKTIV_LABEL: Record<string, string> = {
+    ruhig: t.gassi_activity_calm, mittel: t.gassi_activity_medium, sportlich: t.gassi_activity_very,
+  };
   const position = useRef(new Animated.ValueXY()).current;
   const rotation = position.x.interpolate({
     inputRange: [-W / 2, 0, W / 2],
@@ -235,7 +209,7 @@ function SwipeCard({
             paddingHorizontal: 12, paddingVertical: 5, borderRadius: 99,
           }}>
             <Text style={{ color: "#FFF", fontSize: 12, fontWeight: "700" }}>
-              {card.modus === "gassidate" ? "Gassi-Date" : "Deck-Date"}
+              {card.modus === "gassidate" ? t.gassi_mode_gassi : t.gassi_mode_deck}
             </Text>
           </View>
           {card.photos.length > 1 && (
@@ -254,7 +228,7 @@ function SwipeCard({
             <Text style={{ fontSize: 30, fontWeight: "800", color: Colors.TEXT }}>{card.name}</Text>
             {card.alter_jahre && (
               <Text style={{ fontSize: 16, color: Colors.TEXT_MUTED }}>
-                {`${card.alter_jahre} ${card.alter_jahre === 1 ? "Jahr" : "Jahre"}`}
+                {`${card.alter_jahre} ${card.alter_jahre === 1 ? t.gassi_year : t.gassi_years}`}
               </Text>
             )}
           </View>
@@ -274,7 +248,7 @@ function SwipeCard({
           borderWidth: 1, borderColor: Colors.BORDER,
         }}>
           <Text style={{ fontSize: 12, fontWeight: "700", color: Colors.TEXT_MUTED, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>
-            Besitzer
+            {t.profil_role_tierhalter}
           </Text>
           <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 14 }}>
             {/* Avatar */}
@@ -320,7 +294,7 @@ function SwipeCard({
         {card.charakter_tags && card.charakter_tags.length > 0 && (
           <View style={{ padding: 20, paddingTop: 18 }}>
             <Text style={{ fontSize: 13, fontWeight: "700", color: Colors.TEXT_MUTED, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>
-              Charakter
+              {t.pet_section_char}
             </Text>
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
               {card.charakter_tags.map((tag) => (
@@ -344,13 +318,13 @@ function SwipeCard({
         {/* 7. Eigenschaften */}
         <View style={{ padding: 20, paddingTop: 18 }}>
           <Text style={{ fontSize: 13, fontWeight: "700", color: Colors.TEXT_MUTED, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>
-            Eigenschaften
+            {t.onb_th_behavior}
           </Text>
           {[
-            { icon: "🏃", label: "Aktivitätslevel", value: AKTIV_LABEL[card.aktivitaetslevel ?? ""] ?? "–" },
-            { icon: "🐾", label: "Verträgl. mit Tieren", value: card.vertraeglich_mit_tieren ? "Ja" : "Nein" },
-            { icon: "👦", label: "Kindergeeignet", value: card.kinderfreundlich ? "Ja" : "Nein" },
-            { icon: "🎯", label: "Modus", value: card.modus === "gassidate" ? "Gassi-Date" : "Deck-Date" },
+            { icon: "🏃", label: t.filter_activity, value: AKTIV_LABEL[card.aktivitaetslevel ?? ""] ?? "–" },
+            { icon: "🐾", label: t.onb_th_animal_friendly, value: card.vertraeglich_mit_tieren ? t.onb_yes : t.onb_no },
+            { icon: "👦", label: t.onb_th_child_friendly, value: card.kinderfreundlich ? t.onb_yes : t.onb_no },
+            { icon: "🎯", label: t.gassi_register_label_mode, value: card.modus === "gassidate" ? t.gassi_mode_gassi : t.gassi_mode_deck },
           ].map((row) => (
             <View key={row.label} style={{
               flexDirection: "row", alignItems: "center", justifyContent: "space-between",
@@ -400,6 +374,7 @@ function SwipeCard({
 // ─────────────────────────────────────────────────────────────────────────────
 
 function ProfileSetupScreen({ onDone }: { onDone: (profile: OwnerInfo) => void }) {
+  const { t } = useLanguage();
   const [name, setName]         = useState("");
   const [alter, setAlter]       = useState("");
   const [geschlecht, setGeschlecht] = useState<"männlich" | "weiblich" | "divers" | null>(null);
@@ -408,10 +383,10 @@ function ProfileSetupScreen({ onDone }: { onDone: (profile: OwnerInfo) => void }
   const [saving, setSaving]     = useState(false);
 
   const handleSave = async () => {
-    if (!name.trim()) { Alert.alert("Pflichtfeld", "Bitte gib deinen Vornamen ein."); return; }
-    if (!alter.trim() || isNaN(Number(alter))) { Alert.alert("Pflichtfeld", "Bitte gib dein Alter ein."); return; }
-    if (!geschlecht) { Alert.alert("Pflichtfeld", "Bitte wähle dein Geschlecht."); return; }
-    if (!stadt.trim()) { Alert.alert("Pflichtfeld", "Bitte gib deinen Stadtteil / deine Stadt ein."); return; }
+    if (!name.trim()) { Alert.alert(t.gassi_setup_required_title, t.gassi_setup_required_name); return; }
+    if (!alter.trim() || isNaN(Number(alter))) { Alert.alert(t.gassi_setup_required_title, t.gassi_setup_required_age); return; }
+    if (!geschlecht) { Alert.alert(t.gassi_setup_required_title, t.gassi_setup_required_gender); return; }
+    if (!stadt.trim()) { Alert.alert(t.gassi_setup_required_title, t.gassi_setup_required_city); return; }
 
     setSaving(true);
     try {
@@ -453,8 +428,8 @@ function ProfileSetupScreen({ onDone }: { onDone: (profile: OwnerInfo) => void }
           <Text style={{ fontSize: 24, color: Colors.SECONDARY }}>‹</Text>
         </TouchableOpacity>
         <View>
-          <Text style={{ fontSize: 20, fontWeight: "800", color: Colors.TEXT }}>👤 Dein Profil</Text>
-          <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, marginTop: 1 }}>Damit andere dich kennenlernen können</Text>
+          <Text style={{ fontSize: 20, fontWeight: "800", color: Colors.TEXT }}>{t.gassi_setup_title}</Text>
+          <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, marginTop: 1 }}>{t.gassi_setup_subtitle}</Text>
         </View>
       </View>
 
@@ -469,28 +444,28 @@ function ProfileSetupScreen({ onDone }: { onDone: (profile: OwnerInfo) => void }
           }}>
             <Text style={{ fontSize: 36 }}>📸</Text>
           </View>
-          <Text style={{ fontSize: 13, color: Colors.TEXT_MUTED, marginTop: 8 }}>Profilfoto (kommt bald)</Text>
+          <Text style={{ fontSize: 13, color: Colors.TEXT_MUTED, marginTop: 8 }}>{t.gassi_setup_photo_soon}</Text>
         </View>
 
         {/* Vorname */}
-        <Text style={fieldLabel}>Vorname *</Text>
+        <Text style={fieldLabel}>{t.gassi_setup_label_firstname}</Text>
         <TextInput
           value={name} onChangeText={setName}
-          placeholder="z.B. Max" placeholderTextColor={Colors.TEXT_MUTED}
+          placeholder={t.gassi_setup_ph_firstname} placeholderTextColor={Colors.TEXT_MUTED}
           style={inputStyle}
         />
 
         {/* Alter */}
-        <Text style={fieldLabel}>Alter *</Text>
+        <Text style={fieldLabel}>{t.gassi_setup_label_age}</Text>
         <TextInput
           value={alter} onChangeText={setAlter}
-          placeholder="z.B. 28" keyboardType="numeric"
+          placeholder={t.gassi_setup_ph_age} keyboardType="numeric"
           placeholderTextColor={Colors.TEXT_MUTED}
           style={inputStyle}
         />
 
         {/* Geschlecht */}
-        <Text style={fieldLabel}>Geschlecht *</Text>
+        <Text style={fieldLabel}>{t.gassi_setup_label_gender}</Text>
         <View style={{ flexDirection: "row", gap: 8, marginBottom: 20 }}>
           {GESCHLECHT_OPTIONS.map((g) => (
             <TouchableOpacity
@@ -514,19 +489,19 @@ function ProfileSetupScreen({ onDone }: { onDone: (profile: OwnerInfo) => void }
         </View>
 
         {/* Stadt/Stadtteil */}
-        <Text style={fieldLabel}>Stadt / Stadtteil *</Text>
+        <Text style={fieldLabel}>{t.gassi_setup_label_city}</Text>
         <TextInput
           value={stadt} onChangeText={setStadt}
-          placeholder="z.B. München, Schwabing"
+          placeholder={t.gassi_setup_ph_city}
           placeholderTextColor={Colors.TEXT_MUTED}
           style={inputStyle}
         />
 
         {/* Bio */}
-        <Text style={fieldLabel}>Kurze Bio (optional)</Text>
+        <Text style={fieldLabel}>{t.gassi_setup_label_bio}</Text>
         <TextInput
           value={bio} onChangeText={setBio}
-          placeholder="Ich bin... (wird auf deiner Karte angezeigt)"
+          placeholder={t.gassi_setup_ph_bio}
           placeholderTextColor={Colors.TEXT_MUTED}
           multiline numberOfLines={3}
           style={[inputStyle, { height: 80, textAlignVertical: "top" }]}
@@ -543,7 +518,7 @@ function ProfileSetupScreen({ onDone }: { onDone: (profile: OwnerInfo) => void }
         >
           {saving
             ? <ActivityIndicator color={Colors.WHITE} />
-            : <Text style={{ color: Colors.WHITE, fontWeight: "700", fontSize: 17 }}>Weiter →</Text>
+            : <Text style={{ color: Colors.WHITE, fontWeight: "700", fontSize: 17 }}>{t.gassi_setup_next}</Text>
           }
         </TouchableOpacity>
       </ScrollView>
@@ -556,6 +531,7 @@ function ProfileSetupScreen({ onDone }: { onDone: (profile: OwnerInfo) => void }
 // ─────────────────────────────────────────────────────────────────────────────
 
 function RegisterDogScreen({ onDone, onBack }: { onDone: () => void; onBack: () => void }) {
+  const { t } = useLanguage();
   const [name, setName]         = useState("");
   const [rasse, setRasse]       = useState("");
   const [alterJahre, setAlterJahre] = useState("");
@@ -565,7 +541,7 @@ function RegisterDogScreen({ onDone, onBack }: { onDone: () => void; onBack: () 
   const [saving, setSaving]     = useState(false);
 
   const handleSave = async () => {
-    if (!name.trim()) { Alert.alert("Name fehlt", "Bitte gib deinem Hund einen Namen."); return; }
+    if (!name.trim()) { Alert.alert(t.gassi_register_missing_name_title, t.gassi_register_missing_name_msg); return; }
     setSaving(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -585,7 +561,7 @@ function RegisterDogScreen({ onDone, onBack }: { onDone: () => void; onBack: () 
       if (error) throw error;
       onDone();
     } catch (e: any) {
-      Alert.alert("Fehler", e.message ?? "Konnte Hund nicht speichern.");
+      Alert.alert(t.gassi_register_error_title, e.message ?? t.gassi_register_error_msg);
     } finally {
       setSaving(false);
     }
@@ -605,22 +581,22 @@ function RegisterDogScreen({ onDone, onBack }: { onDone: () => void; onBack: () 
           <Text style={{ fontSize: 24, color: Colors.SECONDARY }}>‹</Text>
         </TouchableOpacity>
         <View>
-          <Text style={{ fontSize: 20, fontWeight: "800", color: Colors.TEXT }}>🐕 Hund registrieren</Text>
-          <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, marginTop: 1 }}>Schritt 2 von 2</Text>
+          <Text style={{ fontSize: 20, fontWeight: "800", color: Colors.TEXT }}>{t.gassi_register_title}</Text>
+          <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, marginTop: 1 }}>{t.gassi_register_step2}</Text>
         </View>
       </View>
 
       <ScrollView contentContainerStyle={{ padding: Sizes.SPACING_LG, paddingBottom: 60 }}>
-        <Text style={fieldLabel}>Name *</Text>
-        <TextInput value={name} onChangeText={setName} placeholder="z.B. Buddy" placeholderTextColor={Colors.TEXT_MUTED} style={inputStyle} />
+        <Text style={fieldLabel}>{t.gassi_register_label_name}</Text>
+        <TextInput value={name} onChangeText={setName} placeholder={t.gassi_register_ph_name} placeholderTextColor={Colors.TEXT_MUTED} style={inputStyle} />
 
-        <Text style={fieldLabel}>Rasse</Text>
-        <TextInput value={rasse} onChangeText={setRasse} placeholder="z.B. Labrador" placeholderTextColor={Colors.TEXT_MUTED} style={inputStyle} />
+        <Text style={fieldLabel}>{t.gassi_register_label_breed}</Text>
+        <TextInput value={rasse} onChangeText={setRasse} placeholder={t.gassi_register_ph_breed} placeholderTextColor={Colors.TEXT_MUTED} style={inputStyle} />
 
-        <Text style={fieldLabel}>Alter (Jahre)</Text>
-        <TextInput value={alterJahre} onChangeText={setAlterJahre} placeholder="z.B. 3" keyboardType="numeric" placeholderTextColor={Colors.TEXT_MUTED} style={inputStyle} />
+        <Text style={fieldLabel}>{t.gassi_register_label_age}</Text>
+        <TextInput value={alterJahre} onChangeText={setAlterJahre} placeholder={t.gassi_register_ph_age} keyboardType="numeric" placeholderTextColor={Colors.TEXT_MUTED} style={inputStyle} />
 
-        <Text style={fieldLabel}>Größe</Text>
+        <Text style={fieldLabel}>{t.gassi_register_label_size}</Text>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 20 }}>
           {GROESSE_OPTIONS.map((g) => (
             <TouchableOpacity key={g} onPress={() => setGroesse(g)}
@@ -633,7 +609,7 @@ function RegisterDogScreen({ onDone, onBack }: { onDone: () => void; onBack: () 
           ))}
         </View>
 
-        <Text style={fieldLabel}>Aktivitätslevel</Text>
+        <Text style={fieldLabel}>{t.gassi_register_label_activity}</Text>
         <View style={{ flexDirection: "row", gap: 8, marginBottom: 20 }}>
           {AKTIV_OPTIONS.map((a) => (
             <TouchableOpacity key={a} onPress={() => setAktiv(a)}
@@ -646,19 +622,19 @@ function RegisterDogScreen({ onDone, onBack }: { onDone: () => void; onBack: () 
           ))}
         </View>
 
-        <Text style={fieldLabel}>Modus</Text>
+        <Text style={fieldLabel}>{t.gassi_register_label_mode}</Text>
         <View style={{ flexDirection: "row", gap: 10, marginBottom: 32 }}>
           <TouchableOpacity onPress={() => setModus("gassidate")}
             style={{ flex: 1, padding: 14, borderRadius: 14, borderWidth: 2, alignItems: "center", borderColor: modus === "gassidate" ? Colors.SECONDARY : Colors.BORDER, backgroundColor: modus === "gassidate" ? Colors.SECONDARY + "10" : Colors.BACKGROUND }}
           >
-            <Text style={{ fontWeight: "700", color: modus === "gassidate" ? Colors.SECONDARY : Colors.TEXT }}>Gassi-Date</Text>
-            <Text style={{ fontSize: 11, color: Colors.TEXT_MUTED, textAlign: "center", marginTop: 2 }}>Gemeinsam Gassi gehen</Text>
+            <Text style={{ fontWeight: "700", color: modus === "gassidate" ? Colors.SECONDARY : Colors.TEXT }}>{t.gassi_mode_gassi}</Text>
+            <Text style={{ fontSize: 11, color: Colors.TEXT_MUTED, textAlign: "center", marginTop: 2 }}>{t.gassi_bio_jonas}</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => setModus("zucht")}
             style={{ flex: 1, padding: 14, borderRadius: 14, borderWidth: 2, alignItems: "center", borderColor: modus === "zucht" ? "#9B59B6" : Colors.BORDER, backgroundColor: modus === "zucht" ? "#9B59B620" : Colors.BACKGROUND }}
           >
-            <Text style={{ fontWeight: "700", color: modus === "zucht" ? "#9B59B6" : Colors.TEXT }}>Deck-Date</Text>
-            <Text style={{ fontSize: 11, color: Colors.TEXT_MUTED, textAlign: "center", marginTop: 2 }}>Nachwuchs finden</Text>
+            <Text style={{ fontWeight: "700", color: modus === "zucht" ? "#9B59B6" : Colors.TEXT }}>{t.gassi_mode_deck}</Text>
+            <Text style={{ fontSize: 11, color: Colors.TEXT_MUTED, textAlign: "center", marginTop: 2 }}>{t.gassi_bio_max}</Text>
           </TouchableOpacity>
         </View>
 
@@ -683,6 +659,7 @@ function MeineHundeModal({
   onClose: () => void; onSelectDog: (id: string) => void;
   onAddDog: () => void; onChangeModus: (dog: MyDog) => void;
 }) {
+  const { t } = useLanguage();
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
@@ -691,9 +668,9 @@ function MeineHundeModal({
           flexDirection: "row", alignItems: "center", justifyContent: "space-between",
           borderBottomWidth: 1, borderBottomColor: Colors.BORDER,
         }}>
-          <Text style={{ fontSize: 20, fontWeight: "800", color: Colors.TEXT }}>🐕 Meine Hunde</Text>
+          <Text style={{ fontSize: 20, fontWeight: "800", color: Colors.TEXT }}>{t.gassi_dogs_modal_title}</Text>
           <TouchableOpacity onPress={onClose}>
-            <Text style={{ fontSize: 16, color: Colors.TEXT_MUTED }}>Schließen</Text>
+            <Text style={{ fontSize: 16, color: Colors.TEXT_MUTED }}>{t.gassi_dogs_modal_close}</Text>
           </TouchableOpacity>
         </View>
 
@@ -718,14 +695,14 @@ function MeineHundeModal({
                 )}
                 <View style={{ flex: 1 }}>
                   <Text style={{ fontSize: 16, fontWeight: "700", color: Colors.TEXT }}>{dog.name}</Text>
-                  <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, marginTop: 2 }}>{dog.rasse ?? "Mischling"}</Text>
+                  <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, marginTop: 2 }}>{dog.rasse ?? t.gassi_dogs_modal_mixed_breed}</Text>
                 </View>
                 <View style={{
                   backgroundColor: dog.modus === "gassidate" ? Colors.SECONDARY + "22" : "#F3EDFF",
                   paddingHorizontal: 10, paddingVertical: 4, borderRadius: 99,
                 }}>
                   <Text style={{ fontSize: 11, fontWeight: "700", color: dog.modus === "gassidate" ? Colors.SECONDARY : "#9B59B6" }}>
-                    {dog.modus === "gassidate" ? "Gassi-Date" : "Deck-Date"}
+                    {dog.modus === "gassidate" ? t.gassi_mode_gassi : t.gassi_mode_deck}
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -734,7 +711,7 @@ function MeineHundeModal({
                   onPress={() => onChangeModus(dog)}
                   style={{ flex: 1, height: 32, borderRadius: 99, borderWidth: 1, borderColor: Colors.BORDER, alignItems: "center", justifyContent: "center" }}
                 >
-                  <Text style={{ fontSize: 12, color: Colors.TEXT }}>⇄ Modus ändern</Text>
+                  <Text style={{ fontSize: 12, color: Colors.TEXT }}>{t.gassi_dogs_modal_change_mode}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -748,7 +725,7 @@ function MeineHundeModal({
             }}
           >
             <Text style={{ fontSize: 20, color: Colors.SECONDARY }}>+</Text>
-            <Text style={{ fontSize: 14, fontWeight: "600", color: Colors.TEXT_MUTED }}>Neuen Hund anlegen</Text>
+            <Text style={{ fontSize: 14, fontWeight: "600", color: Colors.TEXT_MUTED }}>{t.gassi_dogs_modal_add}</Text>
           </TouchableOpacity>
         </ScrollView>
       </View>
@@ -801,6 +778,14 @@ function GassiFilterModal({
   onApply: (f: GassiFilterState) => void;
   onClose: () => void;
 }) {
+  const { t } = useLanguage();
+  const GROESSE_LABEL: Record<string, string> = {
+    klein: t.gassi_size_small, mittel: t.gassi_size_medium,
+    gross: t.gassi_size_large, riese: t.gassi_size_giant,
+  };
+  const AKTIV_LABEL: Record<string, string> = {
+    ruhig: t.gassi_activity_calm, mittel: t.gassi_activity_medium, sportlich: t.gassi_activity_very,
+  };
   const [local, setLocal] = useState<GassiFilterState>(filter);
 
   const toggleArr = (key: keyof GassiFilterState, val: string) => {
@@ -837,60 +822,60 @@ function GassiFilterModal({
           borderBottomWidth: 1, borderBottomColor: Colors.BORDER,
         }}>
           <TouchableOpacity onPress={() => setLocal(DEFAULT_GASSI_FILTER)}>
-            <Text style={{ color: Colors.TEXT_MUTED, fontSize: 13 }}>Zurücksetzen</Text>
+            <Text style={{ color: Colors.TEXT_MUTED, fontSize: 13 }}>{t.filter_reset}</Text>
           </TouchableOpacity>
-          <Text style={{ fontSize: 17, fontWeight: "700", color: Colors.TEXT }}>Gassi-Date Filter</Text>
+          <Text style={{ fontSize: 17, fontWeight: "700", color: Colors.TEXT }}>{`${t.gassi_mode_gassi} ${t.filter_title}`}</Text>
           <TouchableOpacity onPress={onClose}>
             <Text style={{ fontSize: 22, color: Colors.TEXT_MUTED }}>✕</Text>
           </TouchableOpacity>
         </View>
 
         <ScrollView contentContainerStyle={{ padding: Sizes.SPACING_LG }}>
-          <Text style={{ fontSize: 15, fontWeight: "700", color: Colors.TEXT, marginBottom: 8 }}>Hundegröße</Text>
+          <Text style={{ fontSize: 15, fontWeight: "700", color: Colors.TEXT, marginBottom: 8 }}>{t.filter_dog_size}</Text>
           <View style={{ flexDirection: "row", flexWrap: "wrap", marginBottom: 20 }}>
             {GROESSE_OPTIONS.map((g) => (
               <Pill key={g} label={GROESSE_LABEL[g]} selected={local.groesse.includes(g)} onPress={() => toggleArr("groesse", g)} />
             ))}
           </View>
 
-          <Text style={{ fontSize: 15, fontWeight: "700", color: Colors.TEXT, marginBottom: 8 }}>Aktivitätslevel des Hundes</Text>
+          <Text style={{ fontSize: 15, fontWeight: "700", color: Colors.TEXT, marginBottom: 8 }}>{t.filter_dog_activity}</Text>
           <View style={{ flexDirection: "row", flexWrap: "wrap", marginBottom: 20 }}>
             {AKTIV_OPTIONS.map((a) => (
               <Pill key={a} label={AKTIV_LABEL[a]} selected={local.aktivitaetslevel.includes(a)} onPress={() => toggleArr("aktivitaetslevel", a)} />
             ))}
           </View>
 
-          <Text style={{ fontSize: 15, fontWeight: "700", color: Colors.TEXT, marginBottom: 4 }}>Max. Alter des Hundes</Text>
+          <Text style={{ fontSize: 15, fontWeight: "700", color: Colors.TEXT, marginBottom: 4 }}>{t.filter_max_dog_age}</Text>
           <Text style={{ fontSize: 13, color: Colors.TEXT_MUTED, marginBottom: 10 }}>
-            Bis {local.maxAlterJahre === 15 ? "15+" : local.maxAlterJahre} Jahre
+            {`${t.filter_up_to} ${local.maxAlterJahre === 15 ? "15+" : local.maxAlterJahre} ${t.filter_years}`}
           </Text>
           <View style={{ flexDirection: "row", flexWrap: "wrap", marginBottom: 20 }}>
             {ALTER_OPTIONS_LIST.map((a) => (
-              <Pill key={a} label={a === 15 ? "15+" : `${a} J.`} selected={local.maxAlterJahre === a} onPress={() => setLocal({ ...local, maxAlterJahre: a })} />
+              <Pill key={a} label={a === 15 ? "15+" : `${a} ${t.filter_years_abbr}`} selected={local.maxAlterJahre === a} onPress={() => setLocal({ ...local, maxAlterJahre: a })} />
             ))}
           </View>
 
-          <Text style={{ fontSize: 15, fontWeight: "700", color: Colors.TEXT, marginBottom: 8 }}>Altersgruppe Besitzer</Text>
+          <Text style={{ fontSize: 15, fontWeight: "700", color: Colors.TEXT, marginBottom: 8 }}>{t.filter_owner_age}</Text>
           <View style={{ flexDirection: "row", flexWrap: "wrap", marginBottom: 20 }}>
             {["18–30", "30–50", "50+"].map((g) => (
               <Pill key={g} label={g} selected={local.besitzerAlterGruppe.includes(g)} onPress={() => toggleArr("besitzerAlterGruppe", g)} />
             ))}
           </View>
 
-          <Text style={{ fontSize: 15, fontWeight: "700", color: Colors.TEXT, marginBottom: 8 }}>Geschlecht Besitzer</Text>
+          <Text style={{ fontSize: 15, fontWeight: "700", color: Colors.TEXT, marginBottom: 8 }}>{t.filter_owner_gender}</Text>
           <View style={{ flexDirection: "row", flexWrap: "wrap", marginBottom: 20 }}>
-            {[{ k: "alle", l: "Alle" }, { k: "männlich", l: "♂ Männlich" }, { k: "weiblich", l: "♀ Weiblich" }].map(({ k, l }) => (
+            {[{ k: "alle", l: t.filter_gender_all }, { k: "männlich", l: t.filter_gender_male }, { k: "weiblich", l: t.filter_gender_female }].map(({ k, l }) => (
               <Pill key={k} label={l} selected={local.besitzerGeschlecht === k} onPress={() => setLocal({ ...local, besitzerGeschlecht: k as any })} />
             ))}
           </View>
 
-          <Text style={{ fontSize: 15, fontWeight: "700", color: Colors.TEXT, marginBottom: 4 }}>Umkreis</Text>
+          <Text style={{ fontSize: 15, fontWeight: "700", color: Colors.TEXT, marginBottom: 4 }}>{t.filter_radius}</Text>
           <Text style={{ fontSize: 13, color: Colors.TEXT_MUTED, marginBottom: 10 }}>
-            {local.umkreis === 100 ? "Unbegrenzt" : `${local.umkreis} km`}
+            {local.umkreis === 100 ? t.filter_radius_unlimited : `${local.umkreis} km`}
           </Text>
           <View style={{ flexDirection: "row", flexWrap: "wrap", marginBottom: 20 }}>
             {UMKREIS_OPTIONS_LIST.map((u) => (
-              <Pill key={u} label={u === 100 ? "Alle" : `${u} km`} selected={local.umkreis === u} onPress={() => setLocal({ ...local, umkreis: u })} />
+              <Pill key={u} label={u === 100 ? t.filter_radius_all : `${u} km`} selected={local.umkreis === u} onPress={() => setLocal({ ...local, umkreis: u })} />
             ))}
           </View>
         </ScrollView>
@@ -903,7 +888,7 @@ function GassiFilterModal({
               borderRadius: Sizes.RADIUS_FULL, alignItems: "center", justifyContent: "center",
             }}
           >
-            <Text style={{ color: Colors.WHITE, fontWeight: "700", fontSize: Sizes.FONT_MD }}>Filter anwenden</Text>
+            <Text style={{ color: Colors.WHITE, fontWeight: "700", fontSize: Sizes.FONT_MD }}>{t.filter_apply}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -919,6 +904,11 @@ function DeckDateFilterModal({
   onApply: (f: DeckDateFilterState) => void;
   onClose: () => void;
 }) {
+  const { t } = useLanguage();
+  const GROESSE_LABEL: Record<string, string> = {
+    klein: t.gassi_size_small, mittel: t.gassi_size_medium,
+    gross: t.gassi_size_large, riese: t.gassi_size_giant,
+  };
   const [local, setLocal] = useState<DeckDateFilterState>(filter);
 
   const toggleArr = (key: keyof DeckDateFilterState, val: string) => {
@@ -955,9 +945,9 @@ function DeckDateFilterModal({
           borderBottomWidth: 1, borderBottomColor: Colors.BORDER,
         }}>
           <TouchableOpacity onPress={() => setLocal(DEFAULT_DECKDATE_FILTER)}>
-            <Text style={{ color: Colors.TEXT_MUTED, fontSize: 13 }}>Zurücksetzen</Text>
+            <Text style={{ color: Colors.TEXT_MUTED, fontSize: 13 }}>{t.filter_reset}</Text>
           </TouchableOpacity>
-          <Text style={{ fontSize: 17, fontWeight: "700", color: "#9B59B6" }}>Deck-Date Filter</Text>
+          <Text style={{ fontSize: 17, fontWeight: "700", color: "#9B59B6" }}>{`${t.gassi_mode_deck} ${t.filter_title}`}</Text>
           <TouchableOpacity onPress={onClose}>
             <Text style={{ fontSize: 22, color: Colors.TEXT_MUTED }}>✕</Text>
           </TouchableOpacity>
@@ -967,35 +957,35 @@ function DeckDateFilterModal({
         <View style={{ margin: Sizes.SPACING_LG, marginBottom: 0, padding: 12, backgroundColor: "#F3EDFF", borderRadius: 12, flexDirection: "row", gap: 8 }}>
           <Text style={{ fontSize: 15 }}>ℹ️</Text>
           <Text style={{ flex: 1, fontSize: 13, color: "#7D3C98" }}>
-            Kastrierte Hunde werden automatisch ausgeblendet.
+            {t.filter_deck_castrated_note}
           </Text>
         </View>
 
         <ScrollView contentContainerStyle={{ padding: Sizes.SPACING_LG }}>
-          <Text style={{ fontSize: 15, fontWeight: "700", color: Colors.TEXT, marginBottom: 8 }}>Hundegröße</Text>
+          <Text style={{ fontSize: 15, fontWeight: "700", color: Colors.TEXT, marginBottom: 8 }}>{t.filter_dog_size}</Text>
           <View style={{ flexDirection: "row", flexWrap: "wrap", marginBottom: 20 }}>
             {GROESSE_OPTIONS.map((g) => (
               <Pill key={g} label={GROESSE_LABEL[g]} selected={local.groesse.includes(g)} onPress={() => toggleArr("groesse", g)} />
             ))}
           </View>
 
-          <Text style={{ fontSize: 15, fontWeight: "700", color: Colors.TEXT, marginBottom: 4 }}>Max. Alter des Hundes</Text>
+          <Text style={{ fontSize: 15, fontWeight: "700", color: Colors.TEXT, marginBottom: 4 }}>{t.filter_max_dog_age}</Text>
           <Text style={{ fontSize: 13, color: Colors.TEXT_MUTED, marginBottom: 10 }}>
-            Bis {local.maxAlterJahre === 15 ? "15+" : local.maxAlterJahre} Jahre
+            {`${t.filter_up_to} ${local.maxAlterJahre === 15 ? "15+" : local.maxAlterJahre} ${t.filter_years}`}
           </Text>
           <View style={{ flexDirection: "row", flexWrap: "wrap", marginBottom: 20 }}>
             {ALTER_OPTIONS_LIST.map((a) => (
-              <Pill key={a} label={a === 15 ? "15+" : `${a} J.`} selected={local.maxAlterJahre === a} onPress={() => setLocal({ ...local, maxAlterJahre: a })} />
+              <Pill key={a} label={a === 15 ? "15+" : `${a} ${t.filter_years_abbr}`} selected={local.maxAlterJahre === a} onPress={() => setLocal({ ...local, maxAlterJahre: a })} />
             ))}
           </View>
 
-          <Text style={{ fontSize: 15, fontWeight: "700", color: Colors.TEXT, marginBottom: 4 }}>Umkreis</Text>
+          <Text style={{ fontSize: 15, fontWeight: "700", color: Colors.TEXT, marginBottom: 4 }}>{t.filter_radius}</Text>
           <Text style={{ fontSize: 13, color: Colors.TEXT_MUTED, marginBottom: 10 }}>
-            {local.umkreis === 100 ? "Unbegrenzt" : `${local.umkreis} km`}
+            {local.umkreis === 100 ? t.filter_radius_unlimited : `${local.umkreis} km`}
           </Text>
           <View style={{ flexDirection: "row", flexWrap: "wrap", marginBottom: 20 }}>
             {UMKREIS_OPTIONS_LIST.map((u) => (
-              <Pill key={u} label={u === 100 ? "Alle" : `${u} km`} selected={local.umkreis === u} onPress={() => setLocal({ ...local, umkreis: u })} />
+              <Pill key={u} label={u === 100 ? t.filter_radius_all : `${u} km`} selected={local.umkreis === u} onPress={() => setLocal({ ...local, umkreis: u })} />
             ))}
           </View>
         </ScrollView>
@@ -1008,7 +998,7 @@ function DeckDateFilterModal({
               borderRadius: Sizes.RADIUS_FULL, alignItems: "center", justifyContent: "center",
             }}
           >
-            <Text style={{ color: Colors.WHITE, fontWeight: "700", fontSize: Sizes.FONT_MD }}>Filter anwenden</Text>
+            <Text style={{ color: Colors.WHITE, fontWeight: "700", fontSize: Sizes.FONT_MD }}>{t.filter_apply}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -1035,6 +1025,23 @@ const inputStyle = {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function GassiFeed() {
+  const { t } = useLanguage();
+  const GROESSE_LABEL: Record<string, string> = {
+    klein: t.gassi_size_small,
+    mittel: t.gassi_size_medium,
+    gross: t.gassi_size_large,
+    riese: t.gassi_size_giant,
+  };
+  const AKTIV_LABEL: Record<string, string> = {
+    ruhig: t.gassi_activity_calm,
+    mittel: t.gassi_activity_medium,
+    sportlich: t.gassi_activity_very,
+  };
+  const DEMO_OWNERS = [
+    { name: "Max",    alter: 28, geschlecht: "männlich", bio: t.gassi_bio_max,    stadt: "München, Schwabing",      avatar_url: null as string | null },
+    { name: "Sophie", alter: 32, geschlecht: "weiblich", bio: t.gassi_bio_sophie, stadt: "Hamburg, Altona",         avatar_url: null as string | null },
+    { name: "Jonas",  alter: 25, geschlecht: "männlich", bio: t.gassi_bio_jonas,  stadt: "Berlin, Prenzlauer Berg", avatar_url: null as string | null },
+  ];
   const [isGuest, setIsGuest]               = useState(false);
   const [myOwnerProfile, setMyOwnerProfile] = useState<OwnerInfo | null>(null);
   const [myDogs, setMyDogs]                 = useState<MyDog[]>([]);
@@ -1221,18 +1228,18 @@ export default function GassiFeed() {
 
   const handleChangeModus = (dog: MyDog) => {
     Alert.alert(
-      `Modus von ${dog.name}`,
-      `Aktuell: ${dog.modus === "gassidate" ? "Gassi-Date" : "Deck-Date"}`,
+      t.gassi_dogs_modal_change_mode_title(dog.name),
+      `${dog.modus === "gassidate" ? t.gassi_mode_gassi : t.gassi_mode_deck}`,
       [
         {
-          text: `→ ${dog.modus === "gassidate" ? "Deck-Date" : "Gassi-Date"}`,
+          text: `→ ${dog.modus === "gassidate" ? t.gassi_mode_deck : t.gassi_mode_gassi}`,
           onPress: () => {
             setMyDogs((prev) => prev.map((d) =>
               d.id === dog.id ? { ...d, modus: d.modus === "gassidate" ? "zucht" : "gassidate" } : d
             ));
           },
         },
-        { text: "Abbrechen", style: "cancel" },
+        { text: t.profil_cancel, style: "cancel" },
       ]
     );
   };
@@ -1281,7 +1288,7 @@ export default function GassiFeed() {
           style={{ flexDirection: "row", alignItems: "center", gap: 2 }}
         >
           <Text style={{ fontSize: 18, color: "rgba(255,255,255,0.9)" }}>‹</Text>
-          <Text style={{ fontSize: 12, color: "rgba(255,255,255,0.85)", fontWeight: "500" }}> Modi</Text>
+          <Text style={{ fontSize: 12, color: "rgba(255,255,255,0.85)", fontWeight: "500" }}> {t.gassi_feed_back}</Text>
         </TouchableOpacity>
 
         {/* Mode toggle */}
@@ -1299,7 +1306,7 @@ export default function GassiFeed() {
               }}
             >
               <Text style={{ fontSize: 13, fontWeight: "600", color: Colors.WHITE }}>
-                {m === "gassidate" ? "Gassi-Date" : "Deck-Date"}
+                {m === "gassidate" ? t.gassi_mode_gassi : t.gassi_mode_deck}
               </Text>
             </TouchableOpacity>
           ))}
@@ -1319,7 +1326,7 @@ export default function GassiFeed() {
             >
               <Text style={{ fontSize: 13 }}>🐕</Text>
               <Text style={{ color: Colors.WHITE, fontWeight: "600", fontSize: 11 }}>
-                {myDogs.find((d) => d.id === activeDogId)?.name ?? "Hunde"}
+                {myDogs.find((d) => d.id === activeDogId)?.name ?? t.gassi_dogs_modal_title}
               </Text>
             </TouchableOpacity>
           )}
@@ -1343,13 +1350,13 @@ export default function GassiFeed() {
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32 }}>
           <Text style={{ fontSize: 64, marginBottom: 16 }}>🐾</Text>
           <Text style={{ fontSize: Sizes.FONT_XL, fontWeight: "700", color: Colors.TEXT, textAlign: "center", marginBottom: 8 }}>
-            Keine Partner in der Nähe
+            {t.gassi_feed_no_partners}
           </Text>
           <TouchableOpacity
             onPress={() => loadPartnerCards()}
             style={{ height: Sizes.BUTTON_HEIGHT, paddingHorizontal: 28, backgroundColor: Colors.SECONDARY, borderRadius: Sizes.RADIUS_FULL, alignItems: "center", justifyContent: "center" }}
           >
-            <Text style={{ color: Colors.WHITE, fontWeight: "700" }}>Nochmal laden</Text>
+            <Text style={{ color: Colors.WHITE, fontWeight: "700" }}>{t.gassi_feed_reload}</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -1406,19 +1413,19 @@ export default function GassiFeed() {
             )}
             <Text style={{ fontSize: 18, fontWeight: "700", color: Colors.TEXT, marginBottom: 2 }}>{matchCard?.name}</Text>
             <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED, marginBottom: 4 }}>
-              {`Besitzer: ${matchCard?.owner.name} · ${matchCard?.owner.stadt}`}
+              {matchCard ? t.gassi_feed_match_owner(matchCard.owner.name, matchCard.owner.stadt) : ""}
             </Text>
             <Text style={{ color: Colors.TEXT_MUTED, textAlign: "center", marginBottom: 24, lineHeight: 20 }}>
-              Ihr habt euch gegenseitig geliked — schreibt euch!
+              {t.gassi_feed_match_desc}
             </Text>
             <TouchableOpacity
               onPress={() => setMatchVisible(false)}
               style={{ width: "100%", height: Sizes.BUTTON_HEIGHT, backgroundColor: Colors.SECONDARY, borderRadius: Sizes.RADIUS_FULL, alignItems: "center", justifyContent: "center", marginBottom: 10 }}
             >
-              <Text style={{ color: Colors.WHITE, fontWeight: "700", fontSize: Sizes.FONT_MD }}>💬 Nachricht schreiben</Text>
+              <Text style={{ color: Colors.WHITE, fontWeight: "700", fontSize: Sizes.FONT_MD }}>{t.gassi_feed_match_message}</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setMatchVisible(false)} style={{ paddingVertical: 10 }}>
-              <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM }}>Weiter swipen</Text>
+              <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM }}>{t.gassi_feed_match_keep_swiping}</Text>
             </TouchableOpacity>
           </Animated.View>
         </Animated.View>

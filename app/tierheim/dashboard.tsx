@@ -12,6 +12,7 @@ import { router, useFocusEffect } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { Colors } from "../../constants/colors";
 import { Sizes } from "../../constants/sizes";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 interface DashboardStats {
   orgName: string;
@@ -37,19 +38,19 @@ const STATUS_COLOR: Record<string, string> = {
   reserviert: Colors.WARNING,
   vermittelt: Colors.TEXT_MUTED,
 };
-const STATUS_LABEL: Record<string, string> = {
-  verfuegbar: "Verfügbar",
-  reserviert: "Reserviert",
-  vermittelt: "Vermittelt",
-};
-
-function formatAlter(jahre?: number | null, monate?: number | null): string {
-  if (jahre && jahre >= 1) return jahre === 1 ? "1 Jahr" : `${jahre} Jahre`;
-  if (monate) return `${monate} Monate`;
-  return "Welpe";
-}
 
 export default function TierheimDashboard() {
+  const { t } = useLanguage();
+  const STATUS_LABEL: Record<string, string> = {
+    verfuegbar: t.tierheim_status_available,
+    reserviert: t.tierheim_status_reserved,
+    vermittelt: t.tierheim_status_placed,
+  };
+  const formatAlter = (jahre?: number | null, monate?: number | null): string => {
+    if (jahre && jahre >= 1) return jahre === 1 ? `1 ${t.tierheim_age_year}` : `${jahre} ${t.tierheim_age_years}`;
+    if (monate) return `${monate} ${t.tierheim_age_months}`;
+    return t.tierheim_age_puppy;
+  };
   const [stats, setStats]       = useState<DashboardStats | null>(null);
   const [pets, setPets]         = useState<PetItem[]>([]);
   const [loading, setLoading]   = useState(true);
@@ -93,7 +94,7 @@ export default function TierheimDashboard() {
 
         setPets(petList);
         setStats({
-          orgName: "Demo-Tierheim",
+          orgName: t.tierheim_demo_name,
           verfuegbar: petList.filter((p) => p.status === "verfuegbar").length,
           reserviert: petList.filter((p) => p.status === "reserviert").length,
           vermittelt: petList.filter((p) => p.status === "vermittelt").length,
@@ -191,13 +192,13 @@ export default function TierheimDashboard() {
               style={{ flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 6 }}
             >
               <Text style={{ fontSize: 16, color: "rgba(255,255,255,0.7)" }}>‹</Text>
-              <Text style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", fontWeight: "500" }}>Modi wechseln</Text>
+              <Text style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", fontWeight: "500" }}>{t.comp_switch_modes}</Text>
             </TouchableOpacity>
             <Text style={{ color: "rgba(255,255,255,0.8)", fontSize: 13, fontWeight: "500" }}>
-              🏠 Tierheim Dashboard
+              {t.tierheim_dashboard_title}
             </Text>
             <Text style={{ color: Colors.WHITE, fontSize: 22, fontWeight: "800", marginTop: 4 }}>
-              {stats?.orgName ?? "Dein Tierheim"}
+              {stats?.orgName ?? t.tierheim_dashboard_your_shelter}
             </Text>
           </View>
           <TouchableOpacity
@@ -209,39 +210,39 @@ export default function TierheimDashboard() {
             }}
           >
             <Text style={{ color: Colors.WHITE, fontSize: 13, fontWeight: "600" }}>
-              {isGuest ? "Anmelden 🔑" : "Logout"}
+              {isGuest ? t.tierheim_dashboard_login : "Logout"}
             </Text>
           </TouchableOpacity>
         </View>
 
         {/* Stats: Verfügbar / Reserviert / Vermittelt */}
         <View style={{ flexDirection: "row", gap: 10 }}>
-          <StatCard value={stats?.verfuegbar ?? 0} label="Verfügbar" emoji="✅" />
-          <StatCard value={stats?.reserviert ?? 0} label="Reserviert" emoji="⏳" />
-          <StatCard value={stats?.vermittelt ?? 0} label="Vermittelt" emoji="🏡" />
+          <StatCard value={stats?.verfuegbar ?? 0} label={t.tierheim_status_available} emoji="✅" />
+          <StatCard value={stats?.reserviert ?? 0} label={t.tierheim_status_reserved} emoji="⏳" />
+          <StatCard value={stats?.vermittelt ?? 0} label={t.tierheim_status_placed} emoji="🏡" />
         </View>
       </View>
 
       {/* Quick Actions */}
       <View style={{ padding: Sizes.SPACING_LG, paddingBottom: 8 }}>
         <Text style={{ fontSize: 16, fontWeight: "700", color: Colors.TEXT, marginBottom: 12 }}>
-          Schnellzugriff
+          {t.tierheim_dashboard_quick_access}
         </Text>
         <View style={{ gap: 10 }}>
           <ActionCard
             emoji="➕"
-            title="Tier hinzufügen"
-            subtitle="Neues Tier zur Adoption eintragen"
+            title={t.tierheim_dashboard_add_animal}
+            subtitle={t.tierheim_dashboard_add_animal_sub}
             color={Colors.PRIMARY}
             onPress={() => router.push("/tierheim/hunde")}
           />
           <ActionCard
             emoji="🔔"
-            title="Anfragen"
+            title={t.tierheim_dashboard_requests}
             subtitle={
               stats?.unreadMessages
-                ? `${stats.unreadMessages} neue Nachricht${stats.unreadMessages > 1 ? "en" : ""}`
-                : `${stats?.totalMatches ?? 0} Interessenten`
+                ? t.tierheim_dashboard_new_messages(stats.unreadMessages)
+                : t.tierheim_dashboard_interested(stats?.totalMatches ?? 0)
             }
             color="#8A9F79"
             badge={stats?.unreadMessages}
@@ -253,7 +254,7 @@ export default function TierheimDashboard() {
       {/* All Pets */}
       <View style={{ paddingHorizontal: Sizes.SPACING_LG, paddingTop: 8 }}>
         <Text style={{ fontSize: 16, fontWeight: "700", color: Colors.TEXT, marginBottom: 12 }}>
-          Alle Hunde ({pets.length})
+          {t.tierheim_dashboard_all_dogs(pets.length)}
         </Text>
         <View style={{ gap: 10 }}>
           {pets.map((pet) => (
@@ -311,9 +312,9 @@ export default function TierheimDashboard() {
           backgroundColor: Colors.SURFACE, borderRadius: Sizes.RADIUS_LG,
           padding: 16, borderLeftWidth: 3, borderLeftColor: Colors.PRIMARY,
         }}>
-          <Text style={{ fontWeight: "700", color: Colors.TEXT, marginBottom: 4 }}>💡 Tipp</Text>
+          <Text style={{ fontWeight: "700", color: Colors.TEXT, marginBottom: 4 }}>{t.tip_title}</Text>
           <Text style={{ color: Colors.TEXT_MUTED, fontSize: 13, lineHeight: 20 }}>
-            Füge möglichst viele Fotos und eine detaillierte Beschreibung hinzu — Profile mit Fotos werden 3x häufiger geliked!
+            {t.tierheim_tip_body}
           </Text>
         </View>
       </View>

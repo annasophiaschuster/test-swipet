@@ -9,22 +9,47 @@ import { Colors } from "../../constants/colors";
 import { Sizes } from "../../constants/sizes";
 import { formatAlter, formatGroesse } from "../../lib/matching";
 import type { PetWithPhotos } from "../../components/PetCard";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 const { width: W } = Dimensions.get("window");
 
-const ERFAHRUNG_MAP: Record<string, string> = {
-  anfaenger:      "🌱 Geeignet für Einsteiger",
-  fortgeschritten:"⭐ Erfahrene Halter",
-  profi:          "🏆 Nur für Profis",
-};
-
 export default function PetProfileScreen() {
+  const { t } = useLanguage();
   const { petId } = useLocalSearchParams<{ petId: string }>();
   const [pet, setPet]       = useState<PetWithPhotos | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving]  = useState(false);
   const [photoIdx, setPhotoIdx] = useState(0);
   const flatRef = useRef<FlatList>(null);
+
+  const formatAlterLocal = (jahre?: number | null, monate?: number | null): string => {
+    if (jahre && jahre >= 1) return jahre === 1 ? `1 ${t.tierheim_age_year}` : `${jahre} ${t.tierheim_age_years}`;
+    if (monate) return `${monate} ${t.tierheim_age_months}`;
+    return t.tierheim_age_puppy;
+  };
+  const formatGroesseLocal = (groesse?: string | null): string => {
+    const map: Record<string, string> = {
+      klein: t.gassi_size_small_label, mittel: t.gassi_size_medium_label,
+      gross: t.gassi_size_large_label, riese: t.gassi_size_giant_label,
+    };
+    return map[groesse ?? ""] ?? groesse ?? "";
+  };
+  const ERFAHRUNG_MAP: Record<string, string> = {
+    anfaenger:      t.pet_exp_beginner,
+    fortgeschritten: t.pet_exp_experienced,
+    profi:          t.pet_exp_pro,
+  };
+  const AKTIV_MAP: Record<string, string> = {
+    sportlich: t.pet_activity_very,
+    mittel:    t.pet_activity_medium,
+    ruhig:     t.pet_activity_calm,
+  };
+  const KINDER_MAP: Record<string, string> = {
+    ja:           t.pet_child_yes,
+    nein:         t.pet_child_no,
+    ab_schulalter: t.pet_child_school,
+    ab_teenager:  t.pet_child_teen,
+  };
 
   useEffect(() => { if (petId) loadPet(); }, [petId]);
 
@@ -70,11 +95,11 @@ export default function PetProfileScreen() {
           .single();
 
         Alert.alert(
-          "🎉 Es ist ein Match!",
-          `Du hast ${pet.name} geliked!\nDas Tierheim wird sich bald melden.`,
+          t.pet_match_title,
+          t.pet_match_msg(pet.name),
           [
             {
-              text: "💬 Chat öffnen",
+              text: t.pet_open_chat,
               onPress: () =>
                 router.replace({
                   pathname: "/(tabs)/matches/[matchId]",
@@ -86,14 +111,14 @@ export default function PetProfileScreen() {
                   },
                 }),
             },
-            { text: "Zurück", style: "cancel", onPress: () => router.back() },
+            { text: t.pet_back, style: "cancel", onPress: () => router.back() },
           ]
         );
       } else {
         router.back();
       }
     } catch (e: any) {
-      Alert.alert("Fehler", e.message);
+      Alert.alert(t.err_generic, e.message);
     } finally {
       setSaving(false);
     }
@@ -110,9 +135,9 @@ export default function PetProfileScreen() {
   if (!pet) {
     return (
       <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND, alignItems: "center", justifyContent: "center" }}>
-        <Text style={{ color: Colors.TEXT_MUTED }}>Tier nicht gefunden.</Text>
+        <Text style={{ color: Colors.TEXT_MUTED }}>{t.pet_not_found}</Text>
         <TouchableOpacity onPress={() => router.back()} style={{ marginTop: 16 }}>
-          <Text style={{ color: Colors.PRIMARY, fontWeight: "700" }}>← Zurück</Text>
+          <Text style={{ color: Colors.PRIMARY, fontWeight: "700" }}>{t.onb_back}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -207,7 +232,7 @@ export default function PetProfileScreen() {
               {pet.name}
             </Text>
             <Text style={{ fontSize: 16, color: Colors.TEXT_MUTED }}>
-              {formatAlter(pet.alter_jahre, pet.alter_monate)}
+              {formatAlterLocal(pet.alter_jahre, pet.alter_monate)}
             </Text>
             <Text style={{ fontSize: 16, color: Colors.TEXT_MUTED }}>
               {pet.geschlecht === "maennlich" ? "♂" : "♀"}
@@ -216,7 +241,7 @@ export default function PetProfileScreen() {
 
           {/* Rasse + Größe */}
           <Text style={{ fontSize: 15, color: Colors.TEXT_MUTED, marginBottom: 16 }}>
-            {[pet.rasse, formatGroesse(pet.groesse_kategorie)].filter(Boolean).join(" · ")}
+            {[pet.rasse, formatGroesseLocal(pet.groesse_kategorie)].filter(Boolean).join(" · ")}
           </Text>
 
           {/* Beschreibung */}
@@ -234,7 +259,7 @@ export default function PetProfileScreen() {
 
           {/* Charakter Tags */}
           {pet.charakter_tags && pet.charakter_tags.length > 0 && (
-            <Section title="Charakter">
+            <Section title={t.pet_section_char}>
               <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
                 {pet.charakter_tags.map((tag) => (
                   <View key={tag} style={{
@@ -252,22 +277,22 @@ export default function PetProfileScreen() {
           )}
 
           {/* Eigenschaften */}
-          <Section title="Eigenschaften">
+          <Section title={t.pet_section_props}>
             <View style={{ gap: 0 }}>
-              <PropRow icon="🌿" label="Braucht Garten"              value={pet.braucht_garten ? "Ja" : "Nein"} ok={!pet.braucht_garten} />
-              <PropRow icon="✂️" label="Kastriert"                   value={pet.kastriert ? "Ja" : "Nein"}        ok={pet.kastriert} />
-              <PropRow icon="👦" label="Kinderfreundlich"             value={KINDER_MAP[pet.kinderfreundlich ?? ""] ?? "–"} ok={pet.kinderfreundlich !== "nein"} />
-              <PropRow icon="🐾" label="Verträglich mit anderen Tieren" value={pet.vertraeglich_mit_tieren ? "Ja" : "Nein"} ok={pet.vertraeglich_mit_tieren} />
-              <PropRow icon="🏃" label="Aktivitätslevel"              value={AKTIV_MAP[pet.aktivitaetslevel ?? ""] ?? "–"} ok />
+              <PropRow icon="🌿" label={t.pet_label_garden}              value={pet.braucht_garten ? t.pet_yes : t.pet_no} ok={!pet.braucht_garten} />
+              <PropRow icon="✂️" label={t.pet_label_neutered}                   value={pet.kastriert ? t.pet_yes : t.pet_no}        ok={pet.kastriert} />
+              <PropRow icon="👦" label={t.pet_label_children}             value={KINDER_MAP[pet.kinderfreundlich ?? ""] ?? "–"} ok={pet.kinderfreundlich !== "nein"} />
+              <PropRow icon="🐾" label={t.pet_label_animals} value={pet.vertraeglich_mit_tieren ? t.pet_yes : t.pet_no} ok={pet.vertraeglich_mit_tieren} />
+              <PropRow icon="🏃" label={t.pet_label_activity}              value={AKTIV_MAP[pet.aktivitaetslevel ?? ""] ?? "–"} ok />
               {pet.erfahrung_benoetigt && (
-                <PropRow icon="📚" label="Erfahrung"                  value={ERFAHRUNG_MAP[pet.erfahrung_benoetigt] ?? "–"} ok={pet.erfahrung_benoetigt === "anfaenger"} />
+                <PropRow icon="📚" label={t.pet_label_exp}                  value={ERFAHRUNG_MAP[pet.erfahrung_benoetigt] ?? "–"} ok={pet.erfahrung_benoetigt === "anfaenger"} />
               )}
             </View>
           </Section>
 
           {/* Im Heim seit */}
           {pet.im_heim_seit && (
-            <Section title="Im Tierheim seit">
+            <Section title={t.pet_section_shelter_since}>
               <Text style={{ fontSize: 14, color: Colors.TEXT }}>{pet.im_heim_seit}</Text>
             </Section>
           )}
@@ -333,19 +358,6 @@ export default function PetProfileScreen() {
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
-
-const KINDER_MAP: Record<string, string> = {
-  ja:           "Ja, kinderfreundlich",
-  nein:         "Nicht kinderfreundlich",
-  ab_schulalter:"Ab Schulalter",
-  ab_teenager:  "Ab Teenager",
-};
-
-const AKTIV_MAP: Record<string, string> = {
-  sportlich: "🏃 Sehr aktiv",
-  mittel:    "🚶 Mäßig aktiv",
-  ruhig:     "🛋 Ruhig",
-};
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (

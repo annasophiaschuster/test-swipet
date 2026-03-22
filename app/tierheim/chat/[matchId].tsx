@@ -15,6 +15,7 @@ import { supabase } from "../../../lib/supabase";
 import { Colors } from "../../../constants/colors";
 import { Sizes } from "../../../constants/sizes";
 import { sendAdoptionMessageNotification } from "../../../lib/notifications";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 interface Message {
   id: string;
@@ -24,6 +25,7 @@ interface Message {
 }
 
 export default function TierheimChatScreen() {
+  const { t, lang } = useLanguage();
   const { matchId, petName, petPhoto, adoptantName } = useLocalSearchParams<{
     matchId: string;
     petName: string;
@@ -196,7 +198,7 @@ export default function TierheimChatScreen() {
                 <Text
                   style={{ color: Colors.TEXT_MUTED, textAlign: "center", lineHeight: 22 }}
                 >
-                  {adoptantName} interessiert sich für {petName}.{"\n"}Schreib eine Begrüßung!
+                  {t.tierheim_chat_greeting(adoptantName ?? "", petName ?? "")}
                 </Text>
               </View>
             }
@@ -238,7 +240,7 @@ export default function TierheimChatScreen() {
                         textAlign: "right",
                       }}
                     >
-                      {new Date(item.created_at).toLocaleTimeString("de-DE", {
+                      {new Date(item.created_at).toLocaleTimeString(lang === "en" ? "en-US" : "de-DE", {
                         hour: "2-digit",
                         minute: "2-digit",
                       })}
@@ -266,7 +268,7 @@ export default function TierheimChatScreen() {
           <TextInput
             value={inputText}
             onChangeText={setInputText}
-            placeholder={`Nachricht an ${adoptantName}…`}
+            placeholder={t.tierheim_chat_placeholder(adoptantName ?? "")}
             placeholderTextColor={Colors.TEXT_MUTED}
             multiline
             style={{

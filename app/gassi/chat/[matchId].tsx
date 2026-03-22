@@ -14,6 +14,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { supabase } from "../../../lib/supabase";
 import { Colors } from "../../../constants/colors";
 import { Sizes } from "../../../constants/sizes";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 interface Message {
   id: string;
@@ -25,14 +26,15 @@ interface Message {
 const DEMO_USER_ID = "demo-amir";
 const DEMO_MAX_ID  = "demo-max";
 
-const DEMO_MESSAGES_GM1: Message[] = [
-  { id: "dm-gm1-1", sender_id: DEMO_MAX_ID,  text: "Hey Amir! Super dass wir gematcht haben 🐾", created_at: new Date(Date.now() - 50 * 60000).toISOString() },
-  { id: "dm-gm1-2", sender_id: DEMO_USER_ID, text: "Hey Max! Kira sieht toll aus. Wann wollt ihr gassi gehen?", created_at: new Date(Date.now() - 45 * 60000).toISOString() },
-  { id: "dm-gm1-3", sender_id: DEMO_MAX_ID,  text: "Morgen früh um 9 im Englischen Garten? 🌳", created_at: new Date(Date.now() - 46 * 60000).toISOString() },
-  { id: "dm-gm1-4", sender_id: DEMO_USER_ID, text: "Perfekt! Bis morgen 🐕", created_at: new Date(Date.now() - 44 * 60000).toISOString() },
-];
-
 export default function GassiChatScreen() {
+  const { t, lang } = useLanguage();
+
+  const DEMO_MESSAGES_GM1: Message[] = [
+    { id: "dm-gm1-1", sender_id: DEMO_MAX_ID,  text: t.gassi_chat_demo_msg1, created_at: new Date(Date.now() - 50 * 60000).toISOString() },
+    { id: "dm-gm1-2", sender_id: DEMO_USER_ID, text: t.gassi_chat_demo_msg2, created_at: new Date(Date.now() - 45 * 60000).toISOString() },
+    { id: "dm-gm1-3", sender_id: DEMO_MAX_ID,  text: t.gassi_chat_demo_msg3, created_at: new Date(Date.now() - 46 * 60000).toISOString() },
+    { id: "dm-gm1-4", sender_id: DEMO_USER_ID, text: t.gassi_chat_demo_msg4, created_at: new Date(Date.now() - 44 * 60000).toISOString() },
+  ];
   const { matchId, petName, petPhoto, ownerName, modus } = useLocalSearchParams<{
     matchId: string;
     petName: string;
@@ -137,7 +139,7 @@ export default function GassiChatScreen() {
     }
   };
 
-  const modusBadge = modus === "gassi" ? "Gassi-Date" : "Spieldate";
+  const modusBadge = modus === "gassi" ? t.gassi_chat_gassi_date : t.gassi_chat_spieldate;
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
@@ -214,8 +216,8 @@ export default function GassiChatScreen() {
                     lineHeight: 22,
                   }}
                 >
-                  {ownerName} und du haben ein Match!{"\n"}Verabredet euch für einen{" "}
-                  {modus === "gassi" ? "Gassi-Spaziergang" : "Spieldate"}!
+                  {ownerName} {t.gassi_chat_match_text}{"\n"}
+                  {modus === "gassi" ? t.gassi_chat_match_cta_gassi : t.gassi_chat_match_cta_play}
                 </Text>
               </View>
             }
@@ -257,7 +259,7 @@ export default function GassiChatScreen() {
                         textAlign: "right",
                       }}
                     >
-                      {new Date(item.created_at).toLocaleTimeString("de-DE", {
+                      {new Date(item.created_at).toLocaleTimeString(lang === "en" ? "en-US" : "de-DE", {
                         hour: "2-digit",
                         minute: "2-digit",
                       })}
@@ -285,7 +287,7 @@ export default function GassiChatScreen() {
           <TextInput
             value={inputText}
             onChangeText={setInputText}
-            placeholder={`Nachricht an ${ownerName}…`}
+            placeholder={t.gassi_chat_placeholder(ownerName ?? "")}
             placeholderTextColor={Colors.TEXT_MUTED}
             multiline
             style={{

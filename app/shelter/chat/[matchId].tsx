@@ -15,6 +15,7 @@ import { supabase } from "../../../lib/supabase";
 import { Colors } from "../../../constants/colors";
 import { Sizes } from "../../../constants/sizes";
 import { sendAdoptionMessageNotification } from "../../../lib/notifications";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 interface Message {
   id: string;
@@ -24,6 +25,7 @@ interface Message {
 }
 
 export default function ShelterChatScreen() {
+  const { t, lang } = useLanguage();
   const { matchId, petName, petPhoto, adoptantName } = useLocalSearchParams<{
     matchId: string;
     petName: string;
@@ -37,6 +39,8 @@ export default function ShelterChatScreen() {
   const [sending, setSending] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const flatListRef = useRef<FlatList>(null);
+
+  const locale = lang === "en" ? "en-US" : "de-DE";
 
   useEffect(() => {
     initChat();
@@ -138,7 +142,7 @@ export default function ShelterChatScreen() {
               <View style={{ alignItems: "center", paddingTop: 40 }}>
                 <Text style={{ fontSize: 40, marginBottom: 12 }}>👋</Text>
                 <Text style={{ color: Colors.TEXT_MUTED, textAlign: "center", lineHeight: 22 }}>
-                  {adoptantName} interessiert sich für {petName}.{"\n"}Schreib eine Begrüßung!
+                  {t.tierheim_chat_greeting(adoptantName ?? "", petName ?? "")}
                 </Text>
               </View>
             }
@@ -151,7 +155,7 @@ export default function ShelterChatScreen() {
                       {item.text}
                     </Text>
                     <Text style={{ color: isMe ? "rgba(255,255,255,0.65)" : Colors.TEXT_MUTED, fontSize: 10, marginTop: 3, textAlign: "right" }}>
-                      {new Date(item.created_at).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}
+                      {new Date(item.created_at).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })}
                     </Text>
                   </View>
                 </View>
@@ -165,7 +169,7 @@ export default function ShelterChatScreen() {
           <TextInput
             value={inputText}
             onChangeText={setInputText}
-            placeholder={`Nachricht an ${adoptantName}…`}
+            placeholder={t.tierheim_chat_placeholder(adoptantName ?? "")}
             placeholderTextColor={Colors.TEXT_MUTED}
             multiline
             style={{ flex: 1, minHeight: 40, maxHeight: 100, backgroundColor: Colors.SURFACE, borderRadius: 20, paddingHorizontal: 16, paddingTop: 10, paddingBottom: 10, fontSize: Sizes.FONT_MD, color: Colors.TEXT }}

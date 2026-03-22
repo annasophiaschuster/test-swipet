@@ -15,31 +15,12 @@ import { Link, router } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { Colors } from "../../constants/colors";
 import { Sizes } from "../../constants/sizes";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 type Role = "adoptant" | "tierhalter" | "tierheim";
 
-const ROLES: { key: Role; label: string; icon: string; description: string }[] = [
-  {
-    key: "adoptant",
-    label: "Ich suche ein Tier",
-    icon: "❤️",
-    description: "Adoptiere ein Tier aus dem Tierheim",
-  },
-  {
-    key: "tierhalter",
-    label: "Ich habe ein Tier",
-    icon: "🐾",
-    description: "Finde Gassi- & Spieldatepartner",
-  },
-  {
-    key: "tierheim",
-    label: "Ich bin ein Tierheim",
-    icon: "🏠",
-    description: "Vermittle Tiere an liebevolle Familien",
-  },
-];
-
 export default function RegisterScreen() {
+  const { t } = useLanguage();
   const [step, setStep] = useState<"role" | "details">("role");
   const [role, setRole] = useState<Role | null>(null);
   const [name, setName] = useState("");
@@ -47,13 +28,19 @@ export default function RegisterScreen() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const ROLES = [
+    { key: "adoptant" as Role,    label: t.register_role_adoptant_label,   icon: "❤️", description: t.register_role_adoptant_desc },
+    { key: "tierhalter" as Role,  label: t.register_role_tierhalter_label, icon: "🐾", description: t.register_role_tierhalter_desc },
+    { key: "tierheim" as Role,    label: t.register_role_tierheim_label,   icon: "🏠", description: t.register_role_tierheim_desc },
+  ];
+
   const handleRegister = async () => {
     if (!name.trim() || !email.trim() || !password || !role) {
-      Alert.alert("Fehlende Angaben", "Bitte alle Felder ausfüllen.");
+      Alert.alert(t.register_err_missing, t.register_err_missing_msg);
       return;
     }
     if (password.length < 6) {
-      Alert.alert("Passwort zu kurz", "Mindestens 6 Zeichen erforderlich.");
+      Alert.alert(t.register_err_pw_short, t.register_err_pw_short_msg);
       return;
     }
     setLoading(true);
@@ -63,7 +50,7 @@ export default function RegisterScreen() {
         password,
       });
       if (error) throw error;
-      if (!data.user) throw new Error("Kein Benutzer erstellt.");
+      if (!data.user) throw new Error(t.register_err_no_user);
 
       const { error: profileError } = await supabase.from("profiles").insert({
         id: data.user.id,
@@ -80,7 +67,7 @@ export default function RegisterScreen() {
         router.replace("/auth/onboarding/tierheim");
       }
     } catch (error: any) {
-      Alert.alert("Registrierung fehlgeschlagen", error.message);
+      Alert.alert(t.register_err_failed, error.message);
     } finally {
       setLoading(false);
     }
@@ -96,7 +83,6 @@ export default function RegisterScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {/* Gradient Header */}
         <LinearGradient
           colors={[Colors.SECONDARY, Colors.PRIMARY]}
           start={{ x: 0, y: 0 }}
@@ -108,15 +94,13 @@ export default function RegisterScreen() {
           }}
         >
           <TouchableOpacity onPress={() => step === "details" ? setStep("role") : router.back()}>
-            <Text style={{ color: Colors.WHITE, opacity: 0.85, fontSize: 15 }}>← Zurück</Text>
+            <Text style={{ color: Colors.WHITE, opacity: 0.85, fontSize: 15 }}>{t.register_back}</Text>
           </TouchableOpacity>
           <Text style={{ fontSize: 28, fontWeight: "800", color: Colors.WHITE, marginTop: 12 }}>
-            {step === "role" ? "Wer bist du?" : "Dein Konto"}
+            {step === "role" ? t.register_step_role_title : t.register_step_details_title}
           </Text>
           <Text style={{ color: Colors.WHITE, opacity: 0.8, marginTop: 4 }}>
-            {step === "role"
-              ? "Wähle deine Rolle um loszulegen"
-              : "Erstelle dein kostenloses Konto"}
+            {step === "role" ? t.register_step_role_sub : t.register_step_details_sub}
           </Text>
         </LinearGradient>
 
@@ -141,46 +125,28 @@ export default function RegisterScreen() {
                   >
                     <View
                       style={{
-                        width: 52,
-                        height: 52,
-                        borderRadius: 26,
+                        width: 52, height: 52, borderRadius: 26,
                         backgroundColor: role === r.key ? Colors.PRIMARY : Colors.BORDER,
-                        alignItems: "center",
-                        justifyContent: "center",
+                        alignItems: "center", justifyContent: "center",
                       }}
                     >
                       <Text style={{ fontSize: 24 }}>{r.icon}</Text>
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text
-                        style={{
-                          fontSize: Sizes.FONT_MD,
-                          fontWeight: "700",
-                          color: Colors.TEXT,
-                        }}
-                      >
+                      <Text style={{ fontSize: Sizes.FONT_MD, fontWeight: "700", color: Colors.TEXT }}>
                         {r.label}
                       </Text>
-                      <Text
-                        style={{
-                          fontSize: Sizes.FONT_SM,
-                          color: Colors.TEXT_MUTED,
-                          marginTop: 2,
-                        }}
-                      >
+                      <Text style={{ fontSize: Sizes.FONT_SM, color: Colors.TEXT_MUTED, marginTop: 2 }}>
                         {r.description}
                       </Text>
                     </View>
                     <View
                       style={{
-                        width: 24,
-                        height: 24,
-                        borderRadius: 12,
+                        width: 24, height: 24, borderRadius: 12,
                         borderWidth: 2,
                         borderColor: role === r.key ? Colors.PRIMARY : Colors.BORDER,
                         backgroundColor: role === r.key ? Colors.PRIMARY : "transparent",
-                        alignItems: "center",
-                        justifyContent: "center",
+                        alignItems: "center", justifyContent: "center",
                       }}
                     >
                       {role === r.key && (
@@ -194,7 +160,7 @@ export default function RegisterScreen() {
               <TouchableOpacity
                 onPress={() => {
                   if (!role) {
-                    Alert.alert("Rolle wählen", "Bitte wähle eine Rolle um fortzufahren.");
+                    Alert.alert(t.register_pick_role, t.register_pick_role_msg);
                     return;
                   }
                   setStep("details");
@@ -213,7 +179,7 @@ export default function RegisterScreen() {
                 }}
               >
                 <Text style={{ color: Colors.WHITE, fontSize: Sizes.FONT_MD, fontWeight: "600" }}>
-                  Weiter →
+                  {t.register_next}
                 </Text>
               </TouchableOpacity>
             </>
@@ -221,10 +187,10 @@ export default function RegisterScreen() {
             <>
               <View style={{ gap: 14, marginBottom: 8 }}>
                 <View>
-                  <Text style={styles.label}>Name</Text>
+                  <Text style={styles.label}>{t.register_name}</Text>
                   <TextInput
                     style={styles.input}
-                    placeholder="Dein Name"
+                    placeholder={t.register_name_placeholder}
                     placeholderTextColor={Colors.TEXT_MUTED}
                     value={name}
                     onChangeText={setName}
@@ -232,10 +198,10 @@ export default function RegisterScreen() {
                   />
                 </View>
                 <View>
-                  <Text style={styles.label}>E-Mail</Text>
+                  <Text style={styles.label}>{t.login_email}</Text>
                   <TextInput
                     style={styles.input}
-                    placeholder="deine@email.de"
+                    placeholder={t.register_email_placeholder}
                     placeholderTextColor={Colors.TEXT_MUTED}
                     value={email}
                     onChangeText={setEmail}
@@ -245,10 +211,10 @@ export default function RegisterScreen() {
                   />
                 </View>
                 <View>
-                  <Text style={styles.label}>Passwort</Text>
+                  <Text style={styles.label}>{t.login_password}</Text>
                   <TextInput
                     style={styles.input}
-                    placeholder="Mindestens 6 Zeichen"
+                    placeholder={t.register_password_placeholder}
                     placeholderTextColor={Colors.TEXT_MUTED}
                     value={password}
                     onChangeText={setPassword}
@@ -257,7 +223,6 @@ export default function RegisterScreen() {
                 </View>
               </View>
 
-              {/* Gewählte Rolle anzeigen */}
               <View
                 style={{
                   flexDirection: "row",
@@ -276,7 +241,7 @@ export default function RegisterScreen() {
                   {ROLES.find((r) => r.key === role)?.label}
                 </Text>
                 <TouchableOpacity onPress={() => setStep("role")}>
-                  <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM }}>ändern</Text>
+                  <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM }}>{t.register_change}</Text>
                 </TouchableOpacity>
               </View>
 
@@ -303,7 +268,7 @@ export default function RegisterScreen() {
                   <ActivityIndicator color={Colors.WHITE} />
                 ) : (
                   <Text style={{ color: Colors.WHITE, fontSize: Sizes.FONT_MD, fontWeight: "600" }}>
-                    Konto erstellen 🎉
+                    {t.register_create_btn}
                   </Text>
                 )}
               </TouchableOpacity>
@@ -313,8 +278,8 @@ export default function RegisterScreen() {
           <View style={{ alignItems: "center", marginTop: 24 }}>
             <Link href="/auth/login">
               <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM }}>
-                Bereits ein Konto?{" "}
-                <Text style={{ color: Colors.PRIMARY, fontWeight: "700" }}>Anmelden</Text>
+                {t.register_has_account}{" "}
+                <Text style={{ color: Colors.PRIMARY, fontWeight: "700" }}>{t.register_sign_in}</Text>
               </Text>
             </Link>
           </View>

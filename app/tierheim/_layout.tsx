@@ -2,6 +2,7 @@ import { Tabs } from "expo-router";
 import { Colors } from "../../constants/colors";
 import { Sizes } from "../../constants/sizes";
 import { Text, View } from "react-native";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 function TabIcon({ emoji, label, focused }: { emoji: string; label: string; focused: boolean }) {
   return (
@@ -22,6 +23,7 @@ function TabIcon({ emoji, label, focused }: { emoji: string; label: string; focu
 }
 
 export default function TierheimLayout() {
+  const { t } = useLanguage();
   return (
     <Tabs
       screenOptions={{
@@ -46,25 +48,25 @@ export default function TierheimLayout() {
       <Tabs.Screen
         name="dashboard"
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon emoji="📊" label="Dashboard" focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon emoji="📊" label={t.tierheim_tab_dashboard} focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="hunde"
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon emoji="🐕" label="Hunde" focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon emoji="🐕" label={t.tierheim_tab_dogs} focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="anfragen"
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon emoji="🔔" label="Anfragen" focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon emoji="🔔" label={t.tierheim_tab_requests} focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="profil"
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon emoji="👤" label="Profil" focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon emoji="👤" label={t.tierheim_tab_profile} focused={focused} />,
         }}
       />
 

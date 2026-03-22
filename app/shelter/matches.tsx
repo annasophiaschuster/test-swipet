@@ -12,6 +12,7 @@ import { router, useFocusEffect } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { Colors } from "../../constants/colors";
 import { Sizes } from "../../constants/sizes";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 interface ShelterMatch {
   id: string;
@@ -27,6 +28,7 @@ interface ShelterMatch {
 }
 
 export default function ShelterMatchesScreen() {
+  const { t, lang } = useLanguage();
   const [matches, setMatches] = useState<ShelterMatch[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -81,7 +83,7 @@ export default function ShelterMatchesScreen() {
           return {
             id: m.id,
             created_at: m.created_at,
-            pet_name: m.pet?.name ?? "Unbekannt",
+            pet_name: m.pet?.name ?? t.matches_unknown,
             pet_tierart: m.pet?.tierart ?? "hund",
             pet_photo: photos[0]?.url ?? null,
             adoptant_name: m.adoptant?.name ?? null,
@@ -102,14 +104,16 @@ export default function ShelterMatchesScreen() {
     }
   };
 
+  const locale = lang === "en" ? "en-US" : "de-DE";
+
   const formatTime = (iso: string | null) => {
     if (!iso) return "";
     const d = new Date(iso);
     const now = new Date();
     const diffDays = Math.floor((now.getTime() - d.getTime()) / 86400000);
-    if (diffDays === 0) return d.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
-    if (diffDays === 1) return "Gestern";
-    return d.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" });
+    if (diffDays === 0) return d.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
+    if (diffDays === 1) return t.adoption_chat_yesterday;
+    return d.toLocaleDateString(locale, { day: "2-digit", month: "2-digit" });
   };
 
   if (loading) {
@@ -128,8 +132,8 @@ export default function ShelterMatchesScreen() {
           <Text style={{ fontSize: 20, color: Colors.PRIMARY }}>‹</Text>
         </TouchableOpacity>
         <View>
-          <Text style={{ fontSize: 20, fontWeight: "800", color: Colors.TEXT }}>Matches & Nachrichten</Text>
-          <Text style={{ color: Colors.TEXT_MUTED, fontSize: 12 }}>{matches.length} Interessenten</Text>
+          <Text style={{ fontSize: 20, fontWeight: "800", color: Colors.TEXT }}>{t.tierheim_matches_title}</Text>
+          <Text style={{ color: Colors.TEXT_MUTED, fontSize: 12 }}>{t.tierheim_dashboard_interested(matches.length)}</Text>
         </View>
       </View>
 
@@ -137,10 +141,10 @@ export default function ShelterMatchesScreen() {
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32 }}>
           <Text style={{ fontSize: 52, marginBottom: 16 }}>💌</Text>
           <Text style={{ fontSize: Sizes.FONT_XL, fontWeight: "700", color: Colors.TEXT, textAlign: "center", marginBottom: 8 }}>
-            Noch keine Matches
+            {t.tierheim_matches_empty_title}
           </Text>
           <Text style={{ color: Colors.TEXT_MUTED, textAlign: "center", lineHeight: 22 }}>
-            Sobald jemand ein Tier von euch liked, erscheint hier ein Match.
+            {t.tierheim_matches_empty_sub}
           </Text>
         </View>
       ) : (
@@ -157,7 +161,7 @@ export default function ShelterMatchesScreen() {
                     matchId: item.id,
                     petName: item.pet_name,
                     petPhoto: item.pet_photo ?? "",
-                    adoptantName: item.adoptant_name ?? "Interessent",
+                    adoptantName: item.adoptant_name ?? t.tierheim_req_guest_nav,
                   },
                 })
               }
@@ -186,14 +190,14 @@ export default function ShelterMatchesScreen() {
                   </Text>
                 </View>
                 <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, marginTop: 1 }}>
-                  von {item.adoptant_name ?? "Unbekannt"}
+                  {t.tierheim_req_from} {item.adoptant_name ?? t.tierheim_req_unknown}
                 </Text>
                 <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 3 }}>
                   <Text
                     numberOfLines={1}
                     style={{ flex: 1, fontSize: Sizes.FONT_SM, color: item.last_message ? (item.unread_count > 0 ? Colors.TEXT : Colors.TEXT_MUTED) : Colors.TEXT_MUTED, fontStyle: item.last_message ? "normal" : "italic", fontWeight: item.unread_count > 0 ? "600" : "400" }}
                   >
-                    {item.last_message_is_mine ? "Du: " : ""}{item.last_message ?? "Neuer Match — schreib eine Begrüßung!"}
+                    {item.last_message_is_mine ? t.tierheim_req_you : ""}{item.last_message ?? t.tierheim_req_new_match}
                   </Text>
                   {item.unread_count > 0 && (
                     <View style={{ backgroundColor: Colors.PRIMARY, borderRadius: 10, minWidth: 20, height: 20, alignItems: "center", justifyContent: "center", paddingHorizontal: 4, marginLeft: 8 }}>

@@ -12,6 +12,7 @@ import { Sizes } from "../constants/sizes";
 import Badge from "./Badge";
 import { formatAlter, formatGroesse } from "../lib/matching";
 import type { Database } from "../lib/supabase";
+import { useLanguage } from "../contexts/LanguageContext";
 
 type Pet = Database["public"]["Tables"]["pets"]["Row"];
 type PetPhoto = Database["public"]["Tables"]["pet_photos"]["Row"];
@@ -33,6 +34,7 @@ interface PetCardProps {
 }
 
 export default function PetCard({ pet }: PetCardProps) {
+  const { t } = useLanguage();
   const [photoIndex, setPhotoIndex] = useState(0);
   const photos      = pet.photos ?? [];
   const currentPhoto = photos[photoIndex]?.url;
@@ -137,7 +139,7 @@ export default function PetCard({ pet }: PetCardProps) {
               {pet.beschreibung}{" "}
             </Text>
             <TouchableOpacity onPress={() => router.push({ pathname: "/pet/[petId]", params: { petId: pet.id } })}>
-              <Text style={{ fontSize: 12, color: Colors.PRIMARY, fontWeight: "700" }}>mehr...</Text>
+              <Text style={{ fontSize: 12, color: Colors.PRIMARY, fontWeight: "700" }}>{t.comp_pet_more}</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -146,7 +148,7 @@ export default function PetCard({ pet }: PetCardProps) {
             style={{ marginBottom: 7 }}
           >
             <Text style={{ fontSize: 12, color: Colors.PRIMARY, fontWeight: "700" }}>
-              Alle Details ansehen →
+              {t.comp_pet_view_all}
             </Text>
           </TouchableOpacity>
         )}
@@ -162,13 +164,13 @@ export default function PetCard({ pet }: PetCardProps) {
 
         {/* Zeile 5: Icon-Pills */}
         <View style={{ flexDirection: "row", gap: 6, marginTop: "auto", flexWrap: "wrap" }}>
-          <IconPill icon="🌿" label="Garten"  ok={pet.braucht_garten}  positive={false} />
-          <IconPill icon="👦" label="Kinder"  ok={pet.kinderfreundlich === "ja" || pet.kinderfreundlich === "ab_schulalter"} positive />
-          <IconPill icon="🐾" label="Tiere"   ok={pet.vertraeglich_mit_tieren} positive />
+          <IconPill icon="🌿" label={t.comp_pet_garden}  ok={pet.braucht_garten}  positive={false} />
+          <IconPill icon="👦" label={t.comp_pet_children}  ok={pet.kinderfreundlich === "ja" || pet.kinderfreundlich === "ab_schulalter"} positive />
+          <IconPill icon="🐾" label={t.comp_pet_animals}   ok={pet.vertraeglich_mit_tieren} positive />
           {pet.erfahrung_benoetigt && (
             <IconPill
               icon={pet.erfahrung_benoetigt === "profi" ? "🏆" : pet.erfahrung_benoetigt === "fortgeschritten" ? "⭐" : "🌱"}
-              label={pet.erfahrung_benoetigt === "anfaenger" ? "Einsteiger" : pet.erfahrung_benoetigt === "fortgeschritten" ? "Erfahren" : "Profi"}
+              label={pet.erfahrung_benoetigt === "anfaenger" ? t.comp_pet_exp_beginner : pet.erfahrung_benoetigt === "fortgeschritten" ? t.comp_pet_exp_experienced : t.comp_pet_exp_pro}
               ok positive
             />
           )}

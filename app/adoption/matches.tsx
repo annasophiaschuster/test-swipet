@@ -13,6 +13,7 @@ import { supabase } from "../../lib/supabase";
 import { Colors } from "../../constants/colors";
 import { Sizes } from "../../constants/sizes";
 import GradientHeader from "../../components/GradientHeader";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 interface AdoptionMatchItem {
   id: string;
@@ -29,83 +30,84 @@ interface AdoptionMatchItem {
   match_status?: "pending" | "accepted" | "rejected";
 }
 
-const STATUS_STYLE: Record<string, { bg: string; color: string; label: string }> = {
-  pending:  { bg: Colors.WARNING + "22", color: "#B8860B",      label: "⏳ Ausstehend" },
-  accepted: { bg: Colors.SUCCESS + "22", color: Colors.SUCCESS,  label: "✅ Angenommen" },
-  rejected: { bg: Colors.ERROR   + "22", color: Colors.ERROR,    label: "❌ Abgelehnt"  },
-};
-
-const DEMO_MATCHES: AdoptionMatchItem[] = [
-  {
-    id: "demo-a-1",
-    pet_id: "demo-pet-1",
-    shelter_id: "demo-shelter-1",
-    created_at: new Date(Date.now() - 2 * 3600000).toISOString(),
-    pet_name: "Bruno",
-    pet_rasse: "Golden Retriever",
-    pet_tierart: "hund",
-    pet_photo: null,
-    shelter_name: "Tierheim München",
-    last_message: "Hallo! Wir freuen uns über dein Interesse an Bruno. Wann hättest du Zeit für ein Kennenlernen?",
-    last_message_at: new Date(Date.now() - 25 * 60000).toISOString(),
-    match_status: "accepted",
-  },
-  {
-    id: "demo-a-2",
-    pet_id: "demo-pet-2",
-    shelter_id: "demo-shelter-1",
-    created_at: new Date(Date.now() - 26 * 3600000).toISOString(),
-    pet_name: "Milo",
-    pet_rasse: "Labrador",
-    pet_tierart: "hund",
-    pet_photo: null,
-    shelter_name: "Tierheim München",
-    last_message: null,
-    last_message_at: null,
-    match_status: "pending",
-  },
-  {
-    id: "demo-a-3",
-    pet_id: "demo-pet-3",
-    shelter_id: "demo-shelter-2",
-    created_at: new Date(Date.now() - 3 * 86400000).toISOString(),
-    pet_name: "Bella",
-    pet_rasse: "Chihuahua",
-    pet_tierart: "hund",
-    pet_photo: null,
-    shelter_name: "Tierheim Berlin",
-    last_message: "Leider können wir dir Bella momentan nicht vermitteln. Wir wünschen dir viel Erfolg!",
-    last_message_at: new Date(Date.now() - 2 * 86400000).toISOString(),
-    match_status: "rejected",
-  },
-];
-
-function formatTime(iso: string | null): string {
+function formatTime(iso: string | null, yesterday: string, lang: string): string {
   if (!iso) return "";
+  const locale = lang === "en" ? "en-US" : "de-DE";
   const d = new Date(iso);
   const now = new Date();
   const diffDays = Math.floor((now.getTime() - d.getTime()) / 86400000);
-  if (diffDays === 0) return d.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
-  if (diffDays === 1) return "Gestern";
-  if (diffDays < 7) return d.toLocaleDateString("de-DE", { weekday: "short" });
-  return d.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" });
+  if (diffDays === 0) return d.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
+  if (diffDays === 1) return yesterday;
+  if (diffDays < 7) return d.toLocaleDateString(locale, { weekday: "short" });
+  return d.toLocaleDateString(locale, { day: "2-digit", month: "2-digit" });
 }
 
 function EmptyState() {
+  const { t } = useLanguage();
   return (
     <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32 }}>
       <Text style={{ fontSize: 64, marginBottom: 16 }}>💔</Text>
       <Text style={{ fontSize: Sizes.FONT_XL, fontWeight: "700", color: Colors.TEXT, textAlign: "center", marginBottom: 8 }}>
-        Noch keine Matches
+        {t.adoption_matches_empty_title}
       </Text>
       <Text style={{ color: Colors.TEXT_MUTED, textAlign: "center", lineHeight: 22 }}>
-        Swipe rechts auf Tiere die dir gefallen — bei einem Match kannst du direkt mit dem Tierheim schreiben!
+        {t.adoption_matches_empty_sub}
       </Text>
     </View>
   );
 }
 
 export default function AdoptionMatchesScreen() {
+  const { t, lang } = useLanguage();
+  const STATUS_STYLE: Record<string, { bg: string; color: string; label: string }> = {
+    pending:  { bg: Colors.WARNING + "22", color: "#B8860B",      label: t.adoption_matches_pending },
+    accepted: { bg: Colors.SUCCESS + "22", color: Colors.SUCCESS,  label: t.adoption_matches_accepted },
+    rejected: { bg: Colors.ERROR   + "22", color: Colors.ERROR,    label: t.adoption_matches_rejected },
+  };
+  const DEMO_MATCHES: AdoptionMatchItem[] = [
+    {
+      id: "demo-a-1",
+      pet_id: "demo-pet-1",
+      shelter_id: "demo-shelter-1",
+      created_at: new Date(Date.now() - 2 * 3600000).toISOString(),
+      pet_name: "Bruno",
+      pet_rasse: "Golden Retriever",
+      pet_tierart: "hund",
+      pet_photo: null,
+      shelter_name: "Tierheim München",
+      last_message: t.adoption_nachrichten_demo_msg1,
+      last_message_at: new Date(Date.now() - 25 * 60000).toISOString(),
+      match_status: "accepted",
+    },
+    {
+      id: "demo-a-2",
+      pet_id: "demo-pet-2",
+      shelter_id: "demo-shelter-1",
+      created_at: new Date(Date.now() - 26 * 3600000).toISOString(),
+      pet_name: "Milo",
+      pet_rasse: "Labrador",
+      pet_tierart: "hund",
+      pet_photo: null,
+      shelter_name: "Tierheim München",
+      last_message: null,
+      last_message_at: null,
+      match_status: "pending",
+    },
+    {
+      id: "demo-a-3",
+      pet_id: "demo-pet-3",
+      shelter_id: "demo-shelter-2",
+      created_at: new Date(Date.now() - 3 * 86400000).toISOString(),
+      pet_name: "Bella",
+      pet_rasse: "Chihuahua",
+      pet_tierart: "hund",
+      pet_photo: null,
+      shelter_name: "Tierheim Berlin",
+      last_message: t.adoption_nachrichten_demo_msg2,
+      last_message_at: new Date(Date.now() - 2 * 86400000).toISOString(),
+      match_status: "rejected",
+    },
+  ];
   const [matches, setMatches]       = useState<AdoptionMatchItem[]>([]);
   const [loading, setLoading]       = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -164,7 +166,7 @@ export default function AdoptionMatchesScreen() {
             pet_id: m.pet_id,
             shelter_id: m.shelter_id,
             created_at: m.created_at,
-            pet_name: m.pet?.name ?? "Unbekannt",
+            pet_name: m.pet?.name ?? t.matches_unknown,
             pet_rasse: m.pet?.rasse ?? undefined,
             pet_tierart: m.pet?.tierart ?? "hund",
             pet_photo: photos[0]?.url ?? null,
@@ -199,7 +201,7 @@ export default function AdoptionMatchesScreen() {
         title="❤️ Matches"
         subtitle={`${matches.length} ${matches.length === 1 ? "Match" : "Matches"}`}
         showBack
-        backLabel="Modi wechseln"
+        backLabel={t.comp_switch_modes}
         onBack={() => router.replace("/")}
       />
 
@@ -294,11 +296,11 @@ export default function AdoptionMatchesScreen() {
                       )}
                     </View>
                     <Text style={{ fontSize: 11, color: Colors.TEXT_MUTED }}>
-                      {formatTime(item.last_message_at ?? item.created_at)}
+                      {formatTime(item.last_message_at ?? item.created_at, t.matches_yesterday, lang)}
                     </Text>
                   </View>
                   <Text style={{ fontSize: Sizes.FONT_SM, color: Colors.TEXT_MUTED, marginTop: 1 }}>
-                    {[item.shelter_name ?? "Tierheim", item.pet_rasse].filter(Boolean).join(" · ")}
+                    {[item.shelter_name ?? t.adoption_chat_shelter_fallback, item.pet_rasse].filter(Boolean).join(" · ")}
                   </Text>
                   <Text
                     numberOfLines={1}
@@ -309,7 +311,7 @@ export default function AdoptionMatchesScreen() {
                       fontStyle: item.last_message ? "normal" : "italic",
                     }}
                   >
-                    {item.last_message ?? "Anfrage gesendet, warte auf Bestätigung…"}
+                    {item.last_message ?? t.adoption_matches_wait_msg}
                   </Text>
                 </View>
                 <Text style={{ color: Colors.TEXT_MUTED, marginLeft: 8, fontSize: 16 }}>›</Text>

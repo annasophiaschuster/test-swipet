@@ -13,6 +13,7 @@ import { router, useLocalSearchParams, useFocusEffect } from "expo-router";
 import { supabase } from "../../../lib/supabase";
 import { Colors } from "../../../constants/colors";
 import { Sizes } from "../../../constants/sizes";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 interface ShelterInfo {
   id: string;
@@ -34,13 +35,14 @@ interface PetItem {
   photo: string | null;
 }
 
-function formatAlter(jahre?: number | null, monate?: number | null): string {
-  if (jahre && jahre >= 1) return jahre === 1 ? "1 Jahr" : `${jahre} Jahre`;
-  if (monate) return `${monate} Monate`;
-  return "Welpe";
-}
-
 export default function ShelterPublicProfile() {
+  const { t } = useLanguage();
+
+  function formatAlter(jahre?: number | null, monate?: number | null): string {
+    if (jahre && jahre >= 1) return jahre === 1 ? `1 ${t.tierheim_age_year}` : `${jahre} ${t.tierheim_age_years}`;
+    if (monate) return `${monate} ${t.tierheim_age_months}`;
+    return t.tierheim_age_puppy;
+  }
   const { id } = useLocalSearchParams<{ id: string }>();
   const [shelter, setShelter]   = useState<ShelterInfo | null>(null);
   const [pets, setPets]         = useState<PetItem[]>([]);
@@ -175,7 +177,7 @@ export default function ShelterPublicProfile() {
         <View style={{ marginHorizontal: 20, marginBottom: 20, borderRadius: 16, overflow: "hidden", borderWidth: 1, borderColor: Colors.BORDER }}>
           <View style={{ padding: 14, backgroundColor: Colors.SURFACE }}>
             <Text style={{ fontSize: 13, fontWeight: "700", color: Colors.TEXT_MUTED, textTransform: "uppercase", letterSpacing: 1 }}>
-              Kontakt
+              {t.adoption_tierheim_contact}
             </Text>
           </View>
 
@@ -189,7 +191,7 @@ export default function ShelterPublicProfile() {
             >
               <Text style={{ fontSize: 20, marginRight: 14 }}>📞</Text>
               <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED }}>Telefon</Text>
+                <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED }}>{t.tierheim_profil_label_phone}</Text>
                 <Text style={{ fontSize: 15, fontWeight: "500", color: Colors.PRIMARY, marginTop: 2 }}>
                   {shelter.telefon}
                 </Text>
@@ -232,7 +234,7 @@ export default function ShelterPublicProfile() {
             >
               <Text style={{ fontSize: 20, marginRight: 14 }}>📍</Text>
               <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED }}>Adresse</Text>
+                <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED }}>{t.tierheim_profil_label_address}</Text>
                 <Text style={{ fontSize: 15, fontWeight: "500", color: Colors.TEXT, marginTop: 2 }}>
                   {shelter.adresse}
                 </Text>
@@ -246,7 +248,7 @@ export default function ShelterPublicProfile() {
         {pets.length > 0 && (
           <View style={{ marginHorizontal: 20, marginBottom: 20 }}>
             <Text style={{ fontSize: 18, fontWeight: "700", color: Colors.TEXT, marginBottom: 14 }}>
-              🐾 Verfügbare Hunde ({pets.length})
+              🐾 {t.adoption_tierheim_available_header} ({pets.length})
             </Text>
             <View style={{ gap: 10 }}>
               {pets.map((pet) => (
@@ -281,7 +283,7 @@ export default function ShelterPublicProfile() {
                     backgroundColor: Colors.SUCCESS + "20", paddingHorizontal: 10, paddingVertical: 4,
                     borderRadius: 99,
                   }}>
-                    <Text style={{ fontSize: 11, fontWeight: "700", color: Colors.SUCCESS }}>Verfügbar</Text>
+                    <Text style={{ fontSize: 11, fontWeight: "700", color: Colors.SUCCESS }}>{t.tierheim_status_available}</Text>
                   </View>
                 </View>
               ))}
@@ -293,7 +295,7 @@ export default function ShelterPublicProfile() {
           <View style={{ alignItems: "center", padding: 32 }}>
             <Text style={{ fontSize: 40, marginBottom: 12 }}>🐾</Text>
             <Text style={{ color: Colors.TEXT_MUTED, textAlign: "center" }}>
-              Aktuell sind keine Tiere verfügbar.
+              {t.adoption_tierheim_no_pets}
             </Text>
           </View>
         )}

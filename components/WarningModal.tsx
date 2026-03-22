@@ -2,6 +2,7 @@ import { View, Text, TouchableOpacity, Modal, Animated } from "react-native";
 import { useEffect, useRef } from "react";
 import { Colors } from "../constants/colors";
 import { Sizes } from "../constants/sizes";
+import { useLanguage } from "../contexts/LanguageContext";
 
 interface WarningModalProps {
   visible: boolean;
@@ -18,6 +19,7 @@ export default function WarningModal({
   onConfirm,
   onCancel,
 }: WarningModalProps) {
+  const { t } = useLanguage();
   const slideAnim = useRef(new Animated.Value(300)).current;
 
   useEffect(() => {
@@ -78,7 +80,7 @@ export default function WarningModal({
                   marginBottom: 16,
                 }}
               >
-                Passt das wirklich?
+                {t.comp_warning_title}
               </Text>
 
               <View
@@ -110,7 +112,7 @@ export default function WarningModal({
                   }}
                 >
                   <Text style={{ color: Colors.WHITE, fontWeight: "600", fontSize: Sizes.FONT_MD }}>
-                    Trotzdem liken ❤️
+                    {t.comp_warning_like_anyway}
                   </Text>
                 </TouchableOpacity>
 
@@ -126,7 +128,7 @@ export default function WarningModal({
                   }}
                 >
                   <Text style={{ color: Colors.TEXT_MUTED, fontWeight: "600", fontSize: Sizes.FONT_MD }}>
-                    Abbrechen
+                    {t.comp_warning_cancel}
                   </Text>
                 </TouchableOpacity>
               </View>

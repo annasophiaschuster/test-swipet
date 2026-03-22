@@ -13,6 +13,7 @@ import { supabase } from "../../lib/supabase";
 import { Colors } from "../../constants/colors";
 import { Sizes } from "../../constants/sizes";
 import GradientHeader from "../../components/GradientHeader";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 interface ChatItem {
   id: string;
@@ -26,42 +27,43 @@ interface ChatItem {
   unread_count: number;
 }
 
-const DEMO_CHATS: ChatItem[] = [
-  {
-    id: "demo-gn-1",
-    modus: "gassi",
-    created_at: new Date(Date.now() - 45 * 60000).toISOString(),
-    other_pet_name: "Kira",
-    other_pet_photo: null,
-    other_owner_name: "Max",
-    last_message: "Hey! Wollen wir morgen im Englischen Garten Gassi gehen? So gegen 10 Uhr?",
-    last_message_at: new Date(Date.now() - 45 * 60000).toISOString(),
-    unread_count: 2,
-  },
-  {
-    id: "demo-gn-2",
-    modus: "gassi",
-    created_at: new Date(Date.now() - 2 * 3600000).toISOString(),
-    other_pet_name: "Cookie",
-    other_pet_photo: null,
-    other_owner_name: "Sarah",
-    last_message: "Super dass wir gematcht haben! Cookie liebt andere Hunde, das wird toll 🐾",
-    last_message_at: new Date(Date.now() - 2 * 3600000).toISOString(),
-    unread_count: 0,
-  },
-];
-
-function formatTime(iso: string | null): string {
+function formatTime(iso: string | null, yesterday: string, lang: string): string {
   if (!iso) return "";
+  const locale = lang === "en" ? "en-US" : "de-DE";
   const d = new Date(iso);
   const now = new Date();
   const diffDays = Math.floor((now.getTime() - d.getTime()) / 86400000);
-  if (diffDays === 0) return d.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
-  if (diffDays === 1) return "Gestern";
-  return d.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" });
+  if (diffDays === 0) return d.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
+  if (diffDays === 1) return yesterday;
+  return d.toLocaleDateString(locale, { day: "2-digit", month: "2-digit" });
 }
 
 export default function GassiNachrichten() {
+  const { t, lang } = useLanguage();
+  const DEMO_CHATS: ChatItem[] = [
+    {
+      id: "demo-gn-1",
+      modus: "gassi",
+      created_at: new Date(Date.now() - 45 * 60000).toISOString(),
+      other_pet_name: "Kira",
+      other_pet_photo: null,
+      other_owner_name: "Max",
+      last_message: t.gassi_nachr_demo_msg1,
+      last_message_at: new Date(Date.now() - 45 * 60000).toISOString(),
+      unread_count: 2,
+    },
+    {
+      id: "demo-gn-2",
+      modus: "gassi",
+      created_at: new Date(Date.now() - 2 * 3600000).toISOString(),
+      other_pet_name: "Cookie",
+      other_pet_photo: null,
+      other_owner_name: "Sarah",
+      last_message: t.gassi_nachr_demo_msg2,
+      last_message_at: new Date(Date.now() - 2 * 3600000).toISOString(),
+      unread_count: 0,
+    },
+  ];
   const [chats, setChats]           = useState<ChatItem[]>([]);
   const [loading, setLoading]       = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -124,7 +126,7 @@ export default function GassiNachrichten() {
             id: m.id,
             modus: m.modus,
             created_at: m.created_at,
-            other_pet_name: otherPet?.name ?? "Unbekannt",
+            other_pet_name: otherPet?.name ?? t.matches_unknown,
             other_pet_photo: otherPet?.foto_url ?? null,
             other_owner_name: null,
             last_message: msgs?.[0]?.text ?? null,
@@ -154,10 +156,10 @@ export default function GassiNachrichten() {
   return (
     <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
       <GradientHeader
-        title="💬 Nachrichten"
-        subtitle={`${chats.length} Gespräch${chats.length !== 1 ? "e" : ""}`}
+        title={t.gassi_nachr_title}
+        subtitle={`${chats.length} ${chats.length !== 1 ? t.gassi_nachr_conversations_plural : t.gassi_nachr_conversations_singular}`}
         showBack
-        backLabel="Modi wechseln"
+        backLabel={t.comp_switch_modes}
         onBack={() => router.replace("/")}
       />
 
@@ -165,10 +167,10 @@ export default function GassiNachrichten() {
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32 }}>
           <Text style={{ fontSize: 64, marginBottom: 16 }}>💬</Text>
           <Text style={{ fontSize: Sizes.FONT_XL, fontWeight: "700", color: Colors.TEXT, textAlign: "center", marginBottom: 8 }}>
-            Noch keine Nachrichten
+            {t.gassi_nachr_empty_title}
           </Text>
           <Text style={{ color: Colors.TEXT_MUTED, textAlign: "center", lineHeight: 22 }}>
-            Bei einem gegenseitigen Match könnt ihr euch direkt schreiben!
+            {t.gassi_nachr_empty_sub}
           </Text>
         </View>
       ) : (
@@ -257,11 +259,11 @@ export default function GassiNachrichten() {
                         fontSize: 10, fontWeight: "600",
                         color: item.modus === "gassi" ? Colors.SECONDARY : "#9B59B6",
                       }}>
-                        {item.modus === "gassi" ? "Gassi-Date" : "Deck-Date"}
+                        {item.modus === "gassi" ? t.gassi_mode_gassi : t.gassi_mode_deck}
                       </Text>
                     </View>
                     <Text style={{ fontSize: 11, color: Colors.TEXT_MUTED }}>
-                      {formatTime(item.last_message_at ?? item.created_at)}
+                      {formatTime(item.last_message_at ?? item.created_at, t.matches_yesterday, lang)}
                     </Text>
                   </View>
                 </View>
@@ -282,7 +284,7 @@ export default function GassiNachrichten() {
                     fontWeight: item.unread_count > 0 ? "600" : "400",
                   }}
                 >
-                  {item.last_message ?? "Schreib eine erste Nachricht!"}
+                  {item.last_message ?? t.gassi_nachr_placeholder}
                 </Text>
               </View>
             </TouchableOpacity>

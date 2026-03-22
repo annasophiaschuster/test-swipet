@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { Colors } from "../../../constants/colors";
 import { Sizes } from "../../../constants/sizes";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -48,13 +49,6 @@ interface FilterModalProps {
 // Option Lists
 // ─────────────────────────────────────────────────────────────────────────────
 
-const GROESSE_OPTIONS = [
-  { key: "klein", label: "Klein" },
-  { key: "mittel", label: "Mittel" },
-  { key: "gross", label: "Groß" },
-  { key: "riese", label: "Riese" },
-];
-
 const ALTER_OPTIONS = [1, 2, 3, 5, 8, 15];
 const UMKREIS_OPTIONS = [5, 10, 25, 50, 100];
 
@@ -63,6 +57,13 @@ const UMKREIS_OPTIONS = [5, 10, 25, 50, 100];
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function FilterModal({ visible, filter, onApply, onClose }: FilterModalProps) {
+  const { t } = useLanguage();
+  const GROESSE_OPTIONS = [
+    { key: "klein", label: t.filter_size_small },
+    { key: "mittel", label: t.filter_size_medium },
+    { key: "gross", label: t.filter_size_large },
+    { key: "riese", label: t.filter_size_giant },
+  ];
   const [local, setLocal] = useState<FilterState>(filter);
 
   const toggle = <K extends keyof FilterState>(key: K, val: string) => {
@@ -119,9 +120,9 @@ export default function FilterModal({ visible, filter, onApply, onClose }: Filte
           borderBottomWidth: 1, borderBottomColor: Colors.BORDER,
         }}>
           <TouchableOpacity onPress={handleReset}>
-            <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM }}>Zurücksetzen</Text>
+            <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM }}>{t.filter_reset}</Text>
           </TouchableOpacity>
-          <Text style={{ fontSize: Sizes.FONT_LG, fontWeight: "700", color: Colors.TEXT }}>Filter</Text>
+          <Text style={{ fontSize: Sizes.FONT_LG, fontWeight: "700", color: Colors.TEXT }}>{t.filter_title}</Text>
           <TouchableOpacity onPress={onClose}>
             <Text style={{ fontSize: 22, color: Colors.TEXT_MUTED }}>✕</Text>
           </TouchableOpacity>
@@ -130,7 +131,7 @@ export default function FilterModal({ visible, filter, onApply, onClose }: Filte
         <ScrollView contentContainerStyle={{ padding: Sizes.SPACING_LG }}>
 
           {/* Größe */}
-          <Section title="Größe" subtitle="Mehrere möglich">
+          <Section title={t.filter_size} subtitle={t.filter_size_multiple}>
             <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
               {GROESSE_OPTIONS.map((o) => (
                 <Pill key={o.key} label={o.label}
@@ -141,10 +142,10 @@ export default function FilterModal({ visible, filter, onApply, onClose }: Filte
           </Section>
 
           {/* Max Alter */}
-          <Section title="Maximales Alter" subtitle={`Bis ${local.maxAlterJahre === 15 ? "15+" : local.maxAlterJahre} Jahre`}>
+          <Section title={t.filter_max_age} subtitle={`${t.filter_up_to} ${local.maxAlterJahre === 15 ? "15+" : local.maxAlterJahre} ${t.filter_years}`}>
             <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
               {ALTER_OPTIONS.map((a) => (
-                <Pill key={a} label={a === 15 ? "15+" : `${a} J.`}
+                <Pill key={a} label={a === 15 ? "15+" : `${a} ${t.filter_years_abbr}`}
                   selected={local.maxAlterJahre === a}
                   onPress={() => setLocal({ ...local, maxAlterJahre: a })} />
               ))}
@@ -152,9 +153,9 @@ export default function FilterModal({ visible, filter, onApply, onClose }: Filte
           </Section>
 
           {/* Geschlecht */}
-          <Section title="Geschlecht">
+          <Section title={t.filter_gender}>
             <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
-              {[{ k: "alle", l: "Alle" }, { k: "männlich", l: "♂ Männlich" }, { k: "weiblich", l: "♀ Weiblich" }].map(({ k, l }) => (
+              {[{ k: "alle", l: t.filter_gender_all }, { k: "männlich", l: t.filter_gender_male }, { k: "weiblich", l: t.filter_gender_female }].map(({ k, l }) => (
                 <Pill key={k} label={l}
                   selected={local.geschlecht === k}
                   onPress={() => setLocal({ ...local, geschlecht: k as FilterState["geschlecht"] })} />
@@ -163,9 +164,9 @@ export default function FilterModal({ visible, filter, onApply, onClose }: Filte
           </Section>
 
           {/* Aktivitätslevel */}
-          <Section title="Aktivitätslevel" subtitle="Mehrere möglich">
+          <Section title={t.filter_activity} subtitle={t.filter_activity_multiple}>
             <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
-              {[{ k: "ruhig", l: "🛋 Ruhig" }, { k: "mittel", l: "🚶 Mittel" }, { k: "sportlich", l: "🏃 Sportlich" }].map(({ k, l }) => (
+              {[{ k: "ruhig", l: t.filter_activity_calm }, { k: "mittel", l: t.filter_activity_medium }, { k: "sportlich", l: t.filter_activity_athletic }].map(({ k, l }) => (
                 <Pill key={k} label={l}
                   selected={(local.aktivitaetslevel as string[]).includes(k)}
                   onPress={() => toggle("aktivitaetslevel", k)} />
@@ -174,9 +175,9 @@ export default function FilterModal({ visible, filter, onApply, onClose }: Filte
           </Section>
 
           {/* Kinderfreundlich */}
-          <Section title="Kinderfreundlich">
+          <Section title={t.filter_children}>
             <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
-              {[{ k: "alle", l: "Egal" }, { k: "ja", l: "✅ Ja" }].map(({ k, l }) => (
+              {[{ k: "alle", l: t.filter_doesnt_matter }, { k: "ja", l: t.filter_yes }].map(({ k, l }) => (
                 <Pill key={k} label={l}
                   selected={local.kinderfreundlich === k}
                   onPress={() => setLocal({ ...local, kinderfreundlich: k as FilterState["kinderfreundlich"] })} />
@@ -185,9 +186,9 @@ export default function FilterModal({ visible, filter, onApply, onClose }: Filte
           </Section>
 
           {/* Garten */}
-          <Section title="Garten erforderlich">
+          <Section title={t.filter_garden}>
             <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
-              {[{ k: "alle", l: "Egal" }, { k: "nein", l: "✕ Nicht nötig" }, { k: "ja", l: "🌿 Braucht Garten" }].map(({ k, l }) => (
+              {[{ k: "alle", l: t.filter_doesnt_matter }, { k: "nein", l: t.filter_garden_no }, { k: "ja", l: t.filter_garden_yes }].map(({ k, l }) => (
                 <Pill key={k} label={l}
                   selected={local.braucht_garten === k}
                   onPress={() => setLocal({ ...local, braucht_garten: k as FilterState["braucht_garten"] })} />
@@ -196,9 +197,9 @@ export default function FilterModal({ visible, filter, onApply, onClose }: Filte
           </Section>
 
           {/* Verträglich */}
-          <Section title="Verträglich mit anderen Tieren">
+          <Section title={t.filter_other_animals}>
             <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
-              {[{ k: "alle", l: "Egal" }, { k: "ja", l: "✅ Ja" }].map(({ k, l }) => (
+              {[{ k: "alle", l: t.filter_doesnt_matter }, { k: "ja", l: t.filter_yes }].map(({ k, l }) => (
                 <Pill key={k} label={l}
                   selected={local.vertraeglich === k}
                   onPress={() => setLocal({ ...local, vertraeglich: k as FilterState["vertraeglich"] })} />
@@ -207,10 +208,10 @@ export default function FilterModal({ visible, filter, onApply, onClose }: Filte
           </Section>
 
           {/* Umkreis */}
-          <Section title="Umkreis" subtitle={local.umkreis === 100 ? "Unbegrenzt" : `${local.umkreis} km`}>
+          <Section title={t.filter_radius} subtitle={local.umkreis === 100 ? t.filter_radius_unlimited : `${local.umkreis} km`}>
             <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
               {UMKREIS_OPTIONS.map((u) => (
-                <Pill key={u} label={u === 100 ? "Alle" : `${u} km`}
+                <Pill key={u} label={u === 100 ? t.filter_radius_all : `${u} km`}
                   selected={local.umkreis === u}
                   onPress={() => setLocal({ ...local, umkreis: u })} />
               ))}
@@ -230,7 +231,7 @@ export default function FilterModal({ visible, filter, onApply, onClose }: Filte
               shadowOpacity: 0.3, shadowRadius: 8, elevation: 4,
             }}
           >
-            <Text style={{ color: Colors.WHITE, fontWeight: "600", fontSize: Sizes.FONT_MD }}>Filter anwenden</Text>
+            <Text style={{ color: Colors.WHITE, fontWeight: "600", fontSize: Sizes.FONT_MD }}>{t.filter_apply}</Text>
           </TouchableOpacity>
         </View>
       </View>

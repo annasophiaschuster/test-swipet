@@ -22,27 +22,12 @@ import FilterModal, { FilterState, DEFAULT_FILTER } from "../(tabs)/swipe/filter
 import { checkAdoptionCompatibility, formatAlter, formatGroesse } from "../../lib/matching";
 import type { Database } from "../../lib/supabase";
 import { sendAdoptionMatchNotification } from "../../lib/notifications";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 type AdoptantProfile = Database["public"]["Tables"]["adoptant_profiles"]["Row"];
 
 const { width: W } = Dimensions.get("window");
 
-const AKTIV_MAP: Record<string, string> = {
-  sportlich: "🏃 Sehr aktiv",
-  mittel: "🚶 Mäßig aktiv",
-  ruhig: "🛋 Ruhig",
-};
-const KINDER_MAP: Record<string, string> = {
-  ja: "Ja",
-  nein: "Nicht kinderfreundlich",
-  ab_schulalter: "Ab Schulalter",
-  ab_teenager: "Ab Teenager",
-};
-const ERFAHRUNG_MAP: Record<string, string> = {
-  anfaenger: "🌱 Einsteiger",
-  fortgeschritten: "⭐ Erfahren",
-  profi: "🏆 Nur Profis",
-};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PropRow
@@ -78,14 +63,15 @@ function PropRow({
 // ─────────────────────────────────────────────────────────────────────────────
 
 function EmptyState({ onReload }: { onReload: () => void }) {
+  const { t } = useLanguage();
   return (
     <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32 }}>
       <Text style={{ fontSize: 64, marginBottom: 16 }}>🐾</Text>
       <Text style={{ fontSize: Sizes.FONT_XL, fontWeight: "700", color: Colors.TEXT, textAlign: "center", marginBottom: 8 }}>
-        Keine Tiere mehr
+        {t.adoption_empty_title}
       </Text>
       <Text style={{ color: Colors.TEXT_MUTED, textAlign: "center", lineHeight: 22, marginBottom: 24 }}>
-        Du hast alle Tiere in deiner Nähe gesehen. Schau später nochmal vorbei!
+        {t.adoption_empty_sub}
       </Text>
       <TouchableOpacity
         onPress={onReload}
@@ -96,7 +82,7 @@ function EmptyState({ onReload }: { onReload: () => void }) {
         }}
       >
         <Text style={{ color: Colors.WHITE, fontWeight: "700", fontSize: Sizes.FONT_MD }}>
-          Nochmal laden
+          {t.adoption_reload}
         </Text>
       </TouchableOpacity>
     </View>
@@ -114,6 +100,35 @@ function AdoptionPetView({
   saving: boolean;
   onAction: (r: "ja" | "nein") => void;
 }) {
+  const { t } = useLanguage();
+  const formatAlterLocal = (jahre?: number | null, monate?: number | null): string => {
+    if (jahre && jahre >= 1) return jahre === 1 ? `1 ${t.tierheim_age_year}` : `${jahre} ${t.tierheim_age_years}`;
+    if (monate) return `${monate} ${t.tierheim_age_months}`;
+    return t.tierheim_age_puppy;
+  };
+  const formatGroesseLocal = (groesse?: string | null): string => {
+    const map: Record<string, string> = {
+      klein: t.gassi_size_small_label, mittel: t.gassi_size_medium_label,
+      gross: t.gassi_size_large_label, riese: t.gassi_size_giant_label,
+    };
+    return map[groesse ?? ""] ?? groesse ?? "";
+  };
+  const AKTIV_MAP: Record<string, string> = {
+    sportlich: t.adoption_activity_very,
+    mittel: t.adoption_activity_medium,
+    ruhig: t.adoption_activity_calm,
+  };
+  const KINDER_MAP: Record<string, string> = {
+    ja: t.adoption_children_yes,
+    nein: t.adoption_children_no,
+    ab_schulalter: t.adoption_children_school,
+    ab_teenager: t.adoption_children_teen,
+  };
+  const ERFAHRUNG_MAP: Record<string, string> = {
+    anfaenger: t.adoption_exp_beginner,
+    fortgeschritten: t.adoption_exp_experienced,
+    profi: t.adoption_exp_pro,
+  };
   const photos = pet.photos ?? [];
 
   const position = useRef(new Animated.ValueXY()).current;
@@ -233,11 +248,11 @@ function AdoptionPetView({
         <View style={{ padding: 20, paddingBottom: 16 }}>
           <View style={{ flexDirection: "row", alignItems: "baseline", gap: 10, marginBottom: 4 }}>
             <Text style={{ fontSize: 32, fontWeight: "800", color: Colors.TEXT }}>{pet.name}</Text>
-            <Text style={{ fontSize: 17, color: Colors.TEXT_MUTED }}>{formatAlter(pet.alter_jahre, pet.alter_monate)}</Text>
+            <Text style={{ fontSize: 17, color: Colors.TEXT_MUTED }}>{formatAlterLocal(pet.alter_jahre, pet.alter_monate)}</Text>
             <Text style={{ fontSize: 17, color: Colors.TEXT_MUTED }}>{pet.geschlecht === "maennlich" ? "♂" : "♀"}</Text>
           </View>
           <Text style={{ fontSize: 15, color: Colors.TEXT_MUTED, marginBottom: pet.beschreibung ? 14 : 0 }}>
-            {[pet.rasse, formatGroesse(pet.groesse_kategorie)].filter(Boolean).join(" · ")}
+            {[pet.rasse, formatGroesseLocal(pet.groesse_kategorie)].filter(Boolean).join(" · ")}
           </Text>
           {pet.beschreibung && (
             <Text style={{ fontSize: 15, color: Colors.TEXT, lineHeight: 24 }}>{pet.beschreibung}</Text>
@@ -252,7 +267,7 @@ function AdoptionPetView({
         {/* 4. Charakter-Tags */}
         {pet.charakter_tags && pet.charakter_tags.length > 0 && (
           <View style={{ padding: 20, paddingTop: 18 }}>
-            <Text style={{ fontSize: 13, fontWeight: "700", color: Colors.TEXT_MUTED, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>Charakter</Text>
+            <Text style={{ fontSize: 13, fontWeight: "700", color: Colors.TEXT_MUTED, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>{t.adoption_feed_char_label}</Text>
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
               {pet.charakter_tags.map((tag) => (
                 <View key={tag} style={{ paddingHorizontal: 14, paddingVertical: 8, backgroundColor: "#FFF0F3", borderRadius: 99, borderWidth: 1, borderColor: Colors.BORDER }}>
@@ -270,17 +285,17 @@ function AdoptionPetView({
 
         {/* 6. Eigenschaften */}
         <View style={{ padding: 20, paddingTop: 18 }}>
-          <Text style={{ fontSize: 13, fontWeight: "700", color: Colors.TEXT_MUTED, textTransform: "uppercase", letterSpacing: 1, marginBottom: 14 }}>Eigenschaften</Text>
-          <PropRow icon="🌿" label="Braucht Garten"         value={pet.braucht_garten ? "Ja" : "Nein"}           ok={!pet.braucht_garten} />
-          <PropRow icon="✂️" label="Kastriert"              value={pet.kastriert ? "Ja" : "Nein"}                ok={!!pet.kastriert} />
-          <PropRow icon="👦" label="Kinderfreundlich"       value={KINDER_MAP[pet.kinderfreundlich ?? ""] ?? "–"}  ok={pet.kinderfreundlich !== "nein"} />
-          <PropRow icon="🐾" label="Verträglich mit Tieren" value={pet.vertraeglich_mit_tieren ? "Ja" : "Nein"}   ok={!!pet.vertraeglich_mit_tieren} />
-          <PropRow icon="🏃" label="Aktivitätslevel"        value={AKTIV_MAP[pet.aktivitaetslevel ?? ""] ?? "–"}  ok />
+          <Text style={{ fontSize: 13, fontWeight: "700", color: Colors.TEXT_MUTED, textTransform: "uppercase", letterSpacing: 1, marginBottom: 14 }}>{t.adoption_feed_props_label}</Text>
+          <PropRow icon="🌿" label={t.pet_label_garden}         value={pet.braucht_garten ? t.adoption_feed_garden_yes : t.adoption_feed_garden_no}           ok={!pet.braucht_garten} />
+          <PropRow icon="✂️" label={t.pet_label_neutered}              value={pet.kastriert ? t.adoption_feed_garden_yes : t.adoption_feed_garden_no}                ok={!!pet.kastriert} />
+          <PropRow icon="👦" label={t.pet_label_children}       value={KINDER_MAP[pet.kinderfreundlich ?? ""] ?? "–"}  ok={pet.kinderfreundlich !== "nein"} />
+          <PropRow icon="🐾" label={t.pet_label_animals} value={pet.vertraeglich_mit_tieren ? t.adoption_feed_garden_yes : t.adoption_feed_garden_no}   ok={!!pet.vertraeglich_mit_tieren} />
+          <PropRow icon="🏃" label={t.pet_label_activity}        value={AKTIV_MAP[pet.aktivitaetslevel ?? ""] ?? "–"}  ok />
           {pet.erfahrung_benoetigt && (
-            <PropRow icon="📚" label="Erfahrung" value={ERFAHRUNG_MAP[pet.erfahrung_benoetigt] ?? "–"} ok={pet.erfahrung_benoetigt === "anfaenger"} />
+            <PropRow icon="📚" label={t.pet_label_exp} value={ERFAHRUNG_MAP[pet.erfahrung_benoetigt] ?? "–"} ok={pet.erfahrung_benoetigt === "anfaenger"} />
           )}
           {pet.im_heim_seit && (
-            <PropRow icon="📅" label="Im Heim seit" value={pet.im_heim_seit} ok />
+            <PropRow icon="📅" label={t.adoption_feed_in_shelter_since} value={pet.im_heim_seit} ok />
           )}
         </View>
 
@@ -296,7 +311,7 @@ function AdoptionPetView({
               <Text style={{ fontSize: 15, fontWeight: "700", color: Colors.TEXT }}>{pet.shelter_name}</Text>
               {pet.shelter_city && <Text style={{ fontSize: 13, color: Colors.TEXT_MUTED, marginTop: 2 }}>📍 {pet.shelter_city}</Text>}
             </View>
-            <Text style={{ fontSize: 13, color: Colors.PRIMARY }}>Profil →</Text>
+            <Text style={{ fontSize: 13, color: Colors.PRIMARY }}>{t.adoption_feed_shelter_link}</Text>
           </TouchableOpacity>
         )}
 
@@ -338,6 +353,7 @@ function AdoptionPetView({
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function AdoptionFeed() {
+  const { t } = useLanguage();
   const [isGuest, setIsGuest]                     = useState(false);
   const [pets, setPets]                           = useState<PetWithPhotos[]>([]);
   const [petIndex, setPetIndex]                   = useState(0);
@@ -545,7 +561,7 @@ export default function AdoptionFeed() {
           style={{ flexDirection: "row", alignItems: "center", gap: 2 }}
         >
           <Text style={{ fontSize: 18, color: "rgba(255,255,255,0.9)" }}>‹</Text>
-          <Text style={{ fontSize: 12, color: "rgba(255,255,255,0.85)", fontWeight: "500" }}> Modi</Text>
+          <Text style={{ fontSize: 12, color: "rgba(255,255,255,0.85)", fontWeight: "500" }}> {t.comp_switch_modes}</Text>
         </TouchableOpacity>
         <Text style={{ fontSize: 22, fontWeight: "800", color: Colors.WHITE }}>🐾 Adoption</Text>
         <TouchableOpacity
@@ -566,7 +582,7 @@ export default function AdoptionFeed() {
       {loading && (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
           <ActivityIndicator color={Colors.PRIMARY} size="large" />
-          <Text style={{ color: Colors.TEXT_MUTED, marginTop: 12 }}>Tiere werden geladen…</Text>
+          <Text style={{ color: Colors.TEXT_MUTED, marginTop: 12 }}>{t.adoption_feed_loading}</Text>
         </View>
       )}
 
@@ -614,7 +630,7 @@ export default function AdoptionFeed() {
           }}>
             <Text style={{ fontSize: 52, marginBottom: 8 }}>🎉</Text>
             <Text style={{ fontSize: 28, fontWeight: "800", color: Colors.PRIMARY, marginBottom: 4 }}>
-              Es ist ein Match!
+              {t.adoption_feed_match_title}
             </Text>
             {matchPet?.photos?.[0]?.url && (
               <Image
@@ -626,7 +642,7 @@ export default function AdoptionFeed() {
               {matchPet?.name}
             </Text>
             <Text style={{ color: Colors.TEXT_MUTED, textAlign: "center", marginBottom: 24, lineHeight: 20 }}>
-              Du und {matchPet?.shelter_name ?? "das Tierheim"} mögen einander — schreib jetzt eine Nachricht!
+              {t.adoption_feed_match_sub(matchPet?.shelter_name ?? t.matches_shelter_fallback)}
             </Text>
             <TouchableOpacity
               onPress={() => {
@@ -650,11 +666,11 @@ export default function AdoptionFeed() {
               }}
             >
               <Text style={{ color: Colors.WHITE, fontWeight: "700", fontSize: Sizes.FONT_MD }}>
-                💬 Nachricht schreiben
+                {t.adoption_feed_msg_btn}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setMatchVisible(false)} style={{ paddingVertical: 10 }}>
-              <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM }}>Später</Text>
+              <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM }}>{t.adoption_feed_later}</Text>
             </TouchableOpacity>
           </Animated.View>
         </Animated.View>

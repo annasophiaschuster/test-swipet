@@ -15,6 +15,7 @@ import { supabase } from "../../../../lib/supabase";
 import { Colors } from "../../../../constants/colors";
 import { Sizes } from "../../../../constants/sizes";
 import { sendOwnerMessageNotification } from "../../../../lib/notifications";
+import { useLanguage } from "../../../../contexts/LanguageContext";
 
 interface Message {
   id: string;
@@ -24,6 +25,7 @@ interface Message {
 }
 
 export default function OwnerChatScreen() {
+  const { t, lang } = useLanguage();
   const { matchId, petName, petPhoto, ownerName, modus } = useLocalSearchParams<{
     matchId: string;
     petName: string;
@@ -104,7 +106,7 @@ export default function OwnerChatScreen() {
     setSending(false);
   };
 
-  const modusBadge = modus === "gassi" ? "Gassi-Date" : "Spieldate";
+  const modusBadge = modus === "gassi" ? t.matches_gassi_date : t.matches_spieldate;
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
@@ -142,7 +144,7 @@ export default function OwnerChatScreen() {
               <View style={{ alignItems: "center", paddingTop: 40 }}>
                 <Text style={{ fontSize: 40, marginBottom: 12 }}>🐾</Text>
                 <Text style={{ color: Colors.TEXT_MUTED, textAlign: "center", lineHeight: 22 }}>
-                  {ownerName} und du haben ein Match!{"\n"}Verabredet euch für einen {modus === "gassi" ? "Gassi-Spaziergang" : "Spieldate"}!
+                  {t.owner_chat_match_msg(ownerName ?? "", modusBadge)}
                 </Text>
               </View>
             }
@@ -155,7 +157,7 @@ export default function OwnerChatScreen() {
                       {item.text}
                     </Text>
                     <Text style={{ color: isMe ? "rgba(255,255,255,0.65)" : Colors.TEXT_MUTED, fontSize: 10, marginTop: 3, textAlign: "right" }}>
-                      {new Date(item.created_at).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}
+                      {new Date(item.created_at).toLocaleTimeString(lang === "de" ? "de-DE" : "en-US", { hour: "2-digit", minute: "2-digit" })}
                     </Text>
                   </View>
                 </View>
@@ -169,7 +171,7 @@ export default function OwnerChatScreen() {
           <TextInput
             value={inputText}
             onChangeText={setInputText}
-            placeholder={`Nachricht an ${ownerName}…`}
+            placeholder={t.owner_chat_placeholder(ownerName ?? "")}
             placeholderTextColor={Colors.TEXT_MUTED}
             multiline
             style={{ flex: 1, minHeight: 40, maxHeight: 100, backgroundColor: Colors.SURFACE, borderRadius: 20, paddingHorizontal: 16, paddingTop: 10, paddingBottom: 10, fontSize: Sizes.FONT_MD, color: Colors.TEXT }}

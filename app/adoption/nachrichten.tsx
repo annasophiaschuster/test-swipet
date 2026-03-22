@@ -13,6 +13,7 @@ import { supabase } from "../../lib/supabase";
 import { Colors } from "../../constants/colors";
 import { Sizes } from "../../constants/sizes";
 import GradientHeader from "../../components/GradientHeader";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 interface ChatItem {
   id: string;
@@ -28,47 +29,48 @@ interface ChatItem {
   unread_count: number;
 }
 
-const DEMO_CHATS: ChatItem[] = [
-  {
-    id: "demo-nc-1",
-    pet_id: "demo-pet-1",
-    shelter_id: "demo-shelter-1",
-    created_at: new Date(Date.now() - 25 * 60000).toISOString(),
-    pet_name: "Bruno",
-    pet_tierart: "hund",
-    pet_photo: null,
-    shelter_name: "Tierheim München",
-    last_message: "Hallo! Wir freuen uns über dein Interesse an Bruno. Wann hättest du Zeit für ein erstes Kennenlernen?",
-    last_message_at: new Date(Date.now() - 25 * 60000).toISOString(),
-    unread_count: 1,
-  },
-  {
-    id: "demo-nc-2",
-    pet_id: "demo-pet-2",
-    shelter_id: "demo-shelter-1",
-    created_at: new Date(Date.now() - 26 * 3600000).toISOString(),
-    pet_name: "Milo",
-    pet_tierart: "hund",
-    pet_photo: null,
-    shelter_name: "Tierheim München",
-    last_message: "Vielen Dank für deine Anfrage zu Milo! Wir melden uns in den nächsten 1–2 Werktagen.",
-    last_message_at: new Date(Date.now() - 20 * 3600000).toISOString(),
-    unread_count: 0,
-  },
-];
-
-function formatTime(iso: string | null): string {
+function formatTime(iso: string | null, yesterday: string, lang: string): string {
   if (!iso) return "";
+  const locale = lang === "en" ? "en-US" : "de-DE";
   const d = new Date(iso);
   const now = new Date();
   const diffDays = Math.floor((now.getTime() - d.getTime()) / 86400000);
-  if (diffDays === 0) return d.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
-  if (diffDays === 1) return "Gestern";
-  if (diffDays < 7) return d.toLocaleDateString("de-DE", { weekday: "short" });
-  return d.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" });
+  if (diffDays === 0) return d.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
+  if (diffDays === 1) return yesterday;
+  if (diffDays < 7) return d.toLocaleDateString(locale, { weekday: "short" });
+  return d.toLocaleDateString(locale, { day: "2-digit", month: "2-digit" });
 }
 
 export default function AdoptionNachrichten() {
+  const { t, lang } = useLanguage();
+  const DEMO_CHATS: ChatItem[] = [
+    {
+      id: "demo-nc-1",
+      pet_id: "demo-pet-1",
+      shelter_id: "demo-shelter-1",
+      created_at: new Date(Date.now() - 25 * 60000).toISOString(),
+      pet_name: "Bruno",
+      pet_tierart: "hund",
+      pet_photo: null,
+      shelter_name: "Tierheim München",
+      last_message: t.adoption_nachrichten_demo_msg1,
+      last_message_at: new Date(Date.now() - 25 * 60000).toISOString(),
+      unread_count: 1,
+    },
+    {
+      id: "demo-nc-2",
+      pet_id: "demo-pet-2",
+      shelter_id: "demo-shelter-1",
+      created_at: new Date(Date.now() - 26 * 3600000).toISOString(),
+      pet_name: "Milo",
+      pet_tierart: "hund",
+      pet_photo: null,
+      shelter_name: "Tierheim München",
+      last_message: t.adoption_nachrichten_demo_msg2,
+      last_message_at: new Date(Date.now() - 20 * 3600000).toISOString(),
+      unread_count: 0,
+    },
+  ];
   const [chats, setChats]           = useState<ChatItem[]>([]);
   const [loading, setLoading]       = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -133,7 +135,7 @@ export default function AdoptionNachrichten() {
             pet_id: m.pet_id,
             shelter_id: m.shelter_id,
             created_at: m.created_at,
-            pet_name: m.pet?.name ?? "Unbekannt",
+            pet_name: m.pet?.name ?? t.matches_unknown,
             pet_tierart: m.pet?.tierart ?? "hund",
             pet_photo: photos[0]?.url ?? null,
             shelter_name: m.shelter?.name ?? null,
@@ -164,10 +166,10 @@ export default function AdoptionNachrichten() {
   return (
     <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
       <GradientHeader
-        title="💬 Nachrichten"
-        subtitle={`${chats.length} Gespräch${chats.length !== 1 ? "e" : ""}`}
+        title={t.adoption_nachr_title}
+        subtitle={`${chats.length} ${chats.length !== 1 ? t.gassi_nachr_conversations_plural : t.gassi_nachr_conversations_singular}`}
         showBack
-        backLabel="Modi wechseln"
+        backLabel={t.comp_switch_modes}
         onBack={() => router.replace("/")}
       />
 
@@ -175,10 +177,10 @@ export default function AdoptionNachrichten() {
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32 }}>
           <Text style={{ fontSize: 64, marginBottom: 16 }}>💬</Text>
           <Text style={{ fontSize: Sizes.FONT_XL, fontWeight: "700", color: Colors.TEXT, textAlign: "center", marginBottom: 8 }}>
-            Noch keine Nachrichten
+            {t.adoption_nachr_empty_title}
           </Text>
           <Text style={{ color: Colors.TEXT_MUTED, textAlign: "center", lineHeight: 22 }}>
-            Like ein Tier und schreib dem Tierheim eine Nachricht!
+            {t.adoption_nachr_empty_sub}
           </Text>
         </View>
       ) : (
@@ -258,11 +260,11 @@ export default function AdoptionNachrichten() {
                     {item.pet_name}
                   </Text>
                   <Text style={{ fontSize: 11, color: Colors.TEXT_MUTED }}>
-                    {formatTime(item.last_message_at ?? item.created_at)}
+                    {formatTime(item.last_message_at ?? item.created_at, t.matches_yesterday, lang)}
                   </Text>
                 </View>
                 <Text style={{ fontSize: Sizes.FONT_SM, color: Colors.TEXT_MUTED, marginTop: 1 }}>
-                  {item.shelter_name ?? "Tierheim"}
+                  {item.shelter_name ?? t.adoption_chat_shelter_fallback}
                 </Text>
                 <Text
                   numberOfLines={1}
@@ -276,7 +278,7 @@ export default function AdoptionNachrichten() {
                     fontWeight: item.unread_count > 0 ? "600" : "400",
                   }}
                 >
-                  {item.last_message ?? "Schreib dem Tierheim eine Nachricht…"}
+                  {item.last_message ?? t.adoption_nachr_placeholder}
                 </Text>
               </View>
               <Text style={{ color: Colors.TEXT_MUTED, marginLeft: 8, fontSize: 16 }}>›</Text>

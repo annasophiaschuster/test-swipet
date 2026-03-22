@@ -9,6 +9,7 @@ import {
   registerForPushNotificationsAsync,
   savePushToken,
 } from "../lib/notifications";
+import { LanguageProvider } from "../contexts/LanguageContext";
 
 // Set up foreground notification display before any component renders
 setupNotificationHandler();
@@ -54,7 +55,7 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <>
+    <LanguageProvider>
       <StatusBar style="light" />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
@@ -66,7 +67,7 @@ export default function RootLayout() {
         <Stack.Screen name="shelter" />
         <Stack.Screen name="pet/[petId]" />
       </Stack>
-    </>
+    </LanguageProvider>
   );
 }
 

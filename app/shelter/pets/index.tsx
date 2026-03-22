@@ -12,6 +12,7 @@ import { router, useFocusEffect } from "expo-router";
 import { supabase } from "../../../lib/supabase";
 import { Colors } from "../../../constants/colors";
 import { Sizes } from "../../../constants/sizes";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 interface Pet {
   id: string;
@@ -25,16 +26,24 @@ interface Pet {
   created_at: string;
 }
 
-const STATUS_COLORS: Record<string, { bg: string; text: string; label: string }> = {
-  verfuegbar: { bg: "#E8F5E9", text: "#2E7D32", label: "Verfügbar" },
-  reserviert: { bg: "#FFF8E1", text: "#F57F17", label: "Reserviert" },
-  vermittelt: { bg: "#F3E5F5", text: "#6A1B9A", label: "Vermittelt" },
+const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
+  verfuegbar: { bg: "#E8F5E9", text: "#2E7D32" },
+  reserviert: { bg: "#FFF8E1", text: "#F57F17" },
+  vermittelt: { bg: "#F3E5F5", text: "#6A1B9A" },
 };
 
 export default function ShelterPetsScreen() {
+  const { t } = useLanguage();
   const [pets, setPets] = useState<Pet[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+
+  const statusLabel = (status: string) => {
+    if (status === "verfuegbar") return t.tierheim_status_available;
+    if (status === "reserviert") return t.tierheim_status_reserved;
+    if (status === "vermittelt") return t.tierheim_status_placed;
+    return status;
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -67,46 +76,45 @@ export default function ShelterPetsScreen() {
 
   const handleStatusChange = async (pet: Pet) => {
     const options = ["verfuegbar", "reserviert", "vermittelt"].filter((s) => s !== pet.status);
-    const labels = options.map((s) => STATUS_COLORS[s].label);
 
     Alert.alert(
-      `Status von ${pet.name}`,
-      `Aktuell: ${STATUS_COLORS[pet.status]?.label ?? pet.status}`,
+      `${t.tierheim_dogs_status_title} ${pet.name}`,
+      `${t.tierheim_dogs_status_current} ${statusLabel(pet.status)}`,
       [
-        ...options.map((status, i) => ({
-          text: `→ ${labels[i]}`,
+        ...options.map((status) => ({
+          text: `→ ${statusLabel(status)}`,
           onPress: async () => {
             await supabase.from("pets").update({ status }).eq("id", pet.id);
             loadPets();
           },
         })),
-        { text: "Abbrechen", style: "cancel" },
+        { text: t.tierheim_dogs_cancel, style: "cancel" as const },
       ]
     );
   };
 
   const handleDelete = (pet: Pet) => {
     Alert.alert(
-      `${pet.name} löschen?`,
-      "Alle Fotos und Matches werden ebenfalls gelöscht.",
+      `${pet.name} ${t.tierheim_dogs_delete_title}`,
+      t.tierheim_dogs_delete_msg,
       [
         {
-          text: "Löschen",
+          text: t.tierheim_dogs_delete_btn,
           style: "destructive",
           onPress: async () => {
             await supabase.from("pets").delete().eq("id", pet.id);
             loadPets();
           },
         },
-        { text: "Abbrechen", style: "cancel" },
+        { text: t.tierheim_dogs_cancel, style: "cancel" },
       ]
     );
   };
 
   const formatAlter = (jahre?: number | null, monate?: number | null) => {
-    if (jahre && jahre >= 1) return jahre === 1 ? "1 Jahr" : `${jahre} Jahre`;
-    if (monate) return `${monate} Monate`;
-    return "Welpe";
+    if (jahre && jahre >= 1) return jahre === 1 ? `1 ${t.tierheim_age_year}` : `${jahre} ${t.tierheim_age_years}`;
+    if (monate) return `${monate} ${t.tierheim_age_months}`;
+    return t.tierheim_age_puppy;
   };
 
   if (loading) {
@@ -125,13 +133,13 @@ export default function ShelterPetsScreen() {
           <TouchableOpacity onPress={() => router.back()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
             <Text style={{ fontSize: 20, color: Colors.PRIMARY }}>‹</Text>
           </TouchableOpacity>
-          <Text style={{ fontSize: 20, fontWeight: "800", color: Colors.TEXT }}>Meine Tiere</Text>
+          <Text style={{ fontSize: 20, fontWeight: "800", color: Colors.TEXT }}>{t.tierheim_dogs_my_animals}</Text>
         </View>
         <TouchableOpacity
           onPress={() => router.push("/shelter/pets/add")}
           style={{ backgroundColor: Colors.PRIMARY, borderRadius: Sizes.RADIUS_FULL, paddingHorizontal: 14, paddingVertical: 7 }}
         >
-          <Text style={{ color: Colors.WHITE, fontWeight: "700", fontSize: 13 }}>+ Tier</Text>
+          <Text style={{ color: Colors.WHITE, fontWeight: "700", fontSize: 13 }}>{t.tierheim_dogs_add_short}</Text>
         </TouchableOpacity>
       </View>
 
@@ -139,16 +147,16 @@ export default function ShelterPetsScreen() {
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32 }}>
           <Text style={{ fontSize: 52, marginBottom: 16 }}>🐾</Text>
           <Text style={{ fontSize: Sizes.FONT_XL, fontWeight: "700", color: Colors.TEXT, textAlign: "center", marginBottom: 8 }}>
-            Noch keine Tiere
+            {t.tierheim_dogs_empty_title}
           </Text>
           <Text style={{ color: Colors.TEXT_MUTED, textAlign: "center", marginBottom: 24 }}>
-            Füge dein erstes Tier hinzu!
+            {t.tierheim_dogs_empty_sub2}
           </Text>
           <TouchableOpacity
             onPress={() => router.push("/shelter/pets/add")}
             style={{ backgroundColor: Colors.PRIMARY, borderRadius: Sizes.RADIUS_FULL, paddingHorizontal: 24, height: Sizes.BUTTON_HEIGHT, alignItems: "center", justifyContent: "center" }}
           >
-            <Text style={{ color: Colors.WHITE, fontWeight: "700" }}>Tier hinzufügen</Text>
+            <Text style={{ color: Colors.WHITE, fontWeight: "700" }}>{t.tierheim_dogs_add_btn}</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -167,7 +175,7 @@ export default function ShelterPetsScreen() {
                       <Text style={{ fontSize: 20 }}>{item.tierart === "hund" ? "🐶" : "🐱"}</Text>
                       <Text style={{ fontSize: Sizes.FONT_LG, fontWeight: "700", color: Colors.TEXT }}>{item.name}</Text>
                       <View style={{ backgroundColor: statusStyle.bg, paddingHorizontal: 8, paddingVertical: 2, borderRadius: Sizes.RADIUS_FULL }}>
-                        <Text style={{ color: statusStyle.text, fontSize: 11, fontWeight: "600" }}>{statusStyle.label}</Text>
+                        <Text style={{ color: statusStyle.text, fontSize: 11, fontWeight: "600" }}>{statusLabel(item.status)}</Text>
                       </View>
                     </View>
                     <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM }}>
@@ -182,7 +190,7 @@ export default function ShelterPetsScreen() {
                     onPress={() => handleStatusChange(item)}
                     style={{ flex: 1, height: 34, borderRadius: Sizes.RADIUS_FULL, borderWidth: 1, borderColor: Colors.BORDER, alignItems: "center", justifyContent: "center" }}
                   >
-                    <Text style={{ fontSize: 12, color: Colors.TEXT, fontWeight: "500" }}>Status ändern</Text>
+                    <Text style={{ fontSize: 12, color: Colors.TEXT, fontWeight: "500" }}>{t.tierheim_dogs_status_change}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     onPress={() => handleDelete(item)}

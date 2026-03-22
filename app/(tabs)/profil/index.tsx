@@ -9,6 +9,7 @@ import { Colors } from "../../../constants/colors";
 import { Sizes } from "../../../constants/sizes";
 import GradientHeader from "../../../components/GradientHeader";
 import { pickSingleImage, uploadImageToStorage } from "../../../lib/storage";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 type Profile = {
   id: string;
@@ -19,13 +20,13 @@ type Profile = {
   avatar_url: string | null;
 };
 
-const ROLE_LABELS = {
-  adoptant:   { label: "Tiersucher",  icon: "❤️" },
-  tierhalter: { label: "Tierhalter",  icon: "🐾" },
-  tierheim:   { label: "Tierheim",    icon: "🏠" },
-};
-
 export default function ProfilScreen() {
+  const { t } = useLanguage();
+  const ROLE_LABELS = {
+    adoptant:   { label: t.profil_role_adoptant,  icon: "❤️" },
+    tierhalter: { label: t.profil_role_tierhalter, icon: "🐾" },
+    tierheim:   { label: t.profil_role_tierheim,  icon: "🏠" },
+  };
   const [profile, setProfile]         = useState<Profile | null>(null);
   const [loading, setLoading]         = useState(true);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -63,17 +64,17 @@ export default function ProfilScreen() {
       await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("id", profile.id);
       setProfile((prev) => prev ? { ...prev, avatar_url: publicUrl } : prev);
     } catch (e: any) {
-      Alert.alert("Fehler", e.message ?? "Upload fehlgeschlagen.");
+      Alert.alert(t.err_generic, e.message ?? t.profil_err_upload);
     } finally {
       setUploadingAvatar(false);
     }
   };
 
   const handleLogout = () => {
-    Alert.alert("Abmelden", "Möchtest du dich wirklich abmelden?", [
-      { text: "Abbrechen", style: "cancel" },
+    Alert.alert(t.profil_sign_out, t.profil_sign_out_confirm, [
+      { text: t.profil_cancel, style: "cancel" },
       {
-        text: "Abmelden",
+        text: t.profil_sign_out,
         style: "destructive",
         onPress: async () => {
           await supabase.auth.signOut();
@@ -96,7 +97,7 @@ export default function ProfilScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
-      <GradientHeader title="Mein Profil" />
+      <GradientHeader title={t.profil_title} />
 
       <ScrollView contentContainerStyle={{ padding: Sizes.SPACING_LG }}>
 
@@ -130,10 +131,10 @@ export default function ProfilScreen() {
           </TouchableOpacity>
 
           <Text style={{ fontSize: Sizes.FONT_XL, fontWeight: "700", color: Colors.TEXT }}>
-            {profile?.name ?? "Kein Name"}
+            {profile?.name ?? t.profil_no_name}
           </Text>
           <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM, marginTop: 2 }}>
-            Tippe auf das Bild um es zu ändern
+            {t.profil_tap_to_change}
           </Text>
 
           <View style={{ marginTop: 8, paddingHorizontal: 14, paddingVertical: 4, backgroundColor: "#FFF0F3", borderRadius: Sizes.RADIUS_FULL }}>
@@ -146,9 +147,9 @@ export default function ProfilScreen() {
         {/* ── Info Karte ── */}
         <View style={{ backgroundColor: Colors.SURFACE, borderRadius: Sizes.RADIUS_XL, padding: Sizes.SPACING_MD, marginBottom: 16 }}>
           <View style={{ paddingVertical: 10 }}>
-            <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM }}>Standort</Text>
+            <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM }}>{t.profil_location}</Text>
             <Text style={{ color: Colors.TEXT, fontWeight: "500", marginTop: 2 }}>
-              {profile?.city ?? profile?.plz ?? "Nicht angegeben"}
+              {profile?.city ?? profile?.plz ?? t.profil_not_specified}
             </Text>
           </View>
         </View>
@@ -157,7 +158,7 @@ export default function ProfilScreen() {
         {canAddPets && (
           <View style={{ marginBottom: 16 }}>
             <Text style={{ fontSize: 14, fontWeight: "700", color: Colors.TEXT, marginBottom: 10 }}>
-              Meine Tiere
+              {t.profil_my_animals}
             </Text>
 
             <TouchableOpacity
@@ -178,10 +179,10 @@ export default function ProfilScreen() {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={{ fontWeight: "700", color: Colors.TEXT, fontSize: Sizes.FONT_MD }}>
-                  Hund zur Adoption eintragen
+                  {t.profil_add_dog}
                 </Text>
                 <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM, marginTop: 1 }}>
-                  Tier anlegen und Adoptierende finden
+                  {t.profil_add_dog_sub}
                 </Text>
               </View>
               <Text style={{ color: Colors.TEXT_MUTED, fontSize: 18 }}>›</Text>
@@ -205,10 +206,10 @@ export default function ProfilScreen() {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={{ fontWeight: "700", color: Colors.TEXT, fontSize: Sizes.FONT_MD }}>
-                    Alle meine Tiere
+                    {t.profil_all_animals}
                   </Text>
                   <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM, marginTop: 1 }}>
-                    Übersicht und Status verwalten
+                    {t.profil_all_animals_sub}
                   </Text>
                 </View>
                 <Text style={{ color: Colors.TEXT_MUTED, fontSize: 18 }}>›</Text>
@@ -230,7 +231,7 @@ export default function ProfilScreen() {
           }}
         >
           <Text style={{ color: Colors.ERROR, fontSize: Sizes.FONT_MD, fontWeight: "600" }}>
-            Abmelden
+            {t.profil_sign_out}
           </Text>
         </TouchableOpacity>
       </ScrollView>

@@ -13,6 +13,7 @@ import { supabase } from "../../lib/supabase";
 import { Colors } from "../../constants/colors";
 import { Sizes } from "../../constants/sizes";
 import GradientHeader from "../../components/GradientHeader";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 interface OwnerMatchItem {
   id: string;
@@ -38,7 +39,7 @@ const DEMO_MATCHES: OwnerMatchItem[] = [
     other_pet_tierart: "hund",
     other_pet_photo: null,
     other_owner_name: "Max",
-    last_message: "Match! Gassi-Date vereinbaren",
+    last_message: t.gassi_match_msg,
     last_message_at: new Date(Date.now() - 45 * 60000).toISOString(),
     match_status: "matched",
   },
@@ -75,18 +76,20 @@ const STATUS_STYLE: Record<string, { bg: string; color: string; label: string }>
   pending: { bg: Colors.WARNING + "22", color: "#B8860B",      label: "⏳ Wartet" },
 };
 
-function formatTime(iso: string | null): string {
+function formatTime(iso: string | null, yesterday: string, lang: string): string {
   if (!iso) return "";
+  const locale = lang === "en" ? "en-US" : "de-DE";
   const d = new Date(iso);
   const now = new Date();
   const diffDays = Math.floor((now.getTime() - d.getTime()) / 86400000);
-  if (diffDays === 0) return d.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
-  if (diffDays === 1) return "Gestern";
-  if (diffDays < 7) return d.toLocaleDateString("de-DE", { weekday: "short" });
-  return d.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" });
+  if (diffDays === 0) return d.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
+  if (diffDays === 1) return yesterday;
+  if (diffDays < 7) return d.toLocaleDateString(locale, { weekday: "short" });
+  return d.toLocaleDateString(locale, { day: "2-digit", month: "2-digit" });
 }
 
 export default function GassiMatchesScreen() {
+  const { t, lang } = useLanguage();
   const [matches, setMatches]       = useState<OwnerMatchItem[]>([]);
   const [loading, setLoading]       = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -142,7 +145,7 @@ export default function GassiMatchesScreen() {
             id: m.id,
             modus: m.modus,
             created_at: m.created_at,
-            other_pet_name: otherPet?.name ?? "Unbekannt",
+            other_pet_name: otherPet?.name ?? t.matches_unknown,
             other_pet_rasse: otherPet?.rasse ?? undefined,
             other_pet_tierart: otherPet?.tierart ?? "hund",
             other_pet_photo: otherPet?.foto_url ?? null,
@@ -177,7 +180,7 @@ export default function GassiMatchesScreen() {
         title="❤️ Gassi-Matches"
         subtitle={`${matches.length} ${matches.length === 1 ? "Match" : "Matches"}`}
         showBack
-        backLabel="Modi wechseln"
+        backLabel={t.comp_switch_modes}
         onBack={() => router.replace("/")}
       />
 
@@ -185,10 +188,10 @@ export default function GassiMatchesScreen() {
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32 }}>
           <Text style={{ fontSize: 64, marginBottom: 16 }}>🐾</Text>
           <Text style={{ fontSize: Sizes.FONT_XL, fontWeight: "700", color: Colors.TEXT, textAlign: "center", marginBottom: 8 }}>
-            Noch keine Gassi-Matches
+            {t.matches_empty_owner_title}
           </Text>
           <Text style={{ color: Colors.TEXT_MUTED, textAlign: "center", lineHeight: 22 }}>
-            Swipe auf andere Hunde im Gassi-Date-Feed — bei einem gegenseitigen Like könnt ihr euch verabreden!
+            {t.matches_empty_owner_sub}
           </Text>
         </View>
       ) : (
@@ -283,12 +286,12 @@ export default function GassiMatchesScreen() {
                       )}
                     </View>
                     <Text style={{ fontSize: 11, color: Colors.TEXT_MUTED }}>
-                      {formatTime(item.last_message_at ?? item.created_at)}
+                      {formatTime(item.last_message_at ?? item.created_at, t.matches_yesterday, lang)}
                     </Text>
                   </View>
                   <Text style={{ fontSize: Sizes.FONT_SM, color: Colors.TEXT_MUTED, marginTop: 1 }}>
-                    {[item.other_owner_name ?? "Hundehalter", item.other_pet_rasse].filter(Boolean).join(" · ")}
-                    {" · "}{item.modus === "gassi" ? "Gassi-Date" : "Deck-Date"}
+                    {[item.other_owner_name ?? t.gassi_dog_owner_fallback, item.other_pet_rasse].filter(Boolean).join(" · ")}
+                    {` · ${item.modus === "gassi" ? t.gassi_matches_gassi_date : t.gassi_mode_deck}`}
                   </Text>
                   <Text
                     numberOfLines={1}
@@ -299,7 +302,7 @@ export default function GassiMatchesScreen() {
                       fontStyle: item.last_message ? "normal" : "italic",
                     }}
                   >
-                    {item.last_message ?? "Warte auf Gegenmatch…"}
+                    {item.last_message ?? t.gassi_matches_wait_match}
                   </Text>
                 </View>
 

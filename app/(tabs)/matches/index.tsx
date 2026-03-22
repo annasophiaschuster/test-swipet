@@ -12,6 +12,7 @@ import { router, useFocusEffect } from "expo-router";
 import { supabase } from "../../../lib/supabase";
 import { Colors } from "../../../constants/colors";
 import { Sizes } from "../../../constants/sizes";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 interface AdoptionMatchItem {
   id: string;
@@ -41,6 +42,7 @@ interface OwnerMatchItem {
 type TabType = "adoption" | "owner";
 
 export default function MatchesScreen() {
+  const { t, lang } = useLanguage();
   const [tab, setTab] = useState<TabType>("adoption");
   const [adoptionMatches, setAdoptionMatches] = useState<AdoptionMatchItem[]>([]);
   const [ownerMatches, setOwnerMatches] = useState<OwnerMatchItem[]>([]);
@@ -97,7 +99,7 @@ export default function MatchesScreen() {
             pet_id: m.pet_id,
             shelter_id: m.shelter_id,
             created_at: m.created_at,
-            pet_name: m.pet?.name ?? "Unbekannt",
+            pet_name: m.pet?.name ?? t.matches_unknown,
             pet_tierart: m.pet?.tierart ?? "hund",
             pet_photo: photos[0]?.url ?? null,
             shelter_name: m.shelter?.name ?? null,
@@ -148,7 +150,7 @@ export default function MatchesScreen() {
             id: m.id,
             modus: m.modus,
             created_at: m.created_at,
-            other_pet_name: otherPet?.name ?? "Unbekannt",
+            other_pet_name: otherPet?.name ?? t.matches_unknown,
             other_pet_tierart: otherPet?.tierart ?? "hund",
             other_pet_photo: otherPet?.foto_url ?? null,
             other_owner_name: otherPet?.owner?.name ?? null,
@@ -169,10 +171,11 @@ export default function MatchesScreen() {
     const d = new Date(iso);
     const now = new Date();
     const diffDays = Math.floor((now.getTime() - d.getTime()) / 86400000);
-    if (diffDays === 0) return d.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
-    if (diffDays === 1) return "Gestern";
-    if (diffDays < 7) return d.toLocaleDateString("de-DE", { weekday: "short" });
-    return d.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" });
+    const locale = lang === "en" ? "en-US" : "de-DE";
+    if (diffDays === 0) return d.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
+    if (diffDays === 1) return t.matches_yesterday;
+    if (diffDays < 7) return d.toLocaleDateString(locale, { weekday: "short" });
+    return d.toLocaleDateString(locale, { day: "2-digit", month: "2-digit" });
   };
 
   const totalCount = tab === "adoption" ? adoptionMatches.length : ownerMatches.length;
@@ -199,7 +202,7 @@ export default function MatchesScreen() {
         }}
       >
         <Text style={{ fontSize: 26, fontWeight: "800", color: Colors.TEXT }}>
-          ❤️ Matches
+          {t.matches_header}
         </Text>
         <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM, marginTop: 2 }}>
           {totalCount} {totalCount === 1 ? "Match" : "Matches"}
@@ -213,7 +216,7 @@ export default function MatchesScreen() {
           style={{ flex: 1, paddingVertical: 9, borderRadius: Sizes.RADIUS_FULL, backgroundColor: tab === "adoption" ? Colors.PRIMARY : "transparent", alignItems: "center" }}
         >
           <Text style={{ color: tab === "adoption" ? Colors.WHITE : Colors.TEXT_MUTED, fontWeight: tab === "adoption" ? "700" : "400", fontSize: Sizes.FONT_SM }}>
-            ❤️ Adoption
+            {t.matches_tab_adoption}
             {adoptionMatches.length > 0 ? ` (${adoptionMatches.length})` : ""}
           </Text>
         </TouchableOpacity>
@@ -222,7 +225,7 @@ export default function MatchesScreen() {
           style={{ flex: 1, paddingVertical: 9, borderRadius: Sizes.RADIUS_FULL, backgroundColor: tab === "owner" ? Colors.SECONDARY : "transparent", alignItems: "center" }}
         >
           <Text style={{ color: tab === "owner" ? Colors.WHITE : Colors.TEXT_MUTED, fontWeight: tab === "owner" ? "700" : "400", fontSize: Sizes.FONT_SM }}>
-            🐾 Gassi & Spieldate
+            {t.matches_tab_gassi}
             {ownerMatches.length > 0 ? ` (${ownerMatches.length})` : ""}
           </Text>
         </TouchableOpacity>
@@ -272,9 +275,9 @@ export default function MatchesScreen() {
                     <Text style={{ fontSize: Sizes.FONT_MD, fontWeight: "700", color: Colors.TEXT }}>{item.pet_name}</Text>
                     <Text style={{ fontSize: 11, color: Colors.TEXT_MUTED }}>{formatTime(item.last_message_at ?? item.created_at)}</Text>
                   </View>
-                  <Text style={{ fontSize: Sizes.FONT_SM, color: Colors.TEXT_MUTED, marginTop: 1 }}>{item.shelter_name ?? "Tierheim"}</Text>
+                  <Text style={{ fontSize: Sizes.FONT_SM, color: Colors.TEXT_MUTED, marginTop: 1 }}>{item.shelter_name ?? t.matches_shelter_fallback}</Text>
                   <Text numberOfLines={1} style={{ fontSize: Sizes.FONT_SM, color: item.last_message ? Colors.TEXT : Colors.TEXT_MUTED, marginTop: 3, fontStyle: item.last_message ? "normal" : "italic" }}>
-                    {item.last_message ?? "Schreib dem Tierheim eine Nachricht…"}
+                    {item.last_message ?? t.matches_msg_placeholder_shelter}
                   </Text>
                 </View>
                 <Text style={{ color: Colors.TEXT_MUTED, marginLeft: 8, fontSize: 16 }}>›</Text>
@@ -330,10 +333,10 @@ export default function MatchesScreen() {
                     <Text style={{ fontSize: 11, color: Colors.TEXT_MUTED }}>{formatTime(item.last_message_at ?? item.created_at)}</Text>
                   </View>
                   <Text style={{ fontSize: Sizes.FONT_SM, color: Colors.TEXT_MUTED, marginTop: 1 }}>
-                    {`${item.other_owner_name ?? "Tierhalter"} · ${item.modus === "gassi" ? "Gassi-Date" : "Spieldate"}`}
+                    {`${item.other_owner_name ?? t.matches_owner_fallback} · ${item.modus === "gassi" ? t.matches_gassi_date : t.matches_spieldate}`}
                   </Text>
                   <Text numberOfLines={1} style={{ fontSize: Sizes.FONT_SM, color: item.last_message ? Colors.TEXT : Colors.TEXT_MUTED, marginTop: 3, fontStyle: item.last_message ? "normal" : "italic" }}>
-                    {item.last_message ?? "Schreib eine Nachricht…"}
+                    {item.last_message ?? t.matches_msg_placeholder_owner}
                   </Text>
                 </View>
                 <Text style={{ color: Colors.TEXT_MUTED, marginLeft: 8, fontSize: 16 }}>›</Text>
@@ -347,28 +350,30 @@ export default function MatchesScreen() {
 }
 
 function AdoptionEmptyState() {
+  const { t } = useLanguage();
   return (
     <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32 }}>
       <Text style={{ fontSize: 64, marginBottom: 16 }}>💔</Text>
       <Text style={{ fontSize: Sizes.FONT_XL, fontWeight: "700", color: Colors.TEXT, textAlign: "center", marginBottom: 8 }}>
-        Noch keine Matches
+        {t.matches_empty_adoption_title}
       </Text>
       <Text style={{ color: Colors.TEXT_MUTED, textAlign: "center", lineHeight: 22 }}>
-        Swipe rechts auf Tiere die dir gefallen — bei einem Match kannst du direkt mit dem Tierheim schreiben!
+        {t.matches_empty_adoption_sub}
       </Text>
     </View>
   );
 }
 
 function OwnerEmptyState() {
+  const { t } = useLanguage();
   return (
     <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32 }}>
       <Text style={{ fontSize: 64, marginBottom: 16 }}>🐾</Text>
       <Text style={{ fontSize: Sizes.FONT_XL, fontWeight: "700", color: Colors.TEXT, textAlign: "center", marginBottom: 8 }}>
-        Noch keine Gassi-Matches
+        {t.matches_empty_owner_title}
       </Text>
       <Text style={{ color: Colors.TEXT_MUTED, textAlign: "center", lineHeight: 22 }}>
-        Swipe auf andere Haustiere im Gassi & Spieldate-Modus — bei einem gegenseitigen Like könnt ihr euch verabreden!
+        {t.matches_empty_owner_sub}
       </Text>
     </View>
   );

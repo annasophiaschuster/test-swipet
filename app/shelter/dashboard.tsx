@@ -11,6 +11,7 @@ import { router, useFocusEffect } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { Colors } from "../../constants/colors";
 import { Sizes } from "../../constants/sizes";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 interface DashboardStats {
   orgName: string;
@@ -21,6 +22,7 @@ interface DashboardStats {
 }
 
 export default function ShelterDashboard() {
+  const { t } = useLanguage();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -34,7 +36,7 @@ export default function ShelterDashboard() {
 
   // Demo-Placeholder für unangemeldete Besucher
   const DEMO_STATS: DashboardStats = {
-    orgName: "Demo-Tierheim",
+    orgName: t.tierheim_demo_name,
     totalPets: 8,
     verfuegbarePets: 6,
     totalMatches: 12,
@@ -74,7 +76,7 @@ export default function ShelterDashboard() {
       }
 
       setStats({
-        orgName: shelterRes.data?.org_name ?? "Tierheim",
+        orgName: shelterRes.data?.org_name ?? t.adoption_chat_shelter_fallback,
         totalPets: pets.length,
         verfuegbarePets: pets.filter((p) => p.status === "verfuegbar").length,
         totalMatches: matches.length,
@@ -124,10 +126,10 @@ export default function ShelterDashboard() {
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
           <View>
             <Text style={{ color: "rgba(255,255,255,0.8)", fontSize: 13, fontWeight: "500" }}>
-              🏠 Tierheim Dashboard
+              {t.tierheim_dashboard_title}
             </Text>
             <Text style={{ color: Colors.WHITE, fontSize: 22, fontWeight: "800", marginTop: 4 }}>
-              {stats?.orgName ?? "Dein Tierheim"}
+              {stats?.orgName ?? t.tierheim_dashboard_your_shelter}
             </Text>
           </View>
           <TouchableOpacity
@@ -135,16 +137,16 @@ export default function ShelterDashboard() {
             style={{ paddingHorizontal: 14, paddingVertical: 7, borderRadius: Sizes.RADIUS_FULL, backgroundColor: "rgba(255,255,255,0.2)" }}
           >
             <Text style={{ color: Colors.WHITE, fontSize: 13, fontWeight: "600" }}>
-              {isGuest ? "Anmelden 🔑" : "Logout"}
+              {isGuest ? t.tierheim_dashboard_login : "Logout"}
             </Text>
           </TouchableOpacity>
         </View>
 
         {/* Stats */}
         <View style={{ flexDirection: "row", gap: 10, marginTop: 20 }}>
-          <StatCard value={stats?.verfuegbarePets ?? 0} label="Verfügbar" emoji="🐾" />
-          <StatCard value={stats?.totalPets ?? 0} label="Gesamt" emoji="📋" />
-          <StatCard value={stats?.totalMatches ?? 0} label="Matches" emoji="❤️" />
+          <StatCard value={stats?.verfuegbarePets ?? 0} label={t.tierheim_status_available} emoji="🐾" />
+          <StatCard value={stats?.totalPets ?? 0} label={t.tierheim_dashboard_stat_total} emoji="📋" />
+          <StatCard value={stats?.totalMatches ?? 0} label={t.tierheim_dashboard_stat_matches} emoji="❤️" />
         </View>
       </View>
 
@@ -153,8 +155,8 @@ export default function ShelterDashboard() {
         <View style={{ marginHorizontal: Sizes.SPACING_LG, marginTop: Sizes.SPACING_LG, padding: 14, backgroundColor: "#FFF8F0", borderRadius: 12, borderWidth: 1, borderColor: "#F0956A40", flexDirection: "row", alignItems: "center", gap: 10 }}>
           <Text style={{ fontSize: 18 }}>🔒</Text>
           <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 13, fontWeight: "700", color: Colors.TEXT }}>Demo-Ansicht</Text>
-            <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, marginTop: 2 }}>Melde dich an, um dein echtes Tierheim zu verwalten</Text>
+            <Text style={{ fontSize: 13, fontWeight: "700", color: Colors.TEXT }}>{t.tierheim_dashboard_demo_title}</Text>
+            <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, marginTop: 2 }}>{t.tierheim_dashboard_demo_sub}</Text>
           </View>
           <TouchableOpacity onPress={() => router.push("/auth/login")} style={{ backgroundColor: Colors.PRIMARY, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 99 }}>
             <Text style={{ color: "#FFF", fontWeight: "700", fontSize: 12 }}>Login</Text>
@@ -165,30 +167,30 @@ export default function ShelterDashboard() {
       {/* Quick Actions */}
       <View style={{ padding: Sizes.SPACING_LG }}>
         <Text style={{ fontSize: 16, fontWeight: "700", color: Colors.TEXT, marginBottom: 12 }}>
-          Schnellzugriff
+          {t.tierheim_dashboard_quick_access}
         </Text>
         <View style={{ gap: 10 }}>
           <ActionCard
             emoji="➕"
-            title="Tier hinzufügen"
-            subtitle="Neues Tier zur Adoption eintragen"
+            title={t.tierheim_dashboard_add_animal}
+            subtitle={t.tierheim_dashboard_add_animal_sub}
             color={Colors.PRIMARY}
             onPress={() => router.push("/shelter/pets/add")}
           />
           <ActionCard
             emoji="📋"
-            title="Meine Tiere"
-            subtitle={`${stats?.totalPets ?? 0} Tiere verwalten`}
+            title={t.tierheim_dashboard_my_animals}
+            subtitle={t.tierheim_dashboard_manage_animals(stats?.totalPets ?? 0)}
             color={Colors.SECONDARY}
             onPress={() => router.push("/shelter/pets")}
           />
           <ActionCard
             emoji="❤️"
-            title="Matches & Nachrichten"
+            title={t.tierheim_dashboard_matches_nav}
             subtitle={
               stats?.unreadMessages
-                ? `${stats.unreadMessages} neue Nachricht${stats.unreadMessages > 1 ? "en" : ""}`
-                : `${stats?.totalMatches ?? 0} Matches`
+                ? t.tierheim_dashboard_new_messages(stats.unreadMessages)
+                : `${stats?.totalMatches ?? 0} ${t.tierheim_dashboard_stat_matches}`
             }
             color="#8A9F79"
             badge={stats?.unreadMessages}
@@ -200,9 +202,9 @@ export default function ShelterDashboard() {
       {/* Tip */}
       <View style={{ marginHorizontal: Sizes.SPACING_LG }}>
         <View style={{ backgroundColor: Colors.SURFACE, borderRadius: Sizes.RADIUS_LG, padding: 16, borderLeftWidth: 3, borderLeftColor: Colors.PRIMARY }}>
-          <Text style={{ fontWeight: "700", color: Colors.TEXT, marginBottom: 4 }}>💡 Tipp</Text>
+          <Text style={{ fontWeight: "700", color: Colors.TEXT, marginBottom: 4 }}>{t.tip_title}</Text>
           <Text style={{ color: Colors.TEXT_MUTED, fontSize: 13, lineHeight: 20 }}>
-            Füge möglichst viele Fotos und eine detaillierte Beschreibung hinzu — Tiere mit vollständigen Profilen werden häufiger geliked!
+            {t.shelter_tip_body}
           </Text>
         </View>
       </View>

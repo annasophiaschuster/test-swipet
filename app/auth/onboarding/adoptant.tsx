@@ -11,6 +11,7 @@ import { router } from "expo-router";
 import { supabase } from "../../../lib/supabase";
 import { Colors } from "../../../constants/colors";
 import { Sizes } from "../../../constants/sizes";
+import { useLanguage } from "../../../contexts/LanguageContext";
 
 const TOTAL_STEPS = 6;
 
@@ -19,30 +20,32 @@ type Erfahrung = "anfaenger" | "fortgeschritten" | "profi";
 type Aktivitaet = "sportlich" | "mittel" | "ruhig";
 type Arbeitszeit = "vollzeit" | "teilzeit" | "homeoffice" | "nicht_berufstaetig";
 
-const WOHNSITUATION = [
-  { key: "wohnung" as Wohnsituation, label: "🏢 Wohnung" },
-  { key: "haus" as Wohnsituation, label: "🏡 Haus" },
-  { key: "haus_mit_garten" as Wohnsituation, label: "🌿 Haus mit Garten" },
-  { key: "bauernhof" as Wohnsituation, label: "🚜 Bauernhof" },
-];
-const ERFAHRUNG = [
-  { key: "anfaenger" as Erfahrung, label: "🌱 Anfänger", desc: "Erstes Tier" },
-  { key: "fortgeschritten" as Erfahrung, label: "⭐ Fortgeschritten", desc: "Schon Erfahrung" },
-  { key: "profi" as Erfahrung, label: "🏆 Profi", desc: "Viel Erfahrung" },
-];
-const AKTIVITAET = [
-  { key: "sportlich" as Aktivitaet, label: "🏃 Sportlich", desc: "Viel Bewegung täglich" },
-  { key: "mittel" as Aktivitaet, label: "🚶 Mittel", desc: "Regelmäßige Spaziergänge" },
-  { key: "ruhig" as Aktivitaet, label: "🛋️ Ruhig", desc: "Gemütliches Tempo" },
-];
-const ARBEITSZEIT = [
-  { key: "vollzeit" as Arbeitszeit, label: "💼 Vollzeit" },
-  { key: "teilzeit" as Arbeitszeit, label: "🕐 Teilzeit" },
-  { key: "homeoffice" as Arbeitszeit, label: "🏠 Homeoffice" },
-  { key: "nicht_berufstaetig" as Arbeitszeit, label: "☀️ Nicht berufstätig" },
-];
-
 export default function AdoptantOnboarding() {
+  const { t } = useLanguage();
+
+  const WOHNSITUATION = [
+    { key: "wohnung" as Wohnsituation, label: t.onb_housing_apartment },
+    { key: "haus" as Wohnsituation, label: t.onb_housing_house },
+    { key: "haus_mit_garten" as Wohnsituation, label: t.onb_housing_garden },
+    { key: "bauernhof" as Wohnsituation, label: t.onb_housing_farm },
+  ];
+  const ERFAHRUNG = [
+    { key: "anfaenger" as Erfahrung, label: t.onb_exp_beginner, desc: t.onb_exp_beginner_sub },
+    { key: "fortgeschritten" as Erfahrung, label: t.onb_exp_intermediate, desc: t.onb_exp_intermediate_sub },
+    { key: "profi" as Erfahrung, label: t.onb_exp_pro, desc: t.onb_exp_pro_sub },
+  ];
+  const AKTIVITAET = [
+    { key: "sportlich" as Aktivitaet, label: t.onb_activity_athletic, desc: t.onb_activity_athletic_sub },
+    { key: "mittel" as Aktivitaet, label: t.onb_activity_medium, desc: t.onb_activity_medium_sub },
+    { key: "ruhig" as Aktivitaet, label: t.onb_activity_calm, desc: t.onb_activity_calm_sub },
+  ];
+  const ARBEITSZEIT = [
+    { key: "vollzeit" as Arbeitszeit, label: t.onb_work_fulltime },
+    { key: "teilzeit" as Arbeitszeit, label: t.onb_work_parttime },
+    { key: "homeoffice" as Arbeitszeit, label: t.onb_work_home },
+    { key: "nicht_berufstaetig" as Arbeitszeit, label: t.onb_work_none },
+  ];
+
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
 
@@ -69,7 +72,7 @@ export default function AdoptantOnboarding() {
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Nicht angemeldet");
+      if (!user) throw new Error(t.onb_err_not_logged_in);
 
       const { error } = await supabase.from("adoptant_profiles").insert({
         id: user.id,
@@ -83,7 +86,7 @@ export default function AdoptantOnboarding() {
       if (error) throw error;
       router.replace("/adoption/feed");
     } catch (error: any) {
-      Alert.alert("Fehler", error.message);
+      Alert.alert(t.err_generic, error.message);
     } finally {
       setLoading(false);
     }
@@ -157,8 +160,8 @@ export default function AdoptantOnboarding() {
   }) => (
     <View style={{ flexDirection: "row", gap: 12 }}>
       {[
-        { v: true, label: "Ja" },
-        { v: false, label: "Nein" },
+        { v: true, label: t.onb_yes },
+        { v: false, label: t.onb_no },
       ].map(({ v, label }) => (
         <TouchableOpacity
           key={label}
@@ -190,8 +193,8 @@ export default function AdoptantOnboarding() {
 
   const STEPS = [
     {
-      title: "Wie wohnst du?",
-      subtitle: "Das hilft uns, passende Tiere zu finden.",
+      title: t.onb_housing_title,
+      subtitle: t.onb_housing_sub,
       content: (
         <View>
           {WOHNSITUATION.map((o) => (
@@ -206,8 +209,8 @@ export default function AdoptantOnboarding() {
       ),
     },
     {
-      title: "Deine Erfahrung mit Tieren?",
-      subtitle: "Ehrlich bleiben — für dein und das Wohl des Tieres.",
+      title: t.onb_exp_title,
+      subtitle: t.onb_exp_sub,
       content: (
         <View>
           {ERFAHRUNG.map((o) => (
@@ -223,18 +226,18 @@ export default function AdoptantOnboarding() {
       ),
     },
     {
-      title: "Kinder im Haushalt?",
-      subtitle: "Wichtig für die Tiervermittlung.",
+      title: t.onb_children_title,
+      subtitle: t.onb_children_sub,
       content: <YesNoToggle value={kinderImHaushalt} onChange={setKinderImHaushalt} />,
     },
     {
-      title: "Andere Tiere zuhause?",
-      subtitle: "Wir suchen verträgliche Kombinationen.",
+      title: t.onb_other_pets_title,
+      subtitle: t.onb_other_pets_sub,
       content: <YesNoToggle value={andereTiere} onChange={setAndereTiere} />,
     },
     {
-      title: "Wie aktiv bist du?",
-      subtitle: "Dein Tier soll zu deinem Lifestyle passen.",
+      title: t.onb_activity_title,
+      subtitle: t.onb_activity_sub,
       content: (
         <View>
           {AKTIVITAET.map((o) => (
@@ -250,8 +253,8 @@ export default function AdoptantOnboarding() {
       ),
     },
     {
-      title: "Deine Arbeitssituation?",
-      subtitle: "Tiere brauchen Zeit und Aufmerksamkeit.",
+      title: t.onb_work_title,
+      subtitle: t.onb_work_sub,
       content: (
         <View>
           {ARBEITSZEIT.map((o) => (
@@ -283,7 +286,7 @@ export default function AdoptantOnboarding() {
         }}
       >
         <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM, marginBottom: 8 }}>
-          Schritt {step} von {TOTAL_STEPS}
+          {t.onb_step} {step} {t.onb_of} {TOTAL_STEPS}
         </Text>
         {/* Progress Bar */}
         <View style={{ height: 6, backgroundColor: Colors.BORDER, borderRadius: 3, marginBottom: 16 }}>
@@ -336,7 +339,7 @@ export default function AdoptantOnboarding() {
             }}
           >
             <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_MD, fontWeight: "600" }}>
-              ← Zurück
+              {t.onb_back}
             </Text>
           </TouchableOpacity>
         )}
@@ -356,7 +359,7 @@ export default function AdoptantOnboarding() {
             <ActivityIndicator color={Colors.WHITE} />
           ) : (
             <Text style={{ color: Colors.WHITE, fontSize: Sizes.FONT_MD, fontWeight: "600" }}>
-              {step === TOTAL_STEPS ? "Los geht's! 🎉" : "Weiter →"}
+              {step === TOTAL_STEPS ? t.onb_finish : t.onb_next}
             </Text>
           )}
         </TouchableOpacity>

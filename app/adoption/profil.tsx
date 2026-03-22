@@ -17,6 +17,7 @@ import { Colors } from "../../constants/colors";
 import { Sizes } from "../../constants/sizes";
 import { pickSingleImage, uploadImageToStorage } from "../../lib/storage";
 import GradientHeader from "../../components/GradientHeader";
+import { useLanguage } from "../../contexts/LanguageContext";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -46,31 +47,6 @@ type AdoptantProfile = {
 const DEMO_AMIR_AVATAR =
   "https://rdkxfctjdwsyvzbzsxsd.supabase.co/storage/v1/object/public/avatars/demo/amir.png";
 
-const WOHNSITUATION_OPTIONS = [
-  { key: "wohnung", label: "🏢 Wohnung" },
-  { key: "haus", label: "🏠 Haus" },
-  { key: "haus_mit_garten", label: "🌿 Haus mit Garten" },
-];
-const ERFAHRUNG_OPTIONS = [
-  { key: "anfaenger", label: "🌱 Anfänger" },
-  { key: "fortgeschritten", label: "⭐ Fortgeschritten" },
-  { key: "profi", label: "🏆 Profi" },
-];
-const GESCHLECHT_OPTIONS = [
-  { key: "männlich", label: "♂ Männlich" },
-  { key: "weiblich", label: "♀ Weiblich" },
-  { key: "divers", label: "⚧ Divers" },
-];
-const AKTIV_OPTIONS = [
-  { key: "ruhig", label: "🛋 Ruhig" },
-  { key: "mittel", label: "🚶 Mittel" },
-  { key: "sportlich", label: "🏃 Sportlich" },
-];
-const ARBEITSZEIT_OPTIONS = [
-  { key: "vollzeit", label: "💼 Vollzeit" },
-  { key: "teilzeit", label: "⏰ Teilzeit" },
-  { key: "homeoffice", label: "🏡 Homeoffice" },
-];
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helper Components
@@ -121,15 +97,17 @@ function PillSelect({
 }
 
 function BoolPill({
-  value, onChange, color = Colors.PRIMARY,
+  value, onChange, color = Colors.PRIMARY, yes, no,
 }: {
   value: boolean | null;
   onChange: (v: boolean) => void;
   color?: string;
+  yes: string;
+  no: string;
 }) {
   return (
     <View style={{ flexDirection: "row", gap: 10, marginBottom: 20 }}>
-      {[{ v: true, l: "✅ Ja" }, { v: false, l: "✕ Nein" }].map(({ v, l }) => (
+      {[{ v: true, l: `✅ ${yes}` }, { v: false, l: `✕ ${no}` }].map(({ v, l }) => (
         <TouchableOpacity
           key={String(v)}
           onPress={() => onChange(v)}
@@ -169,6 +147,7 @@ function InfoRow({ icon, label, value }: { icon: string; label: string; value: s
 // ─────────────────────────────────────────────────────────────────────────────
 
 function DemoProfile() {
+  const { t } = useLanguage();
   return (
     <ScrollView contentContainerStyle={{ padding: Sizes.SPACING_LG }}>
       <View style={{ alignItems: "center", marginTop: 24, marginBottom: 32 }}>
@@ -184,7 +163,7 @@ function DemoProfile() {
       </View>
       <View style={{ backgroundColor: Colors.SURFACE, borderRadius: Sizes.RADIUS_LG, padding: Sizes.SPACING_MD, marginBottom: 16 }}>
         <View style={{ paddingVertical: 10 }}>
-          <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM }}>Standort</Text>
+          <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM }}>{t.adoption_profil_demo_location}</Text>
           <Text style={{ color: Colors.TEXT, fontWeight: "500", marginTop: 2 }}>📍 Düsseldorf</Text>
         </View>
       </View>
@@ -192,7 +171,7 @@ function DemoProfile() {
         onPress={() => router.push("/auth/login")}
         style={{ height: Sizes.BUTTON_HEIGHT, backgroundColor: Colors.PRIMARY, borderRadius: Sizes.RADIUS_FULL, alignItems: "center", justifyContent: "center" }}
       >
-        <Text style={{ color: Colors.WHITE, fontWeight: "700", fontSize: Sizes.FONT_MD }}>Echtes Konto erstellen</Text>
+        <Text style={{ color: Colors.WHITE, fontWeight: "700", fontSize: Sizes.FONT_MD }}>{t.gassi_profil_create_account}</Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -203,6 +182,34 @@ function DemoProfile() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function AdoptionProfilScreen() {
+  const { t } = useLanguage();
+
+  const WOHNSITUATION_OPTIONS = [
+    { key: "wohnung", label: t.adoption_profil_living_apt },
+    { key: "haus", label: t.adoption_profil_living_house },
+    { key: "haus_mit_garten", label: t.adoption_profil_living_house_garden },
+  ];
+  const ERFAHRUNG_OPTIONS = [
+    { key: "anfaenger", label: t.adoption_profil_exp_beginner },
+    { key: "fortgeschritten", label: t.adoption_profil_exp_experienced },
+    { key: "profi", label: t.adoption_profil_exp_pro },
+  ];
+  const GESCHLECHT_OPTIONS = [
+    { key: "männlich", label: t.gassi_profil_gender_male },
+    { key: "weiblich", label: t.gassi_profil_gender_female },
+    { key: "divers", label: t.gassi_profil_gender_diverse },
+  ];
+  const AKTIV_OPTIONS = [
+    { key: "ruhig", label: t.gassi_profil_activity_calm },
+    { key: "mittel", label: t.gassi_profil_activity_medium },
+    { key: "sportlich", label: t.gassi_profil_activity_athletic },
+  ];
+  const ARBEITSZEIT_OPTIONS = [
+    { key: "vollzeit", label: t.adoption_profil_work_full },
+    { key: "teilzeit", label: t.adoption_profil_work_part },
+    { key: "homeoffice", label: t.adoption_profil_work_home },
+  ];
+
   const [profile, setProfile]             = useState<AdoptantProfile | null>(null);
   const [loading, setLoading]             = useState(true);
   const [isGuest, setIsGuest]             = useState(false);
@@ -314,7 +321,7 @@ export default function AdoptionProfilScreen() {
       } : prev);
       setEditMode(false);
     } catch (e: any) {
-      Alert.alert("Fehler", e.message ?? "Speichern fehlgeschlagen.");
+      Alert.alert(t.err_generic, e.message ?? t.gassi_profil_save_failed);
     } finally {
       setSaving(false);
     }
@@ -330,17 +337,17 @@ export default function AdoptionProfilScreen() {
       await supabase.from("profiles").update({ avatar_url: url }).eq("id", profile.id);
       setProfile((prev) => prev ? { ...prev, avatar_url: url } : prev);
     } catch (e: any) {
-      Alert.alert("Fehler", e.message ?? "Upload fehlgeschlagen.");
+      Alert.alert(t.err_generic, e.message ?? t.profil_err_upload);
     } finally {
       setUploadingAvatar(false);
     }
   };
 
   const handleLogout = () => {
-    Alert.alert("Abmelden", "Möchtest du dich wirklich abmelden?", [
-      { text: "Abbrechen", style: "cancel" },
+    Alert.alert(t.profil_sign_out, t.profil_sign_out_confirm, [
+      { text: t.profil_cancel, style: "cancel" },
       {
-        text: "Abmelden", style: "destructive",
+        text: t.profil_sign_out, style: "destructive",
         onPress: async () => {
           await supabase.auth.signOut();
           router.replace("/auth/login");
@@ -360,7 +367,7 @@ export default function AdoptionProfilScreen() {
   if (isGuest) {
     return (
       <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
-        <GradientHeader title="👤 Profil" showBack backLabel="Modi wechseln" onBack={() => router.replace("/")} />
+        <GradientHeader title="👤 Profil" showBack backLabel={t.comp_switch_modes} onBack={() => router.replace("/")} />
         <DemoProfile />
       </View>
     );
@@ -385,52 +392,52 @@ export default function AdoptionProfilScreen() {
           borderBottomWidth: 1, borderBottomColor: Colors.BORDER,
         }}>
           <TouchableOpacity onPress={() => setEditMode(false)}>
-            <Text style={{ color: Colors.TEXT_MUTED, fontSize: 15 }}>Abbrechen</Text>
+            <Text style={{ color: Colors.TEXT_MUTED, fontSize: 15 }}>{t.profil_cancel}</Text>
           </TouchableOpacity>
-          <Text style={{ fontSize: 17, fontWeight: "700", color: Colors.TEXT }}>Profil bearbeiten</Text>
+          <Text style={{ fontSize: 17, fontWeight: "700", color: Colors.TEXT }}>{t.adoption_profil_edit_title}</Text>
           <TouchableOpacity onPress={handleSave} disabled={saving}>
             {saving
               ? <ActivityIndicator color={Colors.PRIMARY} size="small" />
-              : <Text style={{ color: Colors.PRIMARY, fontSize: 15, fontWeight: "700" }}>Speichern</Text>
+              : <Text style={{ color: Colors.PRIMARY, fontSize: 15, fontWeight: "700" }}>{t.adoption_profil_save}</Text>
             }
           </TouchableOpacity>
         </View>
 
         <ScrollView contentContainerStyle={{ padding: Sizes.SPACING_LG, paddingBottom: 60 }}>
-          <FieldLabel>Vorname *</FieldLabel>
-          <TextInput value={editName} onChangeText={setEditName} placeholder="Dein Vorname" placeholderTextColor={Colors.TEXT_MUTED} style={inputStyle} />
+          <FieldLabel>{t.adoption_profil_label_name}</FieldLabel>
+          <TextInput value={editName} onChangeText={setEditName} placeholder={t.adoption_profil_placeholder_name} placeholderTextColor={Colors.TEXT_MUTED} style={inputStyle} />
 
-          <FieldLabel>Alter</FieldLabel>
-          <TextInput value={editAlter} onChangeText={setEditAlter} placeholder="z.B. 28" keyboardType="numeric" placeholderTextColor={Colors.TEXT_MUTED} style={inputStyle} />
+          <FieldLabel>{t.adoption_profil_label_age}</FieldLabel>
+          <TextInput value={editAlter} onChangeText={setEditAlter} placeholder={t.adoption_profil_placeholder_age} keyboardType="numeric" placeholderTextColor={Colors.TEXT_MUTED} style={inputStyle} />
 
-          <FieldLabel>Geschlecht</FieldLabel>
+          <FieldLabel>{t.adoption_profil_label_gender}</FieldLabel>
           <PillSelect options={GESCHLECHT_OPTIONS} value={editGeschlecht} onChange={setEditGeschlecht} />
 
-          <FieldLabel>Stadt</FieldLabel>
-          <TextInput value={editCity} onChangeText={setEditCity} placeholder="z.B. München" placeholderTextColor={Colors.TEXT_MUTED} style={inputStyle} />
+          <FieldLabel>{t.adoption_profil_label_city}</FieldLabel>
+          <TextInput value={editCity} onChangeText={setEditCity} placeholder={t.adoption_profil_placeholder_city} placeholderTextColor={Colors.TEXT_MUTED} style={inputStyle} />
 
-          <FieldLabel>Wohnsituation</FieldLabel>
+          <FieldLabel>{t.adoption_profil_label_living}</FieldLabel>
           <PillSelect options={WOHNSITUATION_OPTIONS} value={editWohnsituation} onChange={setEditWohnsituation} />
 
-          <FieldLabel>Erfahrung mit Hunden</FieldLabel>
+          <FieldLabel>{t.adoption_profil_label_exp}</FieldLabel>
           <PillSelect options={ERFAHRUNG_OPTIONS} value={editErfahrung} onChange={setEditErfahrung} />
 
-          <FieldLabel>Kinder im Haushalt</FieldLabel>
-          <BoolPill value={editKinder} onChange={setEditKinder} />
+          <FieldLabel>{t.adoption_profil_label_children}</FieldLabel>
+          <BoolPill value={editKinder} onChange={setEditKinder} yes={t.adoption_profil_yes} no={t.adoption_profil_no} />
 
-          <FieldLabel>Andere Tiere</FieldLabel>
-          <BoolPill value={editTiere} onChange={setEditTiere} />
+          <FieldLabel>{t.adoption_profil_label_animals}</FieldLabel>
+          <BoolPill value={editTiere} onChange={setEditTiere} yes={t.adoption_profil_yes} no={t.adoption_profil_no} />
 
-          <FieldLabel>Aktivitätslevel</FieldLabel>
+          <FieldLabel>{t.adoption_profil_label_activity}</FieldLabel>
           <PillSelect options={AKTIV_OPTIONS} value={editAktiv} onChange={setEditAktiv} />
 
-          <FieldLabel>Arbeitszeit</FieldLabel>
+          <FieldLabel>{t.adoption_profil_label_work}</FieldLabel>
           <PillSelect options={ARBEITSZEIT_OPTIONS} value={editArbeitszeit} onChange={setEditArbeitszeit} />
 
-          <FieldLabel>Kurze Bio</FieldLabel>
+          <FieldLabel>{t.adoption_profil_label_bio}</FieldLabel>
           <TextInput
             value={editBio} onChangeText={setEditBio}
-            placeholder="Erzähl etwas über dich…"
+            placeholder={t.adoption_profil_placeholder_bio}
             placeholderTextColor={Colors.TEXT_MUTED}
             multiline numberOfLines={4}
             style={[inputStyle, { height: 100, textAlignVertical: "top" }]}
@@ -442,22 +449,22 @@ export default function AdoptionProfilScreen() {
 
   // ── View Mode ──────────────────────────────────────────────────────────────
 
-  const WOHN_LABEL: Record<string, string> = { wohnung: "🏢 Wohnung", haus: "🏠 Haus", haus_mit_garten: "🌿 Haus mit Garten" };
-  const ERF_LABEL: Record<string, string>  = { anfaenger: "🌱 Anfänger", fortgeschritten: "⭐ Fortgeschritten", profi: "🏆 Profi" };
-  const AKTIV_LABEL: Record<string, string> = { ruhig: "🛋 Ruhig", mittel: "🚶 Mittel", sportlich: "🏃 Sportlich" };
-  const ARBEIT_LABEL: Record<string, string> = { vollzeit: "💼 Vollzeit", teilzeit: "⏰ Teilzeit", homeoffice: "🏡 Homeoffice" };
+  const WOHN_LABEL: Record<string, string> = { wohnung: t.adoption_profil_living_apt, haus: t.adoption_profil_living_house, haus_mit_garten: t.adoption_profil_living_house_garden };
+  const ERF_LABEL: Record<string, string>  = { anfaenger: t.adoption_profil_exp_beginner, fortgeschritten: t.adoption_profil_exp_experienced, profi: t.adoption_profil_exp_pro };
+  const AKTIV_LABEL: Record<string, string> = { ruhig: t.gassi_profil_activity_calm, mittel: t.gassi_profil_activity_medium, sportlich: t.gassi_profil_activity_athletic };
+  const ARBEIT_LABEL: Record<string, string> = { vollzeit: t.adoption_profil_work_full, teilzeit: t.adoption_profil_work_part, homeoffice: t.adoption_profil_work_home };
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
       <GradientHeader
         title="👤 Profil"
-        showBack backLabel="Modi wechseln" onBack={() => router.replace("/")}
+        showBack backLabel={t.comp_switch_modes} onBack={() => router.replace("/")}
         rightElement={
           <TouchableOpacity
             onPress={startEdit}
             style={{ paddingHorizontal: 14, paddingVertical: 7, borderRadius: Sizes.RADIUS_FULL, backgroundColor: "rgba(255,255,255,0.25)" }}
           >
-            <Text style={{ fontSize: 13, fontWeight: "600", color: Colors.WHITE }}>✏️ Bearbeiten</Text>
+            <Text style={{ fontSize: 13, fontWeight: "600", color: Colors.WHITE }}>{t.adoption_profil_edit_btn}</Text>
           </TouchableOpacity>
         }
       />
@@ -485,18 +492,18 @@ export default function AdoptionProfilScreen() {
           </TouchableOpacity>
 
           <Text style={{ fontSize: Sizes.FONT_XL, fontWeight: "700", color: Colors.TEXT }}>
-            {profile?.name ?? "Kein Name"}
+            {profile?.name ?? t.profil_no_name}
             {profile?.alter_jahre ? `, ${profile.alter_jahre}` : ""}
           </Text>
           {profile?.geschlecht && (
             <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM, marginTop: 2 }}>
-              {profile.geschlecht === "männlich" ? "♂ Männlich" : profile.geschlecht === "weiblich" ? "♀ Weiblich" : "⚧ Divers"}
+              {profile.geschlecht === "männlich" ? t.gassi_profil_gender_male : profile.geschlecht === "weiblich" ? t.gassi_profil_gender_female : t.gassi_profil_gender_diverse}
             </Text>
           )}
           <View style={{ marginTop: 8, paddingHorizontal: 14, paddingVertical: 4, backgroundColor: "#FFF0F3", borderRadius: Sizes.RADIUS_FULL }}>
-            <Text style={{ color: Colors.PRIMARY, fontWeight: "600", fontSize: Sizes.FONT_SM }}>❤️ Tiersucher</Text>
+            <Text style={{ color: Colors.PRIMARY, fontWeight: "600", fontSize: Sizes.FONT_SM }}>{t.adoption_profil_role}</Text>
           </View>
-          <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_XS, marginTop: 6 }}>Tippe auf das Bild um es zu ändern</Text>
+          <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_XS, marginTop: 6 }}>{t.profil_tap_to_change}</Text>
         </View>
 
         {/* Bio */}
@@ -509,21 +516,21 @@ export default function AdoptionProfilScreen() {
         {/* Info Card */}
         <View style={{ borderRadius: 16, overflow: "hidden", borderWidth: 1, borderColor: Colors.BORDER, marginBottom: 20 }}>
           <View style={{ padding: 14, backgroundColor: Colors.SURFACE }}>
-            <Text style={{ fontSize: 13, fontWeight: "700", color: Colors.TEXT_MUTED, textTransform: "uppercase", letterSpacing: 1 }}>Mein Profil</Text>
+            <Text style={{ fontSize: 13, fontWeight: "700", color: Colors.TEXT_MUTED, textTransform: "uppercase", letterSpacing: 1 }}>{t.adoption_profil_section}</Text>
           </View>
-          {profile?.city && <InfoRow icon="📍" label="Stadt" value={profile.city} />}
-          {profile?.wohnsituation && <InfoRow icon="🏠" label="Wohnsituation" value={WOHN_LABEL[profile.wohnsituation] ?? profile.wohnsituation} />}
-          {profile?.erfahrung && <InfoRow icon="📚" label="Erfahrung mit Hunden" value={ERF_LABEL[profile.erfahrung] ?? profile.erfahrung} />}
-          {profile?.aktivitaetslevel && <InfoRow icon="🏃" label="Aktivitätslevel" value={AKTIV_LABEL[profile.aktivitaetslevel] ?? profile.aktivitaetslevel} />}
-          {profile?.arbeitszeit && <InfoRow icon="💼" label="Arbeitszeit" value={ARBEIT_LABEL[profile.arbeitszeit] ?? profile.arbeitszeit} />}
-          {profile?.kinder_im_haushalt != null && <InfoRow icon="👦" label="Kinder im Haushalt" value={profile.kinder_im_haushalt ? "Ja" : "Nein"} />}
-          {profile?.andere_tiere != null && <InfoRow icon="🐾" label="Andere Tiere" value={profile.andere_tiere ? "Ja" : "Nein"} />}
+          {profile?.city && <InfoRow icon="📍" label={t.adoption_profil_location} value={profile.city} />}
+          {profile?.wohnsituation && <InfoRow icon="🏠" label={t.adoption_profil_location_label} value={WOHN_LABEL[profile.wohnsituation] ?? profile.wohnsituation} />}
+          {profile?.erfahrung && <InfoRow icon="📚" label={t.adoption_profil_exp_label} value={ERF_LABEL[profile.erfahrung] ?? profile.erfahrung} />}
+          {profile?.aktivitaetslevel && <InfoRow icon="🏃" label={t.adoption_profil_activity_label} value={AKTIV_LABEL[profile.aktivitaetslevel] ?? profile.aktivitaetslevel} />}
+          {profile?.arbeitszeit && <InfoRow icon="💼" label={t.adoption_profil_work_label} value={ARBEIT_LABEL[profile.arbeitszeit] ?? profile.arbeitszeit} />}
+          {profile?.kinder_im_haushalt != null && <InfoRow icon="👦" label={t.adoption_profil_children_label} value={profile.kinder_im_haushalt ? t.adoption_profil_yes : t.adoption_profil_no} />}
+          {profile?.andere_tiere != null && <InfoRow icon="🐾" label={t.adoption_profil_animals_label} value={profile.andere_tiere ? t.adoption_profil_yes : t.adoption_profil_no} />}
           {!profile?.city && !profile?.wohnsituation && (
             <TouchableOpacity
               onPress={startEdit}
               style={{ flexDirection: "row", alignItems: "center", padding: 16, gap: 10 }}
             >
-              <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED, fontStyle: "italic" }}>Profil vervollständigen…</Text>
+              <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED, fontStyle: "italic" }}>{t.adoption_profil_complete}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -533,7 +540,7 @@ export default function AdoptionProfilScreen() {
           onPress={handleLogout}
           style={{ height: Sizes.BUTTON_HEIGHT, borderWidth: 1.5, borderColor: Colors.ERROR, borderRadius: Sizes.RADIUS_FULL, alignItems: "center", justifyContent: "center" }}
         >
-          <Text style={{ color: Colors.ERROR, fontSize: Sizes.FONT_MD, fontWeight: "600" }}>Abmelden</Text>
+          <Text style={{ color: Colors.ERROR, fontSize: Sizes.FONT_MD, fontWeight: "600" }}>{t.profil_sign_out}</Text>
         </TouchableOpacity>
       </ScrollView>
     </View>

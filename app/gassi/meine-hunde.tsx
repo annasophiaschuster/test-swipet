@@ -13,21 +13,10 @@ import { supabase } from "../../lib/supabase";
 import { Colors } from "../../constants/colors";
 import { Sizes } from "../../constants/sizes";
 import type { OwnerPetItem } from "../../components/OwnerPetCard";
-
-const AKTIV_LABEL: Record<string, string> = {
-  sportlich: "🏃 Sehr aktiv",
-  mittel: "🚶 Mäßig aktiv",
-  ruhig: "🛋 Ruhig",
-};
-
-const GROESSE_LABEL: Record<string, string> = {
-  klein: "Klein",
-  mittel: "Mittel",
-  gross: "Groß",
-  riese: "Riese",
-};
+import { useLanguage } from "../../contexts/LanguageContext";
 
 export default function MeineHundeScreen() {
+  const { t } = useLanguage();
   const [dogs, setDogs] = useState<OwnerPetItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -89,7 +78,7 @@ export default function MeineHundeScreen() {
           }}
         >
           <Text style={{ fontSize: 26, fontWeight: "800", color: Colors.TEXT }}>
-            🐕 Meine Hunde
+            {t.gassi_my_dogs}
           </Text>
         </View>
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32 }}>
@@ -103,7 +92,7 @@ export default function MeineHundeScreen() {
               marginBottom: 8,
             }}
           >
-            Anmelden erforderlich
+            {t.gassi_dogs_login_title}
           </Text>
           <Text
             style={{
@@ -113,7 +102,7 @@ export default function MeineHundeScreen() {
               lineHeight: 22,
             }}
           >
-            Melde dich an um deine Hunde zu verwalten und Gassidate-Partner zu finden.
+            {t.gassi_dogs_login_sub}
           </Text>
           <TouchableOpacity
             onPress={() => router.push("/auth/login")}
@@ -127,7 +116,7 @@ export default function MeineHundeScreen() {
             }}
           >
             <Text style={{ color: Colors.WHITE, fontWeight: "700", fontSize: Sizes.FONT_MD }}>
-              Jetzt anmelden
+              {t.gassi_dogs_login_btn}
             </Text>
           </TouchableOpacity>
         </View>
@@ -152,10 +141,10 @@ export default function MeineHundeScreen() {
       >
         <View>
           <Text style={{ fontSize: 26, fontWeight: "800", color: Colors.TEXT }}>
-            🐕 Meine Hunde
+            {t.gassi_my_dogs}
           </Text>
           <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM, marginTop: 2 }}>
-            {dogs.length} {dogs.length === 1 ? "Hund" : "Hunde"} registriert
+            {dogs.length} {dogs.length === 1 ? t.gassi_dogs_count_singular : t.gassi_dogs_count_plural}
           </Text>
         </View>
       </View>
@@ -172,7 +161,7 @@ export default function MeineHundeScreen() {
               marginBottom: 8,
             }}
           >
-            Noch keine Hunde registriert
+            {t.gassi_dogs_empty_title}
           </Text>
           <Text
             style={{
@@ -182,7 +171,7 @@ export default function MeineHundeScreen() {
               lineHeight: 22,
             }}
           >
-            Registriere deinen Hund um Gassidate-Partner in deiner Nähe zu finden!
+            {t.gassi_dogs_empty_sub}
           </Text>
           <TouchableOpacity
             onPress={() => router.push("/auth/onboarding/tierhalter")}
@@ -196,7 +185,7 @@ export default function MeineHundeScreen() {
             }}
           >
             <Text style={{ color: Colors.WHITE, fontWeight: "700", fontSize: Sizes.FONT_MD }}>
-              Hund registrieren
+              {t.gassi_dogs_register_btn}
             </Text>
           </TouchableOpacity>
         </View>
@@ -245,6 +234,18 @@ export default function MeineHundeScreen() {
 }
 
 function DogCard({ dog }: { dog: OwnerPetItem }) {
+  const { t } = useLanguage();
+  const AKTIV_LABEL: Record<string, string> = {
+    sportlich: t.gassi_activity_very,
+    mittel: t.gassi_activity_medium,
+    ruhig: t.gassi_activity_calm,
+  };
+  const GROESSE_LABEL: Record<string, string> = {
+    klein: t.gassi_size_small_label,
+    mittel: t.gassi_size_medium_label,
+    gross: t.gassi_size_large_label,
+    riese: t.gassi_size_giant_label,
+  };
   return (
     <View
       style={{
@@ -291,10 +292,10 @@ function DogCard({ dog }: { dog: OwnerPetItem }) {
           {dog.alter_jahre != null && (
             <Text style={{ fontSize: 13, color: Colors.TEXT_MUTED }}>
               {dog.alter_jahre === 0
-                ? "Welpe"
+                ? t.tierheim_age_puppy
                 : dog.alter_jahre === 1
-                ? "1 Jahr"
-                : `${dog.alter_jahre} Jahre`}
+                ? `1 ${t.tierheim_age_year}`
+                : `${dog.alter_jahre} ${t.tierheim_age_years}`}
             </Text>
           )}
         </View>
@@ -302,7 +303,7 @@ function DogCard({ dog }: { dog: OwnerPetItem }) {
         <Text style={{ fontSize: 13, color: Colors.TEXT_MUTED, marginBottom: 10 }}>
           {[dog.rasse, dog.groesse_kategorie ? GROESSE_LABEL[dog.groesse_kategorie] : null]
             .filter(Boolean)
-            .join(" · ") || "Mischling"}
+            .join(" · ") || t.gassi_dogs_mixed_breed}
         </Text>
 
         {dog.aktivitaetslevel && (
