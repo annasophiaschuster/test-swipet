@@ -548,9 +548,9 @@ export const translations = {
 
     // ── Tierheim Layout ──
     tierheim_tab_dashboard: "Dashboard",
-    tierheim_tab_dogs: "🐕 Hunde",
-    tierheim_tab_requests: "🔔 Anfragen",
-    tierheim_tab_profile: "👤 Profil",
+    tierheim_tab_dogs: "Hunde",
+    tierheim_tab_requests: "Anfragen",
+    tierheim_tab_profile: "Profil",
 
     // ── Tierheim Dashboard ──
     tierheim_status_available: "Verfügbar",
@@ -1312,9 +1312,9 @@ export const translations = {
 
     // ── Tierheim Layout ──
     tierheim_tab_dashboard: "Dashboard",
-    tierheim_tab_dogs: "🐕 Dogs",
-    tierheim_tab_requests: "🔔 Requests",
-    tierheim_tab_profile: "👤 Profile",
+    tierheim_tab_dogs: "Dogs",
+    tierheim_tab_requests: "Requests",
+    tierheim_tab_profile: "Profile",
 
     // ── Tierheim Dashboard ──
     tierheim_status_available: "Available",
