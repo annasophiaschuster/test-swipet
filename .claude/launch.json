@@ -11,7 +11,7 @@
     {
       "name": "Expo iOS",
       "runtimeExecutable": "/opt/homebrew/bin/node",
-      "runtimeArgs": ["node_modules/.bin/expo", "start", "--ios", "--localhost"],
+      "runtimeArgs": ["node_modules/.bin/expo", "start", "--ios", "--localhost", "--clear"],
       "port": 8081,
       "autoPort": false
     },

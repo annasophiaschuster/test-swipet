@@ -235,7 +235,7 @@ function SwipeCard({
             paddingHorizontal: 12, paddingVertical: 5, borderRadius: 99,
           }}>
             <Text style={{ color: "#FFF", fontSize: 12, fontWeight: "700" }}>
-              {card.modus === "gassidate" ? "🦮 Gassi-Date" : "🌸 Deck-Date"}
+              {card.modus === "gassidate" ? "Gassi-Date" : "Deck-Date"}
             </Text>
           </View>
           {card.photos.length > 1 && (
@@ -243,7 +243,7 @@ function SwipeCard({
               position: "absolute", top: 14, right: 14,
               backgroundColor: "rgba(0,0,0,0.45)", borderRadius: 99, paddingHorizontal: 10, paddingVertical: 4,
             }}>
-              <Text style={{ color: "#FFF", fontSize: 12, fontWeight: "600" }}>1 / {card.photos.length}</Text>
+              <Text style={{ color: "#FFF", fontSize: 12, fontWeight: "600" }}>{`1 / ${card.photos.length}`}</Text>
             </View>
           )}
         </View>
@@ -254,7 +254,7 @@ function SwipeCard({
             <Text style={{ fontSize: 30, fontWeight: "800", color: Colors.TEXT }}>{card.name}</Text>
             {card.alter_jahre && (
               <Text style={{ fontSize: 16, color: Colors.TEXT_MUTED }}>
-                {card.alter_jahre} {card.alter_jahre === 1 ? "Jahr" : "Jahre"}
+                {`${card.alter_jahre} ${card.alter_jahre === 1 ? "Jahr" : "Jahre"}`}
               </Text>
             )}
           </View>
@@ -286,22 +286,21 @@ function SwipeCard({
             ) : (
               <View style={{
                 width: 60, height: 60, borderRadius: 30,
-                backgroundColor: Colors.SECONDARY + "22",
+                backgroundColor: Colors.SECONDARY,
                 alignItems: "center", justifyContent: "center",
-                borderWidth: 2, borderColor: Colors.SECONDARY + "40",
               }}>
-                <Text style={{ fontSize: 26 }}>👤</Text>
+                <Text style={{ fontSize: 22, fontWeight: "700", color: "#fff" }}>{owner.name.charAt(0)}</Text>
               </View>
             )}
             <View style={{ flex: 1 }}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 2 }}>
                 <Text style={{ fontSize: 18, fontWeight: "700", color: Colors.TEXT }}>{owner.name}</Text>
                 <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED }}>
-                  {owner.alter} · {owner.geschlecht === "männlich" ? "♂" : owner.geschlecht === "weiblich" ? "♀" : "⚧"}
+                  {`${owner.alter} · ${owner.geschlecht === "männlich" ? "♂" : owner.geschlecht === "weiblich" ? "♀" : "⚧"}`}
                 </Text>
               </View>
               <Text style={{ fontSize: 13, color: Colors.TEXT_MUTED, marginBottom: 6 }}>
-                📍 {owner.stadt}
+                {`📍 ${owner.stadt}`}
               </Text>
               {owner.bio && (
                 <Text style={{ fontSize: 14, color: Colors.TEXT, lineHeight: 21, fontStyle: "italic" }}>
@@ -351,13 +350,13 @@ function SwipeCard({
             { icon: "🏃", label: "Aktivitätslevel", value: AKTIV_LABEL[card.aktivitaetslevel ?? ""] ?? "–" },
             { icon: "🐾", label: "Verträgl. mit Tieren", value: card.vertraeglich_mit_tieren ? "Ja" : "Nein" },
             { icon: "👦", label: "Kindergeeignet", value: card.kinderfreundlich ? "Ja" : "Nein" },
-            { icon: "🎯", label: "Modus", value: card.modus === "gassidate" ? "🦮 Gassi-Date" : "🌸 Deck-Date" },
+            { icon: "🎯", label: "Modus", value: card.modus === "gassidate" ? "Gassi-Date" : "Deck-Date" },
           ].map((row) => (
             <View key={row.label} style={{
               flexDirection: "row", alignItems: "center", justifyContent: "space-between",
               paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: Colors.BORDER,
             }}>
-              <Text style={{ fontSize: 14, color: Colors.TEXT }}>{row.icon}  {row.label}</Text>
+              <Text style={{ fontSize: 14, color: Colors.TEXT }}>{`${row.icon}  ${row.label}`}</Text>
               <Text style={{ fontSize: 14, fontWeight: "600", color: Colors.TEXT }}>{row.value}</Text>
             </View>
           ))}
@@ -652,14 +651,12 @@ function RegisterDogScreen({ onDone, onBack }: { onDone: () => void; onBack: () 
           <TouchableOpacity onPress={() => setModus("gassidate")}
             style={{ flex: 1, padding: 14, borderRadius: 14, borderWidth: 2, alignItems: "center", borderColor: modus === "gassidate" ? Colors.SECONDARY : Colors.BORDER, backgroundColor: modus === "gassidate" ? Colors.SECONDARY + "10" : Colors.BACKGROUND }}
           >
-            <Text style={{ fontSize: 24, marginBottom: 4 }}>🦮</Text>
             <Text style={{ fontWeight: "700", color: modus === "gassidate" ? Colors.SECONDARY : Colors.TEXT }}>Gassi-Date</Text>
             <Text style={{ fontSize: 11, color: Colors.TEXT_MUTED, textAlign: "center", marginTop: 2 }}>Gemeinsam Gassi gehen</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => setModus("zucht")}
             style={{ flex: 1, padding: 14, borderRadius: 14, borderWidth: 2, alignItems: "center", borderColor: modus === "zucht" ? "#9B59B6" : Colors.BORDER, backgroundColor: modus === "zucht" ? "#9B59B620" : Colors.BACKGROUND }}
           >
-            <Text style={{ fontSize: 24, marginBottom: 4 }}>🌸</Text>
             <Text style={{ fontWeight: "700", color: modus === "zucht" ? "#9B59B6" : Colors.TEXT }}>Deck-Date</Text>
             <Text style={{ fontSize: 11, color: Colors.TEXT_MUTED, textAlign: "center", marginTop: 2 }}>Nachwuchs finden</Text>
           </TouchableOpacity>
@@ -842,7 +839,7 @@ function GassiFilterModal({
           <TouchableOpacity onPress={() => setLocal(DEFAULT_GASSI_FILTER)}>
             <Text style={{ color: Colors.TEXT_MUTED, fontSize: 13 }}>Zurücksetzen</Text>
           </TouchableOpacity>
-          <Text style={{ fontSize: 17, fontWeight: "700", color: Colors.TEXT }}>🦮 Gassi-Date Filter</Text>
+          <Text style={{ fontSize: 17, fontWeight: "700", color: Colors.TEXT }}>Gassi-Date Filter</Text>
           <TouchableOpacity onPress={onClose}>
             <Text style={{ fontSize: 22, color: Colors.TEXT_MUTED }}>✕</Text>
           </TouchableOpacity>
@@ -960,7 +957,7 @@ function DeckDateFilterModal({
           <TouchableOpacity onPress={() => setLocal(DEFAULT_DECKDATE_FILTER)}>
             <Text style={{ color: Colors.TEXT_MUTED, fontSize: 13 }}>Zurücksetzen</Text>
           </TouchableOpacity>
-          <Text style={{ fontSize: 17, fontWeight: "700", color: "#9B59B6" }}>🌸 Deck-Date Filter</Text>
+          <Text style={{ fontSize: 17, fontWeight: "700", color: "#9B59B6" }}>Deck-Date Filter</Text>
           <TouchableOpacity onPress={onClose}>
             <Text style={{ fontSize: 22, color: Colors.TEXT_MUTED }}>✕</Text>
           </TouchableOpacity>
@@ -1302,7 +1299,7 @@ export default function GassiFeed() {
               }}
             >
               <Text style={{ fontSize: 13, fontWeight: "600", color: Colors.WHITE }}>
-                {m === "gassidate" ? "🦮 Gassi-Date" : "🌸 Deck-Date"}
+                {m === "gassidate" ? "Gassi-Date" : "Deck-Date"}
               </Text>
             </TouchableOpacity>
           ))}
@@ -1409,7 +1406,7 @@ export default function GassiFeed() {
             )}
             <Text style={{ fontSize: 18, fontWeight: "700", color: Colors.TEXT, marginBottom: 2 }}>{matchCard?.name}</Text>
             <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED, marginBottom: 4 }}>
-              Besitzer: {matchCard?.owner.name} · {matchCard?.owner.stadt}
+              {`Besitzer: ${matchCard?.owner.name} · ${matchCard?.owner.stadt}`}
             </Text>
             <Text style={{ color: Colors.TEXT_MUTED, textAlign: "center", marginBottom: 24, lineHeight: 20 }}>
               Ihr habt euch gegenseitig geliked — schreibt euch!

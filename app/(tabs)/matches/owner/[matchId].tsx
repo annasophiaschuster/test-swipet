@@ -104,7 +104,7 @@ export default function OwnerChatScreen() {
     setSending(false);
   };
 
-  const modusBadge = modus === "gassi" ? "🦮 Gassi" : "🎾 Spieldate";
+  const modusBadge = modus === "gassi" ? "Gassi-Date" : "Spieldate";
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
@@ -122,7 +122,7 @@ export default function OwnerChatScreen() {
         )}
         <View style={{ flex: 1 }}>
           <Text style={{ fontSize: Sizes.FONT_MD, fontWeight: "700", color: Colors.TEXT }}>{petName}</Text>
-          <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED }}>{ownerName} · {modusBadge}</Text>
+          <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED }}>{`${ownerName} · ${modusBadge}`}</Text>
         </View>
       </View>
 

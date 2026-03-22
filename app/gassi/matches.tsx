@@ -38,7 +38,7 @@ const DEMO_MATCHES: OwnerMatchItem[] = [
     other_pet_tierart: "hund",
     other_pet_photo: null,
     other_owner_name: "Max",
-    last_message: "Match! Gassi-Date vereinbaren 🐾",
+    last_message: "Match! Gassi-Date vereinbaren",
     last_message_at: new Date(Date.now() - 45 * 60000).toISOString(),
     match_status: "matched",
   },
@@ -259,7 +259,7 @@ export default function GassiMatchesScreen() {
                     borderWidth: 2, borderColor: Colors.BACKGROUND,
                   }}>
                     <Text style={{ fontSize: 10 }}>
-                      {item.modus === "gassi" ? "🦮" : "🎾"}
+                      {item.modus === "gassi" ? "G" : "D"}
                     </Text>
                   </View>
                 </View>
@@ -288,7 +288,7 @@ export default function GassiMatchesScreen() {
                   </View>
                   <Text style={{ fontSize: Sizes.FONT_SM, color: Colors.TEXT_MUTED, marginTop: 1 }}>
                     {[item.other_owner_name ?? "Hundehalter", item.other_pet_rasse].filter(Boolean).join(" · ")}
-                    {" · "}{item.modus === "gassi" ? "🦮 Gassi-Date" : "🌸 Deck-Date"}
+                    {" · "}{item.modus === "gassi" ? "Gassi-Date" : "Deck-Date"}
                   </Text>
                   <Text
                     numberOfLines={1}

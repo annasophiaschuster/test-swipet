@@ -456,7 +456,7 @@ export default function SwipeFeed() {
               color: mode === m ? Colors.WHITE : Colors.TEXT_MUTED,
               fontWeight: mode === m ? "700" : "400", fontSize: Sizes.FONT_SM,
             }}>
-              {m === "adoption" ? "❤️ Adoption" : "🦮 Gassidate & Zucht"}
+              {m === "adoption" ? "Adoption" : "Gassidate & Zucht"}
             </Text>
           </TouchableOpacity>
         ))}
@@ -480,7 +480,7 @@ export default function SwipeFeed() {
                 color: ownerSubMode === sub ? Colors.WHITE : Colors.TEXT_MUTED,
                 fontWeight: ownerSubMode === sub ? "700" : "400",
               }}>
-                {sub === "gassidate" ? "🦮 Gassidate" : "🐕 Zucht"}
+                {sub === "gassidate" ? "Gassidate" : "Zucht"}
               </Text>
             </TouchableOpacity>
           ))}
@@ -967,7 +967,7 @@ function GassidatePetView({
             </View>
           )}
           <View style={{ position: "absolute", top: 14, right: 14, backgroundColor: Colors.SECONDARY, paddingHorizontal: 12, paddingVertical: 5, borderRadius: 99 }}>
-            <Text style={{ color: "#FFF", fontSize: 12, fontWeight: "700" }}>🦮 Gassidate</Text>
+            <Text style={{ color: "#FFF", fontSize: 12, fontWeight: "700" }}>Gassidate</Text>
           </View>
         </View>
 

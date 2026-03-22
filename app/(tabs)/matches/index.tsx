@@ -321,7 +321,7 @@ export default function MatchesScreen() {
                     </View>
                   )}
                   <View style={{ position: "absolute", bottom: -2, right: -2, width: 22, height: 22, borderRadius: 11, backgroundColor: Colors.SECONDARY, alignItems: "center", justifyContent: "center", borderWidth: 2, borderColor: Colors.BACKGROUND }}>
-                    <Text style={{ fontSize: 10 }}>{item.modus === "gassi" ? "🦮" : "🎾"}</Text>
+                    <Text style={{ fontSize: 10 }}>{item.modus === "gassi" ? "G" : "D"}</Text>
                   </View>
                 </View>
                 <View style={{ flex: 1 }}>
@@ -330,7 +330,7 @@ export default function MatchesScreen() {
                     <Text style={{ fontSize: 11, color: Colors.TEXT_MUTED }}>{formatTime(item.last_message_at ?? item.created_at)}</Text>
                   </View>
                   <Text style={{ fontSize: Sizes.FONT_SM, color: Colors.TEXT_MUTED, marginTop: 1 }}>
-                    {item.other_owner_name ?? "Tierhalter"} · {item.modus === "gassi" ? "🦮 Gassi" : "🎾 Spieldate"}
+                    {`${item.other_owner_name ?? "Tierhalter"} · ${item.modus === "gassi" ? "Gassi-Date" : "Spieldate"}`}
                   </Text>
                   <Text numberOfLines={1} style={{ fontSize: Sizes.FONT_SM, color: item.last_message ? Colors.TEXT : Colors.TEXT_MUTED, marginTop: 3, fontStyle: item.last_message ? "normal" : "italic" }}>
                     {item.last_message ?? "Schreib eine Nachricht…"}

@@ -137,7 +137,7 @@ export default function GassiChatScreen() {
     }
   };
 
-  const modusBadge = modus === "gassi" ? "🦮 Gassi" : "🎾 Spieldate";
+  const modusBadge = modus === "gassi" ? "Gassi-Date" : "Spieldate";
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
@@ -184,7 +184,7 @@ export default function GassiChatScreen() {
             {petName}
           </Text>
           <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED }}>
-            {ownerName} · {modusBadge}
+            {`${ownerName} · ${modusBadge}`}
           </Text>
         </View>
       </View>
@@ -206,7 +206,7 @@ export default function GassiChatScreen() {
             contentContainerStyle={{ padding: 16, paddingBottom: 8 }}
             ListEmptyComponent={
               <View style={{ alignItems: "center", paddingTop: 40 }}>
-                <Text style={{ fontSize: 40, marginBottom: 12 }}>🦮</Text>
+                <Text style={{ fontSize: 40, marginBottom: 12 }}>🐕</Text>
                 <Text
                   style={{
                     color: Colors.TEXT_MUTED,

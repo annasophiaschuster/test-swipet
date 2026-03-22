@@ -177,6 +177,7 @@ function DemoProfile() {
           style={{ width: 90, height: 90, borderRadius: 45, borderWidth: 3, borderColor: Colors.PRIMARY, marginBottom: 12 }}
         />
         <Text style={{ fontSize: Sizes.FONT_XL, fontWeight: "700", color: Colors.TEXT }}>Amir</Text>
+        <Text style={{ fontSize: Sizes.FONT_SM, color: Colors.TEXT_MUTED, marginTop: 2 }}>29</Text>
         <View style={{ marginTop: 8, paddingHorizontal: 14, paddingVertical: 4, backgroundColor: "#FFF0F3", borderRadius: Sizes.RADIUS_FULL }}>
           <Text style={{ color: Colors.PRIMARY, fontWeight: "600", fontSize: Sizes.FONT_SM }}>Demo-User</Text>
         </View>
@@ -184,7 +185,7 @@ function DemoProfile() {
       <View style={{ backgroundColor: Colors.SURFACE, borderRadius: Sizes.RADIUS_LG, padding: Sizes.SPACING_MD, marginBottom: 16 }}>
         <View style={{ paddingVertical: 10 }}>
           <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM }}>Standort</Text>
-          <Text style={{ color: Colors.TEXT, fontWeight: "500", marginTop: 2 }}>Pforzheim</Text>
+          <Text style={{ color: Colors.TEXT, fontWeight: "500", marginTop: 2 }}>📍 Düsseldorf</Text>
         </View>
       </View>
       <TouchableOpacity
