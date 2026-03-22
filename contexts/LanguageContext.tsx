@@ -485,6 +485,7 @@ export const translations = {
     gassi_matches_gassi_date: "Gassi-Date",
     gassi_matches_spieldate: "Spieldate",
     gassi_matches_wait_match: "Warte auf Gegenmatch…",
+    gassi_matches_status_pending: "⏳ Wartet",
 
     // ── Gassi Chat ──
     gassi_chat_gassi_date: "Gassi-Date",
@@ -1248,6 +1249,7 @@ export const translations = {
     gassi_matches_gassi_date: "Walk Date",
     gassi_matches_spieldate: "Playdate",
     gassi_matches_wait_match: "Waiting for mutual match…",
+    gassi_matches_status_pending: "⏳ Waiting",
 
     // ── Gassi Chat ──
     gassi_chat_gassi_date: "Walk Date",

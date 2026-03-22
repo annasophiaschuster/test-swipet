@@ -29,52 +29,6 @@ interface OwnerMatchItem {
   match_status?: "matched" | "pending";
 }
 
-const DEMO_MATCHES: OwnerMatchItem[] = [
-  {
-    id: "demo-gm-1",
-    modus: "gassi",
-    created_at: new Date(Date.now() - 45 * 60000).toISOString(),
-    other_pet_name: "Kira",
-    other_pet_rasse: "Husky",
-    other_pet_tierart: "hund",
-    other_pet_photo: null,
-    other_owner_name: "Max",
-    last_message: t.gassi_match_msg,
-    last_message_at: new Date(Date.now() - 45 * 60000).toISOString(),
-    match_status: "matched",
-  },
-  {
-    id: "demo-gm-2",
-    modus: "gassi",
-    created_at: new Date(Date.now() - 3 * 3600000).toISOString(),
-    other_pet_name: "Cookie",
-    other_pet_rasse: "Australian Shepherd",
-    other_pet_tierart: "hund",
-    other_pet_photo: null,
-    other_owner_name: "Sarah",
-    last_message: "Match! ✅",
-    last_message_at: new Date(Date.now() - 3 * 3600000).toISOString(),
-    match_status: "matched",
-  },
-  {
-    id: "demo-gm-3",
-    modus: "gassi",
-    created_at: new Date(Date.now() - 26 * 3600000).toISOString(),
-    other_pet_name: "Rocky",
-    other_pet_rasse: "Bulldogge",
-    other_pet_tierart: "hund",
-    other_pet_photo: null,
-    other_owner_name: "Tom",
-    last_message: null,
-    last_message_at: null,
-    match_status: "pending",
-  },
-];
-
-const STATUS_STYLE: Record<string, { bg: string; color: string; label: string }> = {
-  matched: { bg: Colors.SUCCESS + "22", color: Colors.SUCCESS, label: "✅ Match" },
-  pending: { bg: Colors.WARNING + "22", color: "#B8860B",      label: "⏳ Wartet" },
-};
 
 function formatTime(iso: string | null, yesterday: string, lang: string): string {
   if (!iso) return "";
@@ -90,6 +44,54 @@ function formatTime(iso: string | null, yesterday: string, lang: string): string
 
 export default function GassiMatchesScreen() {
   const { t, lang } = useLanguage();
+
+  const DEMO_MATCHES: OwnerMatchItem[] = [
+    {
+      id: "demo-gm-1",
+      modus: "gassi",
+      created_at: new Date(Date.now() - 45 * 60000).toISOString(),
+      other_pet_name: "Kira",
+      other_pet_rasse: "Husky",
+      other_pet_tierart: "hund",
+      other_pet_photo: null,
+      other_owner_name: "Max",
+      last_message: t.gassi_match_msg,
+      last_message_at: new Date(Date.now() - 45 * 60000).toISOString(),
+      match_status: "matched",
+    },
+    {
+      id: "demo-gm-2",
+      modus: "gassi",
+      created_at: new Date(Date.now() - 3 * 3600000).toISOString(),
+      other_pet_name: "Cookie",
+      other_pet_rasse: "Australian Shepherd",
+      other_pet_tierart: "hund",
+      other_pet_photo: null,
+      other_owner_name: "Sarah",
+      last_message: "Match! ✅",
+      last_message_at: new Date(Date.now() - 3 * 3600000).toISOString(),
+      match_status: "matched",
+    },
+    {
+      id: "demo-gm-3",
+      modus: "gassi",
+      created_at: new Date(Date.now() - 26 * 3600000).toISOString(),
+      other_pet_name: "Rocky",
+      other_pet_rasse: "Bulldogge",
+      other_pet_tierart: "hund",
+      other_pet_photo: null,
+      other_owner_name: "Tom",
+      last_message: null,
+      last_message_at: null,
+      match_status: "pending",
+    },
+  ];
+
+  const STATUS_STYLE: Record<string, { bg: string; color: string; label: string }> = {
+    matched: { bg: Colors.SUCCESS + "22", color: Colors.SUCCESS, label: "✅ Match" },
+    pending: { bg: Colors.WARNING + "22", color: "#B8860B", label: t.gassi_matches_status_pending },
+  };
+
   const [matches, setMatches]       = useState<OwnerMatchItem[]>([]);
   const [loading, setLoading]       = useState(true);
   const [refreshing, setRefreshing] = useState(false);
