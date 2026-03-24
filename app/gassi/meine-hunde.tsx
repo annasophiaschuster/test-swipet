@@ -174,7 +174,7 @@ export default function MeineHundeScreen() {
             {t.gassi_dogs_empty_sub}
           </Text>
           <TouchableOpacity
-            onPress={() => router.push("/auth/onboarding/tierhalter")}
+            onPress={() => router.push("/gassi/hund-anlegen")}
             style={{
               height: Sizes.BUTTON_HEIGHT,
               paddingHorizontal: 28,
@@ -207,7 +207,7 @@ export default function MeineHundeScreen() {
 
       {/* FAB */}
       <TouchableOpacity
-        onPress={() => router.push("/auth/onboarding/tierhalter")}
+        onPress={() => router.push("/gassi/hund-anlegen")}
         style={{
           position: "absolute",
           bottom: 30,

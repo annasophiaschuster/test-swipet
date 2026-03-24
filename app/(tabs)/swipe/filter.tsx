@@ -24,6 +24,7 @@ export interface FilterState {
   braucht_garten: "alle" | "ja" | "nein";
   vertraeglich: "alle" | "ja";
   umkreis: number;
+  erfahrung: "alle" | "anfaenger" | "fortgeschritten" | "profi";
 }
 
 export const DEFAULT_FILTER: FilterState = {
@@ -36,6 +37,7 @@ export const DEFAULT_FILTER: FilterState = {
   braucht_garten: "alle",
   vertraeglich: "alle",
   umkreis: 100,
+  erfahrung: "alle",
 };
 
 interface FilterModalProps {
@@ -214,6 +216,22 @@ export default function FilterModal({ visible, filter, onApply, onClose }: Filte
                 <Pill key={u} label={u === 100 ? t.filter_radius_all : `${u} km`}
                   selected={local.umkreis === u}
                   onPress={() => setLocal({ ...local, umkreis: u })} />
+              ))}
+            </View>
+          </Section>
+
+          {/* Erfahrung */}
+          <Section title={t.filter_exp_required}>
+            <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+              {[
+                { k: "alle",           l: t.filter_doesnt_matter },
+                { k: "anfaenger",      l: t.adoption_profil_exp_beginner },
+                { k: "fortgeschritten",l: t.adoption_profil_exp_experienced },
+                { k: "profi",          l: t.adoption_profil_exp_pro },
+              ].map(({ k, l }) => (
+                <Pill key={k} label={l}
+                  selected={local.erfahrung === k}
+                  onPress={() => setLocal({ ...local, erfahrung: k as FilterState["erfahrung"] })} />
               ))}
             </View>
           </Section>

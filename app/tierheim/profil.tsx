@@ -106,6 +106,7 @@ export default function TierheimProfilScreen() {
   const [editMode, setEditMode]   = useState(false);
   const [saving, setSaving]       = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [faqOpen, setFaqOpen]     = useState<number | null>(null);
 
   // Edit state
   const [editOrgName, setEditOrgName]       = useState("");
@@ -424,6 +425,40 @@ export default function TierheimProfilScreen() {
               <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED }}>{t.tierheim_profil_add_contact}</Text>
             </TouchableOpacity>
           )}
+        </View>
+
+        {/* FAQ */}
+        <View style={{ marginBottom: 20 }}>
+          <Text style={{ fontSize: 16, fontWeight: "700", color: Colors.TEXT, marginBottom: 12 }}>
+            ❓ FAQ
+          </Text>
+          {([1,2,3,4,5,6,7] as const).map((n) => {
+            const q = String(t[`faq_th_q${n}` as keyof typeof t]);
+            const a = String(t[`faq_th_a${n}` as keyof typeof t]);
+            const isOpen = faqOpen === n;
+            return (
+              <TouchableOpacity
+                key={n}
+                activeOpacity={0.75}
+                onPress={() => setFaqOpen(isOpen ? null : n)}
+                style={{
+                  marginBottom: 8, backgroundColor: Colors.SURFACE,
+                  borderRadius: 14, borderWidth: 1, borderColor: isOpen ? Colors.PRIMARY + "40" : Colors.BORDER,
+                  overflow: "hidden",
+                }}
+              >
+                <View style={{ flexDirection: "row", alignItems: "center", padding: 14, gap: 10 }}>
+                  <Text style={{ flex: 1, fontSize: 14, fontWeight: "600", color: Colors.TEXT }}>{q}</Text>
+                  <Text style={{ fontSize: 16, color: Colors.PRIMARY }}>{isOpen ? "−" : "+"}</Text>
+                </View>
+                {isOpen && (
+                  <View style={{ paddingHorizontal: 14, paddingBottom: 14 }}>
+                    <Text style={{ fontSize: 13, color: Colors.TEXT_MUTED, lineHeight: 20 }}>{a}</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
         {/* Logout / Login */}

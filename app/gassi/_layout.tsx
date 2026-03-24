@@ -58,21 +58,23 @@ export default function GassiLayout() {
         }}
       />
       <Tabs.Screen
-        name="nachrichten"
+        name="news"
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon emoji="💬" label={t.tab_chat} focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon emoji="📰" label={t.tab_news} focused={focused} />,
         }}
       />
       <Tabs.Screen
-        name="profil"
+        name="ich"
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon emoji="👤" label={t.tab_profile} focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon emoji="👤" label={t.tab_ich} focused={focused} />,
         }}
       />
 
-      {/* Hidden routes — not in tab bar */}
+      {/* Hidden routes */}
       <Tabs.Screen name="chat/[matchId]" options={{ href: null }} />
       <Tabs.Screen name="meine-hunde" options={{ href: null }} />
+      <Tabs.Screen name="hund-anlegen" options={{ href: null }} />
+      <Tabs.Screen name="filter" options={{ href: null }} />
     </Tabs>
   );
 }

@@ -318,6 +318,72 @@ export default function TierheimDashboard() {
           </Text>
         </View>
       </View>
+
+      {/* News Teaser */}
+      <View style={{ marginHorizontal: Sizes.SPACING_LG, marginTop: 24 }}>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+          <Text style={{ fontSize: 16, fontWeight: "700", color: Colors.TEXT }}>📰 {t.news_title}</Text>
+        </View>
+
+        {/* Event Card */}
+        <View style={{
+          backgroundColor: Colors.WHITE, borderRadius: Sizes.RADIUS_LG,
+          borderWidth: 1, borderColor: Colors.BORDER,
+          borderLeftWidth: 4, borderLeftColor: Colors.PRIMARY,
+          padding: 14, marginBottom: 10,
+          shadowColor: "#000", shadowOffset: { width: 0, height: 1 },
+          shadowOpacity: 0.05, shadowRadius: 4, elevation: 1,
+        }}>
+          <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 10 }}>
+            <Text style={{ fontSize: 28 }}>🐕</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 14, fontWeight: "700", color: Colors.TEXT }}>{t.news_event_title}</Text>
+              <Text style={{ fontSize: 12, color: Colors.PRIMARY, marginTop: 2 }}>📅 {t.news_event_date}</Text>
+              <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED }}>{t.news_event_location}</Text>
+            </View>
+          </View>
+          <Text style={{ fontSize: 13, color: Colors.TEXT, lineHeight: 18, marginTop: 8 }} numberOfLines={2}>
+            {t.news_event_desc}
+          </Text>
+        </View>
+
+        {/* Blog Article Cards */}
+        {([
+          { emoji: "💉", catKey: "news_cat_health" as const, titleKey: "news_article1_title" as const },
+          { emoji: "🎓", catKey: "news_cat_training" as const, titleKey: "news_article2_title" as const },
+        ] as const).map(({ emoji, catKey, titleKey }, i) => (
+          <View
+            key={i}
+            style={{
+              backgroundColor: Colors.WHITE, borderRadius: Sizes.RADIUS_LG,
+              borderWidth: 1, borderColor: Colors.BORDER,
+              padding: 14, marginBottom: 10,
+              shadowColor: "#000", shadowOffset: { width: 0, height: 1 },
+              shadowOpacity: 0.04, shadowRadius: 4, elevation: 1,
+              flexDirection: "row", alignItems: "center", gap: 12,
+            }}
+          >
+            <View style={{
+              width: 44, height: 44, borderRadius: 10,
+              backgroundColor: Colors.PRIMARY + "18",
+              alignItems: "center", justifyContent: "center",
+            }}>
+              <Text style={{ fontSize: 20 }}>{emoji}</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 11, fontWeight: "700", color: Colors.PRIMARY, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 2 }}>
+                {String(t[catKey])}
+              </Text>
+              <Text style={{ fontSize: 13, fontWeight: "600", color: Colors.TEXT }} numberOfLines={2}>
+                {String(t[titleKey])}
+              </Text>
+            </View>
+            <Text style={{ color: Colors.TEXT_MUTED }}>›</Text>
+          </View>
+        ))}
+      </View>
+
+      <View style={{ height: 20 }} />
     </ScrollView>
   );
 }
