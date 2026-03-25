@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { Stack, router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as Notifications from "expo-notifications";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { supabase } from "../lib/supabase";
 import {
   setupNotificationHandler,
@@ -55,19 +56,21 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <LanguageProvider>
-      <StatusBar style="light" />
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" />
-        <Stack.Screen name="auth" />
-        <Stack.Screen name="adoption" />
-        <Stack.Screen name="gassi" />
-        <Stack.Screen name="tierheim" />
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="shelter" />
-        <Stack.Screen name="pet/[petId]" />
-      </Stack>
-    </LanguageProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <LanguageProvider>
+        <StatusBar style="light" />
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="index" />
+          <Stack.Screen name="auth" />
+          <Stack.Screen name="adoption" />
+          <Stack.Screen name="gassi" />
+          <Stack.Screen name="tierheim" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="shelter" />
+          <Stack.Screen name="pet/[petId]" />
+        </Stack>
+      </LanguageProvider>
+    </GestureHandlerRootView>
   );
 }
 

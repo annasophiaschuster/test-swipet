@@ -7,7 +7,9 @@ import { supabase } from "./supabase";
 export function setupNotificationHandler() {
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
-      shouldShowAlert: true,
+      shouldShowAlert: true,   // legacy iOS compat
+      shouldShowBanner: true,  // iOS 17+ banner (SDK 52)
+      shouldShowList: true,    // iOS 17+ notification centre (SDK 52)
       shouldPlaySound: true,
       shouldSetBadge: true,
     }),
