@@ -17,6 +17,7 @@
     "expo-linear-gradient": "~13.0.2",
     "expo-linking": "~6.3.1",
     "expo-location": "~17.0.1",
+    "expo-modules-autolinking": "~1.11.0",
     "expo-notifications": "~0.28.19",
     "expo-router": "~3.5.23",
     "expo-status-bar": "~1.12.1",
@@ -33,6 +34,7 @@
   },
   "devDependencies": {
     "@types/react": "~18.2.79",
+    "babel-preset-expo": "~11.0.0",
     "typescript": "~5.3.3"
   },
   "private": true
