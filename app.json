@@ -15,14 +15,13 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.swipet.app",
-      "buildNumber": "2",
+      "buildNumber": "3",
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Swipet möchte auf deine Fotos zugreifen.",
         "NSCameraUsageDescription": "Swipet möchte auf deine Kamera zugreifen.",
         "NSLocationWhenInUseUsageDescription": "Swipet möchte deinen Standort nutzen, um Tiere in deiner Nähe zu finden.",
         "ITSAppUsesNonExemptEncryption": false
       },
-      "deploymentTarget": "16.0"
     },
     "android": {
       "adaptiveIcon": {
