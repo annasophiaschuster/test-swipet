@@ -47,8 +47,6 @@ export default function SwipeFeed() {
   const [mode, setMode]       = useState<"adoption" | "owner">(
     initialMode === "owner" ? "owner" : "adoption"
   );
-  // Gassidate vs. Zucht — nur im Owner-Modus relevant
-  const [ownerSubMode, setOwnerSubMode] = useState<"gassidate" | "zucht">("gassidate");
   // Demo-Modus: kein Login nötig zum Browsen (kein Speichern)
   const [isGuest, setIsGuest] = useState(false);
 
@@ -459,36 +457,11 @@ export default function SwipeFeed() {
               color: mode === m ? Colors.WHITE : Colors.TEXT_MUTED,
               fontWeight: mode === m ? "700" : "400", fontSize: Sizes.FONT_SM,
             }}>
-              {m === "adoption" ? t.swipe_mode_adoption : t.swipe_mode_gassi_zucht}
+              {m === "adoption" ? t.swipe_mode_adoption : t.swipe_sub_gassidate}
             </Text>
           </TouchableOpacity>
         ))}
       </View>
-
-      {/* ── GASSIDATE / ZUCHT SUB-TOGGLE (nur im Owner-Modus) ── */}
-      {mode === "owner" && (
-        <View style={{
-          flexDirection: "row", marginHorizontal: 16, marginTop: 10, marginBottom: 0,
-          backgroundColor: Colors.SURFACE, borderRadius: Sizes.RADIUS_FULL, padding: 3,
-        }}>
-          {(["gassidate", "zucht"] as const).map((sub) => (
-            <TouchableOpacity key={sub} onPress={() => setOwnerSubMode(sub)}
-              style={{
-                flex: 1, paddingVertical: 7, borderRadius: Sizes.RADIUS_FULL,
-                backgroundColor: ownerSubMode === sub ? Colors.SECONDARY : "transparent",
-                alignItems: "center",
-              }}>
-              <Text style={{
-                fontSize: 12,
-                color: ownerSubMode === sub ? Colors.WHITE : Colors.TEXT_MUTED,
-                fontWeight: ownerSubMode === sub ? "700" : "400",
-              }}>
-                {sub === "gassidate" ? t.swipe_sub_gassidate : t.swipe_sub_zucht}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      )}
 
       {/* ── ADOPTION FEED ── */}
       {mode === "adoption" && loading && (

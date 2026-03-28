@@ -13,7 +13,7 @@ export const translations = {
     splash_dog_seeker_title: "Hundesuchende",
     splash_dog_seeker_sub: "Finde deinen perfekten Hund",
     splash_dog_owner_title: "Hundehaber",
-    splash_dog_owner_sub: "Gassidate & Zucht für Hundebesitzer",
+    splash_dog_owner_sub: "Gassidate für Hundebesitzer",
     splash_shelter_title: "Tierheim",
     splash_shelter_sub: "Tiere verwalten & Anfragen bearbeiten",
     splash_login_link: "Bereits registriert? Anmelden →",
@@ -240,7 +240,6 @@ export const translations = {
     filter_max_dog_age: "Max. Alter des Hundes",
     filter_owner_age: "Altersgruppe Besitzer",
     filter_owner_gender: "Geschlecht Besitzer",
-    filter_deck_castrated_note: "Kastrierte Hunde werden automatisch ausgeblendet.",
 
     // ── Gassi Feed / Setup ──
     gassi_setup_title: "👤 Dein Profil",
@@ -294,9 +293,7 @@ export const translations = {
 
     // ── Swipe Mode Toggle ──
     swipe_mode_adoption: "Adoption",
-    swipe_mode_gassi_zucht: "Gassidate & Zucht",
     swipe_sub_gassidate: "Gassidate",
-    swipe_sub_zucht: "Zucht",
     swipe_badge_gassidate: "Gassidate",
 
     // ── Matches Screen ──
@@ -477,7 +474,6 @@ export const translations = {
 
     // ── Gassi Feed ──
     gassi_mode_gassi: "Gassi-Date",
-    gassi_mode_deck: "Deck-Date",
     gassi_bio_max: "Laufe gerne durch Parks und liebe lange Morgenspaziergänge. Mein Hund ist mein bester Freund!",
     gassi_bio_sophie: "Leidenschaftliche Hundemama seit 5 Jahren. Liebe Outdoor-Aktivitäten und freue mich über neue Hundekontakte.",
     gassi_bio_jonas: "Täglich 2 Stunden aktiv — mein Hund und ich sind unzertrennlich. Suche regelmäßige Gassipartner.",
@@ -1055,7 +1051,7 @@ export const translations = {
     splash_dog_seeker_title: "Dog Seekers",
     splash_dog_seeker_sub: "Find your perfect dog",
     splash_dog_owner_title: "Dog Owners",
-    splash_dog_owner_sub: "Walk dates & breeding for dog owners",
+    splash_dog_owner_sub: "Walk dates for dog owners",
     splash_shelter_title: "Animal Shelter",
     splash_shelter_sub: "Manage animals & process requests",
     splash_login_link: "Already registered? Sign in →",
@@ -1282,7 +1278,6 @@ export const translations = {
     filter_max_dog_age: "Max. dog age",
     filter_owner_age: "Owner age group",
     filter_owner_gender: "Owner gender",
-    filter_deck_castrated_note: "Neutered dogs are automatically hidden.",
 
     // ── Gassi Feed / Setup ──
     gassi_setup_title: "👤 Your Profile",
@@ -1336,9 +1331,7 @@ export const translations = {
 
     // ── Swipe Mode Toggle ──
     swipe_mode_adoption: "Adoption",
-    swipe_mode_gassi_zucht: "Walk & Breeding",
     swipe_sub_gassidate: "Walk Date",
-    swipe_sub_zucht: "Breeding",
     swipe_badge_gassidate: "Walk Date",
 
     // ── Matches Screen ──
@@ -1519,7 +1512,6 @@ export const translations = {
 
     // ── Gassi Feed ──
     gassi_mode_gassi: "Walk Date",
-    gassi_mode_deck: "Breeding Date",
     gassi_bio_max: "I love running through parks and enjoy long morning walks. My dog is my best friend!",
     gassi_bio_sophie: "Passionate dog mom for 5 years. Love outdoor activities and enjoy meeting new dog owners.",
     gassi_bio_jonas: "Active 2 hours daily — my dog and I are inseparable. Looking for regular walking partners.",

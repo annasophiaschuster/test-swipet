@@ -42,7 +42,6 @@ export default function HundAnlegenScreen() {
   ];
   const MODUS_OPTIONS = [
     { key: "gassidate", label: t.gassi_mode_gassi },
-    { key: "deckdate",  label: t.gassi_mode_deck },
   ];
   const CHARAKTER_OPTIONS = [
     t.shelter_traits_playful,
@@ -137,7 +136,7 @@ export default function HundAnlegenScreen() {
         vertraeglich_mit_tieren: vertraeglich,
         charakter_tags:   charakterTags.length > 0 ? charakterTags : null,
         beschreibung:     beschreibung.trim() || null,
-        modus:            modus,
+        modus:            "gassi",
         foto_url:         uploadedUrls[0] ?? null,
         foto_urls:        uploadedUrls,
       });

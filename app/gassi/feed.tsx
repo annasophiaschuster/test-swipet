@@ -65,7 +65,7 @@ interface PartnerCard {
   charakter_tags: string[];
   beschreibung: string | null;
   photos: string[];
-  modus: "gassidate" | "zucht";
+  modus: "gassidate";
   owner: OwnerInfo;
 }
 
@@ -76,7 +76,7 @@ interface MyDog {
   groesse_kategorie: string | null;
   alter_jahre: number | null;
   foto_url: string | null;
-  modus: "gassidate" | "zucht";
+  modus: "gassidate";
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -205,11 +205,11 @@ function SwipeCard({
           {/* Modus badge */}
           <View style={{
             position: "absolute", top: 14, left: 14,
-            backgroundColor: card.modus === "gassidate" ? Colors.SECONDARY : "#9B59B6",
+            backgroundColor: Colors.SECONDARY,
             paddingHorizontal: 12, paddingVertical: 5, borderRadius: 99,
           }}>
             <Text style={{ color: "#FFF", fontSize: 12, fontWeight: "700" }}>
-              {card.modus === "gassidate" ? t.gassi_mode_gassi : t.gassi_mode_deck}
+              {t.gassi_mode_gassi}
             </Text>
           </View>
           {card.photos.length > 1 && (
@@ -324,7 +324,7 @@ function SwipeCard({
             { icon: "🏃", label: t.filter_activity, value: AKTIV_LABEL[card.aktivitaetslevel ?? ""] ?? "–" },
             { icon: "🐾", label: t.onb_th_animal_friendly, value: card.vertraeglich_mit_tieren ? t.onb_yes : t.onb_no },
             { icon: "👦", label: t.onb_th_child_friendly, value: card.kinderfreundlich ? t.onb_yes : t.onb_no },
-            { icon: "🎯", label: t.gassi_register_label_mode, value: card.modus === "gassidate" ? t.gassi_mode_gassi : t.gassi_mode_deck },
+            { icon: "🎯", label: t.gassi_register_label_mode, value: t.gassi_mode_gassi },
           ].map((row) => (
             <View key={row.label} style={{
               flexDirection: "row", alignItems: "center", justifyContent: "space-between",
@@ -537,7 +537,6 @@ function RegisterDogScreen({ onDone, onBack }: { onDone: () => void; onBack: () 
   const [alterJahre, setAlterJahre] = useState("");
   const [groesse, setGroesse]   = useState<typeof GROESSE_OPTIONS[number] | null>(null);
   const [aktiv, setAktiv]       = useState<typeof AKTIV_OPTIONS[number] | null>(null);
-  const [modus, setModus]       = useState<"gassidate" | "zucht">("gassidate");
   const [saving, setSaving]     = useState(false);
 
   const handleSave = async () => {
@@ -622,22 +621,6 @@ function RegisterDogScreen({ onDone, onBack }: { onDone: () => void; onBack: () 
           ))}
         </View>
 
-        <Text style={fieldLabel}>{t.gassi_register_label_mode}</Text>
-        <View style={{ flexDirection: "row", gap: 10, marginBottom: 32 }}>
-          <TouchableOpacity onPress={() => setModus("gassidate")}
-            style={{ flex: 1, padding: 14, borderRadius: 14, borderWidth: 2, alignItems: "center", borderColor: modus === "gassidate" ? Colors.SECONDARY : Colors.BORDER, backgroundColor: modus === "gassidate" ? Colors.SECONDARY + "10" : Colors.BACKGROUND }}
-          >
-            <Text style={{ fontWeight: "700", color: modus === "gassidate" ? Colors.SECONDARY : Colors.TEXT }}>{t.gassi_mode_gassi}</Text>
-            <Text style={{ fontSize: 11, color: Colors.TEXT_MUTED, textAlign: "center", marginTop: 2 }}>{t.gassi_bio_jonas}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => setModus("zucht")}
-            style={{ flex: 1, padding: 14, borderRadius: 14, borderWidth: 2, alignItems: "center", borderColor: modus === "zucht" ? "#9B59B6" : Colors.BORDER, backgroundColor: modus === "zucht" ? "#9B59B620" : Colors.BACKGROUND }}
-          >
-            <Text style={{ fontWeight: "700", color: modus === "zucht" ? "#9B59B6" : Colors.TEXT }}>{t.gassi_mode_deck}</Text>
-            <Text style={{ fontSize: 11, color: Colors.TEXT_MUTED, textAlign: "center", marginTop: 2 }}>{t.gassi_bio_max}</Text>
-          </TouchableOpacity>
-        </View>
-
         <TouchableOpacity onPress={handleSave} disabled={saving}
           style={{ height: Sizes.BUTTON_HEIGHT, borderRadius: Sizes.RADIUS_FULL, backgroundColor: Colors.SECONDARY, alignItems: "center", justifyContent: "center" }}
         >
@@ -653,11 +636,11 @@ function RegisterDogScreen({ onDone, onBack }: { onDone: () => void; onBack: () 
 // ─────────────────────────────────────────────────────────────────────────────
 
 function MeineHundeModal({
-  visible, dogs, activeDogId, onClose, onSelectDog, onAddDog, onChangeModus,
+  visible, dogs, activeDogId, onClose, onSelectDog, onAddDog,
 }: {
   visible: boolean; dogs: MyDog[]; activeDogId: string | null;
   onClose: () => void; onSelectDog: (id: string) => void;
-  onAddDog: () => void; onChangeModus: (dog: MyDog) => void;
+  onAddDog: () => void;
 }) {
   const { t } = useLanguage();
   return (
@@ -697,23 +680,7 @@ function MeineHundeModal({
                   <Text style={{ fontSize: 16, fontWeight: "700", color: Colors.TEXT }}>{dog.name}</Text>
                   <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, marginTop: 2 }}>{dog.rasse ?? t.gassi_dogs_modal_mixed_breed}</Text>
                 </View>
-                <View style={{
-                  backgroundColor: dog.modus === "gassidate" ? Colors.SECONDARY + "22" : "#F3EDFF",
-                  paddingHorizontal: 10, paddingVertical: 4, borderRadius: 99,
-                }}>
-                  <Text style={{ fontSize: 11, fontWeight: "700", color: dog.modus === "gassidate" ? Colors.SECONDARY : "#9B59B6" }}>
-                    {dog.modus === "gassidate" ? t.gassi_mode_gassi : t.gassi_mode_deck}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-              <View style={{ flexDirection: "row", paddingHorizontal: 14, paddingBottom: 12, gap: 8 }}>
-                <TouchableOpacity
-                  onPress={() => onChangeModus(dog)}
-                  style={{ flex: 1, height: 32, borderRadius: 99, borderWidth: 1, borderColor: Colors.BORDER, alignItems: "center", justifyContent: "center" }}
-                >
-                  <Text style={{ fontSize: 12, color: Colors.TEXT }}>{t.gassi_dogs_modal_change_mode}</Text>
                 </TouchableOpacity>
-              </View>
             </View>
           ))}
           <TouchableOpacity
@@ -755,17 +722,6 @@ export const DEFAULT_GASSI_FILTER: GassiFilterState = {
   umkreis: 100,
 };
 
-export interface DeckDateFilterState {
-  groesse: string[];
-  maxAlterJahre: number;
-  umkreis: number;
-}
-
-export const DEFAULT_DECKDATE_FILTER: DeckDateFilterState = {
-  groesse: [],
-  maxAlterJahre: 15,
-  umkreis: 100,
-};
 
 const ALTER_OPTIONS_LIST = [1, 2, 3, 5, 8, 15];
 const UMKREIS_OPTIONS_LIST = [5, 10, 25, 50, 100];
@@ -896,115 +852,6 @@ function GassiFilterModal({
   );
 }
 
-function DeckDateFilterModal({
-  visible, filter, onApply, onClose,
-}: {
-  visible: boolean;
-  filter: DeckDateFilterState;
-  onApply: (f: DeckDateFilterState) => void;
-  onClose: () => void;
-}) {
-  const { t } = useLanguage();
-  const GROESSE_LABEL: Record<string, string> = {
-    klein: t.gassi_size_small, mittel: t.gassi_size_medium,
-    gross: t.gassi_size_large, riese: t.gassi_size_giant,
-  };
-  const [local, setLocal] = useState<DeckDateFilterState>(filter);
-
-  const toggleArr = (key: keyof DeckDateFilterState, val: string) => {
-    const arr = local[key] as string[];
-    setLocal((prev) => ({
-      ...prev,
-      [key]: arr.includes(val) ? arr.filter((x) => x !== val) : [...arr, val],
-    }));
-  };
-
-  const Pill = ({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) => (
-    <TouchableOpacity
-      onPress={onPress}
-      style={{
-        paddingHorizontal: 14, paddingVertical: 8,
-        borderRadius: Sizes.RADIUS_FULL, borderWidth: 1.5,
-        borderColor: selected ? "#9B59B6" : Colors.BORDER,
-        backgroundColor: selected ? "#9B59B615" : Colors.SURFACE,
-        marginRight: 8, marginBottom: 8,
-      }}
-    >
-      <Text style={{ fontSize: 13, fontWeight: selected ? "600" : "400", color: selected ? "#9B59B6" : Colors.TEXT }}>
-        {label}
-      </Text>
-    </TouchableOpacity>
-  );
-
-  return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
-        <View style={{
-          flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-          padding: Sizes.SPACING_LG, paddingTop: 20,
-          borderBottomWidth: 1, borderBottomColor: Colors.BORDER,
-        }}>
-          <TouchableOpacity onPress={() => setLocal(DEFAULT_DECKDATE_FILTER)}>
-            <Text style={{ color: Colors.TEXT_MUTED, fontSize: 13 }}>{t.filter_reset}</Text>
-          </TouchableOpacity>
-          <Text style={{ fontSize: 17, fontWeight: "700", color: "#9B59B6" }}>{`${t.gassi_mode_deck} ${t.filter_title}`}</Text>
-          <TouchableOpacity onPress={onClose}>
-            <Text style={{ fontSize: 22, color: Colors.TEXT_MUTED }}>✕</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Auto-filter hint */}
-        <View style={{ margin: Sizes.SPACING_LG, marginBottom: 0, padding: 12, backgroundColor: "#F3EDFF", borderRadius: 12, flexDirection: "row", gap: 8 }}>
-          <Text style={{ fontSize: 15 }}>ℹ️</Text>
-          <Text style={{ flex: 1, fontSize: 13, color: "#7D3C98" }}>
-            {t.filter_deck_castrated_note}
-          </Text>
-        </View>
-
-        <ScrollView contentContainerStyle={{ padding: Sizes.SPACING_LG }}>
-          <Text style={{ fontSize: 15, fontWeight: "700", color: Colors.TEXT, marginBottom: 8 }}>{t.filter_dog_size}</Text>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", marginBottom: 20 }}>
-            {GROESSE_OPTIONS.map((g) => (
-              <Pill key={g} label={GROESSE_LABEL[g]} selected={local.groesse.includes(g)} onPress={() => toggleArr("groesse", g)} />
-            ))}
-          </View>
-
-          <Text style={{ fontSize: 15, fontWeight: "700", color: Colors.TEXT, marginBottom: 4 }}>{t.filter_max_dog_age}</Text>
-          <Text style={{ fontSize: 13, color: Colors.TEXT_MUTED, marginBottom: 10 }}>
-            {`${t.filter_up_to} ${local.maxAlterJahre === 15 ? "15+" : local.maxAlterJahre} ${t.filter_years}`}
-          </Text>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", marginBottom: 20 }}>
-            {ALTER_OPTIONS_LIST.map((a) => (
-              <Pill key={a} label={a === 15 ? "15+" : `${a} ${t.filter_years_abbr}`} selected={local.maxAlterJahre === a} onPress={() => setLocal({ ...local, maxAlterJahre: a })} />
-            ))}
-          </View>
-
-          <Text style={{ fontSize: 15, fontWeight: "700", color: Colors.TEXT, marginBottom: 4 }}>{t.filter_radius}</Text>
-          <Text style={{ fontSize: 13, color: Colors.TEXT_MUTED, marginBottom: 10 }}>
-            {local.umkreis === 100 ? t.filter_radius_unlimited : `${local.umkreis} km`}
-          </Text>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", marginBottom: 20 }}>
-            {UMKREIS_OPTIONS_LIST.map((u) => (
-              <Pill key={u} label={u === 100 ? t.filter_radius_all : `${u} km`} selected={local.umkreis === u} onPress={() => setLocal({ ...local, umkreis: u })} />
-            ))}
-          </View>
-        </ScrollView>
-
-        <View style={{ padding: Sizes.SPACING_LG, borderTopWidth: 1, borderTopColor: Colors.BORDER }}>
-          <TouchableOpacity
-            onPress={() => { onApply(local); onClose(); }}
-            style={{
-              height: Sizes.BUTTON_HEIGHT, backgroundColor: "#9B59B6",
-              borderRadius: Sizes.RADIUS_FULL, alignItems: "center", justifyContent: "center",
-            }}
-          >
-            <Text style={{ color: Colors.WHITE, fontWeight: "700", fontSize: Sizes.FONT_MD }}>{t.filter_apply}</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </Modal>
-  );
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Styles
@@ -1046,13 +893,10 @@ export default function GassiFeed() {
   const [myOwnerProfile, setMyOwnerProfile] = useState<OwnerInfo | null>(null);
   const [myDogs, setMyDogs]                 = useState<MyDog[]>([]);
   const [activeDogId, setActiveDogId]       = useState<string | null>(null);
-  const [ownerSubMode, setOwnerSubMode]     = useState<"gassidate" | "zucht">("gassidate");
-
   const [partnerCards, setPartnerCards]     = useState<PartnerCard[]>([]);
   const [cardIndex, setCardIndex]           = useState(0);
 
   const [gassiFilter, setGassiFilter]       = useState<GassiFilterState>(DEFAULT_GASSI_FILTER);
-  const [deckFilter, setDeckFilter]         = useState<DeckDateFilterState>(DEFAULT_DECKDATE_FILTER);
   const [filterVisible, setFilterVisible]   = useState(false);
 
   const [showProfileSetup, setShowProfileSetup] = useState(false);
@@ -1073,7 +917,7 @@ export default function GassiFeed() {
     if (!showProfileSetup && !showRegister && (myDogs.length > 0 || isGuest)) {
       loadPartnerCards();
     }
-  }, [activeDogId, ownerSubMode, isGuest, showProfileSetup, showRegister, gassiFilter, deckFilter]);
+  }, [activeDogId, isGuest, showProfileSetup, showRegister, gassiFilter]);
 
   const loadUserInfo = async () => {
     try {
@@ -1134,9 +978,7 @@ export default function GassiFeed() {
 
   const loadPartnerCards = async () => {
     try {
-      const isGassi = ownerSubMode === "gassidate";
       const gf = gassiFilter;
-      const df = deckFilter;
 
       // Load dogs from Supabase and pair with rotating demo owners
       let query = supabase
@@ -1146,16 +988,9 @@ export default function GassiFeed() {
         .order("created_at", { ascending: false })
         .limit(20);
 
-      if (isGassi) {
-        if (gf.groesse.length > 0) query = query.in("groesse_kategorie", gf.groesse);
-        if (gf.aktivitaetslevel.length > 0) query = query.in("aktivitaetslevel", gf.aktivitaetslevel);
-        if (gf.maxAlterJahre < 15) query = query.lte("alter_jahre", gf.maxAlterJahre);
-      } else {
-        // Deck-Date: auto-exclude kastriert
-        query = query.eq("kastriert", false);
-        if (df.groesse.length > 0) query = query.in("groesse_kategorie", df.groesse);
-        if (df.maxAlterJahre < 15) query = query.lte("alter_jahre", df.maxAlterJahre);
-      }
+      if (gf.groesse.length > 0) query = query.in("groesse_kategorie", gf.groesse);
+      if (gf.aktivitaetslevel.length > 0) query = query.in("aktivitaetslevel", gf.aktivitaetslevel);
+      if (gf.maxAlterJahre < 15) query = query.lte("alter_jahre", gf.maxAlterJahre);
 
       const { data, error } = await query;
 
@@ -1180,7 +1015,7 @@ export default function GassiFeed() {
           charakter_tags: p.charakter_tags ?? [],
           beschreibung: p.beschreibung,
           photos,
-          modus: ownerSubMode,
+          modus: "gassidate",
           owner,
         };
       });
@@ -1226,24 +1061,6 @@ export default function GassiFeed() {
     await loadUserInfo();
   };
 
-  const handleChangeModus = (dog: MyDog) => {
-    Alert.alert(
-      t.gassi_dogs_modal_change_mode_title(dog.name),
-      `${dog.modus === "gassidate" ? t.gassi_mode_gassi : t.gassi_mode_deck}`,
-      [
-        {
-          text: `→ ${dog.modus === "gassidate" ? t.gassi_mode_deck : t.gassi_mode_gassi}`,
-          onPress: () => {
-            setMyDogs((prev) => prev.map((d) =>
-              d.id === dog.id ? { ...d, modus: d.modus === "gassidate" ? "zucht" : "gassidate" } : d
-            ));
-          },
-        },
-        { text: t.profil_cancel, style: "cancel" },
-      ]
-    );
-  };
-
   // ── Flows ─────────────────────────────────────────────────────────────────
 
   if (showProfileSetup) {
@@ -1268,7 +1085,6 @@ export default function GassiFeed() {
   }
 
   const currentCard = partnerCards[cardIndex];
-  const activeModus = myDogs.find((d) => d.id === activeDogId)?.modus ?? ownerSubMode;
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
@@ -1291,26 +1107,7 @@ export default function GassiFeed() {
           <Text style={{ fontSize: 12, color: "rgba(255,255,255,0.85)", fontWeight: "500" }}> {t.gassi_feed_back}</Text>
         </TouchableOpacity>
 
-        {/* Mode toggle */}
-        <View style={{
-          flexDirection: "row", borderRadius: 99, overflow: "hidden",
-          backgroundColor: "rgba(255,255,255,0.2)",
-        }}>
-          {(["gassidate", "zucht"] as const).map((m) => (
-            <TouchableOpacity
-              key={m}
-              onPress={() => setOwnerSubMode(m)}
-              style={{
-                paddingHorizontal: 14, paddingVertical: 7,
-                backgroundColor: ownerSubMode === m ? "rgba(255,255,255,0.35)" : "transparent",
-              }}
-            >
-              <Text style={{ fontSize: 13, fontWeight: "600", color: Colors.WHITE }}>
-                {m === "gassidate" ? t.gassi_mode_gassi : t.gassi_mode_deck}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        <Text style={{ fontSize: 16, fontWeight: "700", color: Colors.WHITE }}>{t.gassi_mode_gassi}</Text>
 
         {/* Right side: Hunde + Filter */}
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
@@ -1379,20 +1176,13 @@ export default function GassiFeed() {
         onClose={() => setHundeModalVisible(false)}
         onSelectDog={(id) => { setActiveDogId(id); setHundeModalVisible(false); }}
         onAddDog={() => { setHundeModalVisible(false); setShowRegister(true); }}
-        onChangeModus={handleChangeModus}
       />
 
       {/* Filter Modals */}
       <GassiFilterModal
-        visible={filterVisible && ownerSubMode === "gassidate"}
+        visible={filterVisible}
         filter={gassiFilter}
         onApply={(f) => { setGassiFilter(f); setCardIndex(0); }}
-        onClose={() => setFilterVisible(false)}
-      />
-      <DeckDateFilterModal
-        visible={filterVisible && ownerSubMode === "zucht"}
-        filter={deckFilter}
-        onApply={(f) => { setDeckFilter(f); setCardIndex(0); }}
         onClose={() => setFilterVisible(false)}
       />
 
