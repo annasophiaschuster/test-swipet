@@ -33,7 +33,7 @@ export default function AdoptionLayout() {
           backgroundColor: Colors.WHITE,
           borderTopWidth: 1,
           borderTopColor: Colors.BORDER,
-          height: 80,
+          height: Sizes.TAB_BAR_HEIGHT,
           paddingBottom: 10,
           shadowColor: Colors.PRIMARY,
           shadowOffset: { width: 0, height: -2 },
@@ -41,6 +41,7 @@ export default function AdoptionLayout() {
           shadowRadius: 8,
           elevation: 8,
         },
+        tabBarItemStyle: { flex: 1 },
         tabBarActiveTintColor: Colors.PRIMARY,
         tabBarInactiveTintColor: Colors.TEXT_MUTED,
       }}
@@ -58,21 +59,23 @@ export default function AdoptionLayout() {
         }}
       />
       <Tabs.Screen
-        name="nachrichten"
+        name="news"
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon emoji="💬" label={t.tab_chat} focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon emoji="📰" label={t.tab_news} focused={focused} />,
         }}
       />
       <Tabs.Screen
-        name="profil"
+        name="ich"
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon emoji="👤" label={t.tab_profile} focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon emoji="👤" label={t.tab_ich} focused={focused} />,
         }}
       />
 
       {/* Hidden routes */}
-      <Tabs.Screen name="chat/[matchId]" options={{ href: null }} />
-      <Tabs.Screen name="tierheim/[id]" options={{ href: null }} />
+      <Tabs.Screen name="chat/[matchId]" options={{ tabBarButton: () => null }} />
+      <Tabs.Screen name="tierheim/[id]" options={{ tabBarButton: () => null }} />
+      <Tabs.Screen name="nachrichten" options={{ tabBarButton: () => null }} />
+      <Tabs.Screen name="profil" options={{ tabBarButton: () => null }} />
     </Tabs>
   );
 }

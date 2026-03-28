@@ -41,6 +41,7 @@ export default function TabsLayout() {
           shadowRadius: 8,
           elevation: 8,
         },
+        tabBarItemStyle: { flex: 1 },
         tabBarActiveTintColor: Colors.PRIMARY,
         tabBarInactiveTintColor: Colors.TEXT_MUTED,
       }}

@@ -41,6 +41,7 @@ export default function TierheimLayout() {
           shadowRadius: 8,
           elevation: 8,
         },
+        tabBarItemStyle: { flex: 1 },
         tabBarActiveTintColor: Colors.PRIMARY,
         tabBarInactiveTintColor: Colors.TEXT_MUTED,
       }}
@@ -71,7 +72,7 @@ export default function TierheimLayout() {
       />
 
       {/* Hidden routes */}
-      <Tabs.Screen name="chat/[matchId]" options={{ href: null }} />
+      <Tabs.Screen name="chat/[matchId]" options={{ tabBarButton: () => null }} />
     </Tabs>
   );
 }
