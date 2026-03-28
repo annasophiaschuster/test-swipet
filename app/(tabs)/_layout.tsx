@@ -4,16 +4,14 @@ import { Sizes } from "../../constants/sizes";
 import { Text, View } from "react-native";
 import { useLanguage } from "../../contexts/LanguageContext";
 
-function TabIcon({ emoji, label, focused }: { emoji: string; label: string; focused: boolean }) {
+function TabIcon({ label, focused }: { label: string; focused: boolean }) {
   return (
-    <View style={{ alignItems: "center", justifyContent: "center", paddingTop: 6 }}>
-      <Text style={{ fontSize: 22 }}>{emoji}</Text>
+    <View style={{ alignItems: "center", justifyContent: "center" }}>
       <Text
         style={{
-          fontSize: 10,
-          marginTop: 2,
+          fontSize: 11,
           color: focused ? Colors.PRIMARY : Colors.TEXT_MUTED,
-          fontWeight: focused ? "600" : "400",
+          fontWeight: focused ? "700" : "400",
         }}
       >
         {label}
@@ -49,32 +47,32 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="swipe/index"
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon emoji="🐾" label={t.tab_discover} focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon label={t.tab_discover} focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="matches/index"
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon emoji="❤️" label={t.tab_matches} focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon label={t.tab_matches} focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="chat/index"
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon emoji="💬" label={t.tab_chat} focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon label={t.tab_chat} focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="profil/index"
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon emoji="👤" label={t.tab_profile} focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon label={t.tab_profile} focused={focused} />,
         }}
       />
 
       {/* Routen die NICHT in der Tab Bar erscheinen sollen */}
-      <Tabs.Screen name="matches/[matchId]"       options={{ tabBarButton: () => null }} />
-      <Tabs.Screen name="matches/owner/[matchId]" options={{ tabBarButton: () => null }} />
-      <Tabs.Screen name="swipe/filter"            options={{ tabBarButton: () => null }} />
+      <Tabs.Screen name="matches/[matchId]"       options={{ href: null }} />
+      <Tabs.Screen name="matches/owner/[matchId]" options={{ href: null }} />
+      <Tabs.Screen name="swipe/filter"            options={{ href: null }} />
     </Tabs>
   );
 }
