@@ -115,41 +115,6 @@ function InfoRow({ icon, label, value }: { icon: string; label: string; value: s
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Demo Profile (guest mode)
-// ─────────────────────────────────────────────────────────────────────────────
-
-function DemoProfile() {
-  const { t } = useLanguage();
-  return (
-    <ScrollView contentContainerStyle={{ padding: Sizes.SPACING_LG }}>
-      <View style={{ alignItems: "center", marginTop: 24, marginBottom: 32 }}>
-        <Image
-          source={{ uri: DEMO_AMIR_AVATAR }}
-          style={{ width: 90, height: 90, borderRadius: 45, borderWidth: 3, borderColor: Colors.SECONDARY, marginBottom: 12 }}
-        />
-        <Text style={{ fontSize: Sizes.FONT_XL, fontWeight: "700", color: Colors.TEXT }}>Amir</Text>
-        <Text style={{ fontSize: Sizes.FONT_SM, color: Colors.TEXT_MUTED, marginTop: 2 }}>29</Text>
-        <View style={{ marginTop: 8, paddingHorizontal: 14, paddingVertical: 4, backgroundColor: Colors.SECONDARY + "18", borderRadius: Sizes.RADIUS_FULL }}>
-          <Text style={{ color: Colors.SECONDARY, fontWeight: "600", fontSize: Sizes.FONT_SM }}>Demo-User</Text>
-        </View>
-      </View>
-      <View style={{ backgroundColor: Colors.SURFACE, borderRadius: Sizes.RADIUS_LG, padding: Sizes.SPACING_MD, marginBottom: 16 }}>
-        <View style={{ paddingVertical: 10 }}>
-          <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM }}>{t.gassi_profil_label_city}</Text>
-          <Text style={{ color: Colors.TEXT, fontWeight: "500", marginTop: 2 }}>📍 Düsseldorf</Text>
-        </View>
-      </View>
-      <TouchableOpacity
-        onPress={() => router.push("/auth/login")}
-        style={{ height: Sizes.BUTTON_HEIGHT, backgroundColor: Colors.SECONDARY, borderRadius: Sizes.RADIUS_FULL, alignItems: "center", justifyContent: "center" }}
-      >
-        <Text style={{ color: Colors.WHITE, fontWeight: "700", fontSize: Sizes.FONT_MD }}>{t.gassi_profil_create_account}</Text>
-      </TouchableOpacity>
-    </ScrollView>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
 // Main Screen
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -178,7 +143,23 @@ export default function GassiProfilScreen() {
   const loadProfile = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setIsGuest(true); setLoading(false); return; }
+      if (!user) {
+        setIsGuest(true);
+        setProfile({
+          id: "demo",
+          name: "Amir",
+          city: "Düsseldorf",
+          avatar_url: DEMO_AMIR_AVATAR,
+          alter_jahre: 29,
+          geschlecht: "männlich",
+          bio: "Ich bin Amir, 29, aus Düsseldorf. Ich liebe lange Spaziergänge und suche einen Gassi-Partner für meinen Hund.",
+          aktivitaetslevel: "mittel",
+          treffpunkt: "park",
+        });
+        setMyDogs([{ id: "demo-zeus", name: "Zeus", rasse: "Zwergpudel", foto_url: null, modus: "gassidate" }]);
+        setLoading(false);
+        return;
+      }
       setIsGuest(false);
 
       const { data: p } = await supabase
@@ -301,15 +282,6 @@ export default function GassiProfilScreen() {
     );
   }
 
-  if (isGuest) {
-    return (
-      <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
-        <GradientHeader title="👤 Profil" showBack backLabel={t.comp_switch_modes} onBack={() => router.replace("/")} />
-        <DemoProfile />
-      </View>
-    );
-  }
-
   // ── Edit Mode ──────────────────────────────────────────────────────────────
 
   if (editMode) {
@@ -405,20 +377,20 @@ export default function GassiProfilScreen() {
       <GradientHeader
         title="👤 Profil"
         showBack backLabel={t.comp_switch_modes} onBack={() => router.replace("/")}
-        rightElement={
+        rightElement={!isGuest ? (
           <TouchableOpacity
             onPress={startEdit}
             style={{ paddingHorizontal: 14, paddingVertical: 7, borderRadius: Sizes.RADIUS_FULL, backgroundColor: "rgba(255,255,255,0.25)" }}
           >
             <Text style={{ fontSize: 13, fontWeight: "600", color: Colors.WHITE }}>✏️ {t.gassi_profil_edit_title}</Text>
           </TouchableOpacity>
-        }
+        ) : undefined}
       />
 
       <ScrollView contentContainerStyle={{ padding: Sizes.SPACING_LG, paddingBottom: 40 }}>
         {/* Avatar */}
         <View style={{ alignItems: "center", marginTop: 24, marginBottom: 32 }}>
-          <TouchableOpacity onPress={handleAvatarUpload} disabled={uploadingAvatar} style={{ marginBottom: 12 }}>
+          <TouchableOpacity onPress={isGuest ? undefined : handleAvatarUpload} disabled={uploadingAvatar || isGuest} style={{ marginBottom: 12 }}>
             {profile?.avatar_url ? (
               <Image source={{ uri: profile.avatar_url }} style={{ width: 90, height: 90, borderRadius: 45, borderWidth: 3, borderColor: Colors.SECONDARY }} />
             ) : (
@@ -512,10 +484,10 @@ export default function GassiProfilScreen() {
                   <Text style={{ fontSize: 12, fontWeight: "700", color: Colors.TEXT, textAlign: "center" }} numberOfLines={1}>{dog.name}</Text>
                   <View style={{
                     marginTop: 4, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 99,
-                    backgroundColor: dog.modus === "gassidate" ? Colors.SECONDARY + "22" : "#F3EDFF",
+                    backgroundColor: Colors.SECONDARY + "22",
                   }}>
-                    <Text style={{ fontSize: 9, fontWeight: "700", color: dog.modus === "gassidate" ? Colors.SECONDARY : "#9B59B6" }}>
-                      {dog.modus === "gassidate" ? t.gassi_mode_gassi : t.gassi_mode_deck}
+                    <Text style={{ fontSize: 9, fontWeight: "700", color: Colors.SECONDARY }}>
+                      {t.gassi_mode_gassi}
                     </Text>
                   </View>
                 </View>
@@ -568,13 +540,22 @@ export default function GassiProfilScreen() {
           })}
         </View>
 
-        {/* Logout */}
-        <TouchableOpacity
-          onPress={handleLogout}
-          style={{ height: Sizes.BUTTON_HEIGHT, borderWidth: 1.5, borderColor: Colors.ERROR, borderRadius: Sizes.RADIUS_FULL, alignItems: "center", justifyContent: "center", marginTop: 8 }}
-        >
-          <Text style={{ color: Colors.ERROR, fontSize: Sizes.FONT_MD, fontWeight: "600" }}>{t.profil_sign_out}</Text>
-        </TouchableOpacity>
+        {/* Logout / Login */}
+        {isGuest ? (
+          <TouchableOpacity
+            onPress={() => router.push("/auth/login")}
+            style={{ height: Sizes.BUTTON_HEIGHT, backgroundColor: Colors.SECONDARY, borderRadius: Sizes.RADIUS_FULL, alignItems: "center", justifyContent: "center", marginTop: 8 }}
+          >
+            <Text style={{ color: Colors.WHITE, fontSize: Sizes.FONT_MD, fontWeight: "700" }}>{t.gassi_profil_create_account}</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            onPress={handleLogout}
+            style={{ height: Sizes.BUTTON_HEIGHT, borderWidth: 1.5, borderColor: Colors.ERROR, borderRadius: Sizes.RADIUS_FULL, alignItems: "center", justifyContent: "center", marginTop: 8 }}
+          >
+            <Text style={{ color: Colors.ERROR, fontSize: Sizes.FONT_MD, fontWeight: "600" }}>{t.profil_sign_out}</Text>
+          </TouchableOpacity>
+        )}
       </ScrollView>
     </View>
   );
