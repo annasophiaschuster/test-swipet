@@ -366,15 +366,17 @@ export default function GassiProfilScreen() {
 
   // ── View Mode ──────────────────────────────────────────────────────────────
 
+  // Strip leading emoji prefix (e.g. "🏃 Mittel" → "Mittel") for clean InfoRow display
+  const noEmoji = (s: string) => s.replace(/^.{1,3}\s/, '');
   const AKTIV_LABEL: Record<string, string> = {
-    ruhig: t.gassi_profil_activity_calm,
-    mittel: t.gassi_profil_activity_medium,
-    sportlich: t.gassi_profil_activity_athletic,
+    ruhig:     noEmoji(t.gassi_profil_activity_calm),
+    mittel:    noEmoji(t.gassi_profil_activity_medium),
+    sportlich: noEmoji(t.gassi_profil_activity_athletic),
   };
   const TREFF_LABEL: Record<string, string> = {
-    park: t.gassi_profil_meeting_park,
-    wald: t.gassi_profil_meeting_forest,
-    egal: t.gassi_profil_meeting_any,
+    park: noEmoji(t.gassi_profil_meeting_park),
+    wald: noEmoji(t.gassi_profil_meeting_forest),
+    egal: noEmoji(t.gassi_profil_meeting_any),
   };
 
 
@@ -479,7 +481,7 @@ export default function GassiProfilScreen() {
               {myDogs.map((dog) => (
                 <TouchableOpacity
                   key={dog.id}
-                  onPress={() => !isGuest && router.push(`/gassi/hund-bearbeiten/${dog.id}`)}
+                  onPress={() => router.push(`/gassi/hund-bearbeiten/${dog.id}`)}
                   style={{
                     marginHorizontal: 4, alignItems: "center",
                     backgroundColor: Colors.SURFACE, borderRadius: 16, padding: 12, width: 100,
@@ -488,9 +490,7 @@ export default function GassiProfilScreen() {
                   {dog.foto_url ? (
                     <Image source={{ uri: dog.foto_url }} style={{ width: 64, height: 64, borderRadius: 32, marginBottom: 6 }} />
                   ) : (
-                    <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: Colors.SECONDARY + "20", alignItems: "center", justifyContent: "center", marginBottom: 6 }}>
-                      <Text style={{ fontSize: 28 }}>🐶</Text>
-                    </View>
+                    <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: Colors.BORDER, marginBottom: 6 }} />
                   )}
                   <Text style={{ fontSize: 12, fontWeight: "700", color: Colors.TEXT, textAlign: "center" }} numberOfLines={1}>{dog.name}</Text>
                   {dog.rasse && (
@@ -512,15 +512,8 @@ export default function GassiProfilScreen() {
           )}
         </View>
 
-        {/* Logout / Login */}
-        {isGuest ? (
-          <TouchableOpacity
-            onPress={() => router.push("/auth/login")}
-            style={{ height: Sizes.BUTTON_HEIGHT, backgroundColor: Colors.SECONDARY, borderRadius: Sizes.RADIUS_FULL, alignItems: "center", justifyContent: "center", marginTop: 8 }}
-          >
-            <Text style={{ color: Colors.WHITE, fontSize: Sizes.FONT_MD, fontWeight: "700" }}>{t.gassi_profil_create_account}</Text>
-          </TouchableOpacity>
-        ) : (
+        {/* Logout */}
+        {!isGuest && (
           <TouchableOpacity
             onPress={handleLogout}
             style={{ height: Sizes.BUTTON_HEIGHT, borderWidth: 1.5, borderColor: Colors.ERROR, borderRadius: Sizes.RADIUS_FULL, alignItems: "center", justifyContent: "center", marginTop: 8 }}

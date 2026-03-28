@@ -425,7 +425,9 @@ export default function AdoptionProfilScreen() {
 
   const WOHN_LABEL: Record<string, string> = { wohnung: t.adoption_profil_living_apt, haus: t.adoption_profil_living_house, haus_mit_garten: t.adoption_profil_living_house_garden };
   const ERF_LABEL: Record<string, string>  = { anfaenger: t.adoption_profil_exp_beginner, fortgeschritten: t.adoption_profil_exp_experienced, profi: t.adoption_profil_exp_pro };
-  const AKTIV_LABEL: Record<string, string> = { ruhig: t.gassi_profil_activity_calm, mittel: t.gassi_profil_activity_medium, sportlich: t.gassi_profil_activity_athletic };
+  // Strip leading emoji prefix for clean InfoRow display
+  const noEmoji = (s: string) => s.replace(/^.{1,3}\s/, '');
+  const AKTIV_LABEL: Record<string, string> = { ruhig: noEmoji(t.gassi_profil_activity_calm), mittel: noEmoji(t.gassi_profil_activity_medium), sportlich: noEmoji(t.gassi_profil_activity_athletic) };
   const ARBEIT_LABEL: Record<string, string> = { vollzeit: t.adoption_profil_work_full, teilzeit: t.adoption_profil_work_part, homeoffice: t.adoption_profil_work_home };
 
   return (
@@ -523,15 +525,8 @@ export default function AdoptionProfilScreen() {
           )}
         </View>
 
-        {/* Logout / Login */}
-        {isGuest ? (
-          <TouchableOpacity
-            onPress={() => router.push("/auth/login")}
-            style={{ height: Sizes.BUTTON_HEIGHT, backgroundColor: Colors.PRIMARY, borderRadius: Sizes.RADIUS_FULL, alignItems: "center", justifyContent: "center" }}
-          >
-            <Text style={{ color: Colors.WHITE, fontSize: Sizes.FONT_MD, fontWeight: "700" }}>{t.gassi_profil_create_account}</Text>
-          </TouchableOpacity>
-        ) : (
+        {/* Logout */}
+        {!isGuest && (
           <TouchableOpacity
             onPress={handleLogout}
             style={{ height: Sizes.BUTTON_HEIGHT, borderWidth: 1.5, borderColor: Colors.ERROR, borderRadius: Sizes.RADIUS_FULL, alignItems: "center", justifyContent: "center" }}

@@ -70,6 +70,16 @@ export default function HundBearbeitenScreen() {
 
   const loadDog = async () => {
     if (!id) return;
+    // Demo mode: pre-fill with demo dog data
+    if (id === "demo-zeus") {
+      setName("Zeus");
+      setRasse("Zwergpudel");
+      setAlterJahre("3");
+      setGroesse("klein");
+      setAktivitaet("mittel");
+      setLoading(false);
+      return;
+    }
     try {
       const { data, error } = await supabase
         .from("owner_pets")
@@ -128,6 +138,10 @@ export default function HundBearbeitenScreen() {
       return;
     }
     if (!id) return;
+    if (id === "demo-zeus") {
+      Alert.alert(t.gassi_profil_create_account ?? "Konto erstellen", t.err_not_logged_in ?? "Melde dich an, um Änderungen zu speichern.");
+      return;
+    }
     setSaving(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -177,6 +191,10 @@ export default function HundBearbeitenScreen() {
   };
 
   const handleDelete = () => {
+    if (id === "demo-zeus") {
+      Alert.alert(t.gassi_profil_create_account ?? "Konto erstellen", t.err_not_logged_in ?? "Melde dich an, um Änderungen zu speichern.");
+      return;
+    }
     Alert.alert(
       t.gassi_dog_delete_title ?? "Hund löschen",
       t.gassi_dog_delete_confirm ?? "Möchtest du dieses Profil wirklich löschen?",
