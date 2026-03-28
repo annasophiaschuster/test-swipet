@@ -78,10 +78,9 @@ const inputStyle = {
   marginBottom: 18,
 };
 
-function InfoRow({ icon, label, value, onPress }: { icon: string; label: string; value: string; onPress?: () => void }) {
+function InfoRow({ label, value, onPress }: { label: string; value: string; onPress?: () => void }) {
   const inner = (
     <View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderTopWidth: 1, borderTopColor: Colors.BORDER }}>
-      <Text style={{ fontSize: 20, marginRight: 14 }}>{icon}</Text>
       <View style={{ flex: 1 }}>
         <Text style={{ fontSize: 11, color: Colors.TEXT_MUTED }}>{label}</Text>
         <Text style={{ fontSize: 15, fontWeight: "500", color: onPress ? Colors.PRIMARY : Colors.TEXT, marginTop: 1 }} numberOfLines={2}>{value}</Text>
@@ -106,8 +105,6 @@ export default function TierheimProfilScreen() {
   const [editMode, setEditMode]   = useState(false);
   const [saving, setSaving]       = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
-  const [faqOpen, setFaqOpen]     = useState<number | null>(null);
-
   // Edit state
   const [editOrgName, setEditOrgName]       = useState("");
   const [editBeschreibung, setEditBeschreibung] = useState("");
@@ -351,7 +348,7 @@ export default function TierheimProfilScreen() {
             {profile?.org_name ?? t.tierheim_profil_fallback_name}
           </Text>
           {profile?.city && (
-            <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM, marginTop: 4 }}>📍 {profile.city}</Text>
+            <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM, marginTop: 4 }}>{profile.city}</Text>
           )}
           <View style={{ marginTop: 8, paddingHorizontal: 14, paddingVertical: 4, backgroundColor: "#FFF0F3", borderRadius: Sizes.RADIUS_FULL }}>
             <Text style={{ color: Colors.PRIMARY, fontWeight: "600", fontSize: Sizes.FONT_SM }}>{t.tierheim_profil_role}</Text>
@@ -394,26 +391,26 @@ export default function TierheimProfilScreen() {
           </View>
 
           {profile?.telefon && (
-            <InfoRow icon="📞" label={t.tierheim_profil_phone_label} value={profile.telefon}
+            <InfoRow label={t.tierheim_profil_phone_label} value={profile.telefon}
               onPress={() => Linking.openURL(`tel:${profile.telefon}`)} />
           )}
           {profile?.email && (
-            <InfoRow icon="✉️" label={t.tierheim_profil_email_label} value={profile.email}
+            <InfoRow label={t.tierheim_profil_email_label} value={profile.email}
               onPress={() => Linking.openURL(`mailto:${profile.email}`)} />
           )}
           {profile?.website && (
-            <InfoRow icon="🌐" label={t.tierheim_profil_website_label} value={profile.website}
+            <InfoRow label={t.tierheim_profil_website_label} value={profile.website}
               onPress={() => {
                 const url = (profile.website ?? "").startsWith("http") ? profile.website! : `https://${profile.website}`;
                 Linking.openURL(url);
               }} />
           )}
           {profile?.adresse && (
-            <InfoRow icon="📍" label={t.tierheim_profil_address_label} value={profile.adresse}
+            <InfoRow label={t.tierheim_profil_address_label} value={profile.adresse}
               onPress={() => Linking.openURL(`maps:?q=${encodeURIComponent(profile.adresse!)}`)} />
           )}
           {profile?.offnungszeiten && (
-            <InfoRow icon="🕐" label={t.tierheim_profil_hours_label} value={profile.offnungszeiten} />
+            <InfoRow label={t.tierheim_profil_hours_label} value={profile.offnungszeiten} />
           )}
 
           {!isGuest && !profile?.telefon && !profile?.email && !profile?.website && (
@@ -425,40 +422,6 @@ export default function TierheimProfilScreen() {
               <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED }}>{t.tierheim_profil_add_contact}</Text>
             </TouchableOpacity>
           )}
-        </View>
-
-        {/* FAQ */}
-        <View style={{ marginBottom: 20 }}>
-          <Text style={{ fontSize: 16, fontWeight: "700", color: Colors.TEXT, marginBottom: 12 }}>
-            ❓ FAQ
-          </Text>
-          {([1,2,3,4,5,6,7] as const).map((n) => {
-            const q = String(t[`faq_th_q${n}` as keyof typeof t]);
-            const a = String(t[`faq_th_a${n}` as keyof typeof t]);
-            const isOpen = faqOpen === n;
-            return (
-              <TouchableOpacity
-                key={n}
-                activeOpacity={0.75}
-                onPress={() => setFaqOpen(isOpen ? null : n)}
-                style={{
-                  marginBottom: 8, backgroundColor: Colors.SURFACE,
-                  borderRadius: 14, borderWidth: 1, borderColor: isOpen ? Colors.PRIMARY + "40" : Colors.BORDER,
-                  overflow: "hidden",
-                }}
-              >
-                <View style={{ flexDirection: "row", alignItems: "center", padding: 14, gap: 10 }}>
-                  <Text style={{ flex: 1, fontSize: 14, fontWeight: "600", color: Colors.TEXT }}>{q}</Text>
-                  <Text style={{ fontSize: 16, color: Colors.PRIMARY }}>{isOpen ? "−" : "+"}</Text>
-                </View>
-                {isOpen && (
-                  <View style={{ paddingHorizontal: 14, paddingBottom: 14 }}>
-                    <Text style={{ fontSize: 13, color: Colors.TEXT_MUTED, lineHeight: 20 }}>{a}</Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            );
-          })}
         </View>
 
         {/* Logout / Login */}

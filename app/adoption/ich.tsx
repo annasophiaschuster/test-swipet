@@ -127,13 +127,13 @@ function BoolPill({
   );
 }
 
-function InfoRow({ icon, label, value }: { icon: string; label: string; value: string }) {
+function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <View style={{
       flexDirection: "row", alignItems: "center",
-      paddingVertical: 11, borderTopWidth: 1, borderTopColor: Colors.BORDER,
+      paddingVertical: 11, paddingHorizontal: 14,
+      borderTopWidth: 1, borderTopColor: Colors.BORDER,
     }}>
-      <Text style={{ fontSize: 18, marginRight: 12 }}>{icon}</Text>
       <View style={{ flex: 1 }}>
         <Text style={{ fontSize: 11, color: Colors.TEXT_MUTED }}>{label}</Text>
         <Text style={{ fontSize: 15, fontWeight: "500", color: Colors.TEXT, marginTop: 1 }}>{value}</Text>
@@ -181,8 +181,6 @@ export default function AdoptionProfilScreen() {
   const [editMode, setEditMode]           = useState(false);
   const [saving, setSaving]               = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
-  const [faqOpen, setFaqOpen]             = useState<number | null>(null);
-
   // Edit state
   const [editName, setEditName]           = useState("");
   const [editCity, setEditCity]           = useState("");
@@ -494,13 +492,13 @@ export default function AdoptionProfilScreen() {
           <View style={{ padding: 14, backgroundColor: Colors.SURFACE }}>
             <Text style={{ fontSize: 13, fontWeight: "700", color: Colors.TEXT_MUTED, textTransform: "uppercase", letterSpacing: 1 }}>{t.adoption_profil_section}</Text>
           </View>
-          {profile?.city && <InfoRow icon="📍" label={t.adoption_profil_location} value={profile.city} />}
-          {profile?.wohnsituation && <InfoRow icon="🏠" label={t.adoption_profil_location_label} value={WOHN_LABEL[profile.wohnsituation] ?? profile.wohnsituation} />}
-          {profile?.erfahrung && <InfoRow icon="📚" label={t.adoption_profil_exp_label} value={ERF_LABEL[profile.erfahrung] ?? profile.erfahrung} />}
-          {profile?.aktivitaetslevel && <InfoRow icon="🏃" label={t.adoption_profil_activity_label} value={AKTIV_LABEL[profile.aktivitaetslevel] ?? profile.aktivitaetslevel} />}
-          {profile?.arbeitszeit && <InfoRow icon="💼" label={t.adoption_profil_work_label} value={ARBEIT_LABEL[profile.arbeitszeit] ?? profile.arbeitszeit} />}
-          {profile?.kinder_im_haushalt != null && <InfoRow icon="👦" label={t.adoption_profil_children_label} value={profile.kinder_im_haushalt ? t.adoption_profil_yes : t.adoption_profil_no} />}
-          {profile?.andere_tiere != null && <InfoRow icon="🐾" label={t.adoption_profil_animals_label} value={profile.andere_tiere ? t.adoption_profil_yes : t.adoption_profil_no} />}
+          {profile?.city && <InfoRow label={t.adoption_profil_location} value={profile.city} />}
+          {profile?.wohnsituation && <InfoRow label={t.adoption_profil_location_label} value={WOHN_LABEL[profile.wohnsituation] ?? profile.wohnsituation} />}
+          {profile?.erfahrung && <InfoRow label={t.adoption_profil_exp_label} value={ERF_LABEL[profile.erfahrung] ?? profile.erfahrung} />}
+          {profile?.aktivitaetslevel && <InfoRow label={t.adoption_profil_activity_label} value={AKTIV_LABEL[profile.aktivitaetslevel] ?? profile.aktivitaetslevel} />}
+          {profile?.arbeitszeit && <InfoRow label={t.adoption_profil_work_label} value={ARBEIT_LABEL[profile.arbeitszeit] ?? profile.arbeitszeit} />}
+          {profile?.kinder_im_haushalt != null && <InfoRow label={t.adoption_profil_children_label} value={profile.kinder_im_haushalt ? t.adoption_profil_yes : t.adoption_profil_no} />}
+          {profile?.andere_tiere != null && <InfoRow label={t.adoption_profil_animals_label} value={profile.andere_tiere ? t.adoption_profil_yes : t.adoption_profil_no} />}
           {!profile?.city && !profile?.wohnsituation && (
             <TouchableOpacity
               onPress={startEdit}
@@ -509,40 +507,6 @@ export default function AdoptionProfilScreen() {
               <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED, fontStyle: "italic" }}>{t.adoption_profil_complete}</Text>
             </TouchableOpacity>
           )}
-        </View>
-
-        {/* FAQ */}
-        <View style={{ marginBottom: 20 }}>
-          <Text style={{ fontSize: 16, fontWeight: "700", color: Colors.TEXT, marginBottom: 12 }}>
-            ❓ FAQ
-          </Text>
-          {([1,2,3,4,5,6,7,8] as const).map((n) => {
-            const q = String(t[`faq_hs_q${n}` as keyof typeof t]);
-            const a = String(t[`faq_hs_a${n}` as keyof typeof t]);
-            const isOpen = faqOpen === n;
-            return (
-              <TouchableOpacity
-                key={n}
-                activeOpacity={0.75}
-                onPress={() => setFaqOpen(isOpen ? null : n)}
-                style={{
-                  marginBottom: 8, backgroundColor: Colors.SURFACE,
-                  borderRadius: 14, borderWidth: 1, borderColor: isOpen ? Colors.PRIMARY + "40" : Colors.BORDER,
-                  overflow: "hidden",
-                }}
-              >
-                <View style={{ flexDirection: "row", alignItems: "center", padding: 14, gap: 10 }}>
-                  <Text style={{ flex: 1, fontSize: 14, fontWeight: "600", color: Colors.TEXT }}>{q}</Text>
-                  <Text style={{ fontSize: 16, color: Colors.PRIMARY }}>{isOpen ? "−" : "+"}</Text>
-                </View>
-                {isOpen && (
-                  <View style={{ paddingHorizontal: 14, paddingBottom: 14 }}>
-                    <Text style={{ fontSize: 13, color: Colors.TEXT_MUTED, lineHeight: 20 }}>{a}</Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            );
-          })}
         </View>
 
         {/* Logout / Login */}

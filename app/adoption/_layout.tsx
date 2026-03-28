@@ -72,10 +72,10 @@ export default function AdoptionLayout() {
       />
 
       {/* Hidden routes */}
-      <Tabs.Screen name="chat/[matchId]" options={{ tabBarButton: () => null }} />
-      <Tabs.Screen name="tierheim/[id]" options={{ tabBarButton: () => null }} />
-      <Tabs.Screen name="nachrichten" options={{ tabBarButton: () => null }} />
-      <Tabs.Screen name="profil" options={{ tabBarButton: () => null }} />
+      <Tabs.Screen name="chat/[matchId]" options={{ href: null }} />
+      <Tabs.Screen name="tierheim/[id]"  options={{ href: null }} />
+      <Tabs.Screen name="nachrichten"    options={{ href: null }} />
+      <Tabs.Screen name="profil"         options={{ href: null }} />
     </Tabs>
   );
 }

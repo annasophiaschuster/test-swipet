@@ -72,12 +72,12 @@ export default function GassiLayout() {
       />
 
       {/* Hidden routes */}
-      <Tabs.Screen name="chat/[matchId]" options={{ tabBarButton: () => null }} />
-      <Tabs.Screen name="meine-hunde" options={{ tabBarButton: () => null }} />
-      <Tabs.Screen name="hund-anlegen" options={{ tabBarButton: () => null }} />
-      <Tabs.Screen name="filter" options={{ tabBarButton: () => null }} />
-      <Tabs.Screen name="nachrichten" options={{ tabBarButton: () => null }} />
-      <Tabs.Screen name="profil" options={{ tabBarButton: () => null }} />
+      <Tabs.Screen name="chat/[matchId]" options={{ href: null }} />
+      <Tabs.Screen name="meine-hunde"    options={{ href: null }} />
+      <Tabs.Screen name="hund-anlegen"   options={{ href: null }} />
+      <Tabs.Screen name="filter"         options={{ href: null }} />
+      <Tabs.Screen name="nachrichten"    options={{ href: null }} />
+      <Tabs.Screen name="profil"         options={{ href: null }} />
     </Tabs>
   );
 }

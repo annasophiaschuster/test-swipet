@@ -72,7 +72,7 @@ export default function TierheimLayout() {
       />
 
       {/* Hidden routes */}
-      <Tabs.Screen name="chat/[matchId]" options={{ tabBarButton: () => null }} />
+      <Tabs.Screen name="chat/[matchId]" options={{ href: null }} />
     </Tabs>
   );
 }
