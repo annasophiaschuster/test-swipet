@@ -481,11 +481,25 @@ export default function AdoptionProfilScreen() {
         </View>
 
         {/* Bio */}
-        {profile?.bio && (
+        {profile?.bio ? (
           <View style={{ marginBottom: 20, padding: 16, backgroundColor: Colors.SURFACE, borderRadius: 16 }}>
             <Text style={{ fontSize: 15, color: Colors.TEXT, lineHeight: 24, fontStyle: "italic" }}>{profile.bio}</Text>
           </View>
-        )}
+        ) : !isGuest ? (
+          <TouchableOpacity
+            onPress={startEdit}
+            style={{
+              marginBottom: 20, padding: 16, backgroundColor: Colors.SURFACE,
+              borderRadius: 16, borderWidth: 1.5, borderStyle: "dashed", borderColor: Colors.BORDER,
+              flexDirection: "row", alignItems: "center", gap: 10,
+            }}
+          >
+            <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED, fontStyle: "italic", flex: 1 }}>
+              {t.adoption_profil_placeholder_bio}
+            </Text>
+            <Text style={{ fontSize: 13, color: Colors.PRIMARY, fontWeight: "600" }}>+ {t.adoption_profil_label_bio}</Text>
+          </TouchableOpacity>
+        ) : null}
 
         {/* Info Card */}
         <View style={{ borderRadius: 16, overflow: "hidden", borderWidth: 1, borderColor: Colors.BORDER, marginBottom: 20 }}>

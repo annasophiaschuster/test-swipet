@@ -479,7 +479,7 @@ export default function GassiProfilScreen() {
               {myDogs.map((dog) => (
                 <TouchableOpacity
                   key={dog.id}
-                  onPress={() => !isGuest && router.push("/gassi/meine-hunde")}
+                  onPress={() => !isGuest && router.push(`/gassi/hund-bearbeiten/${dog.id}`)}
                   style={{
                     marginHorizontal: 4, alignItems: "center",
                     backgroundColor: Colors.SURFACE, borderRadius: 16, padding: 12, width: 100,

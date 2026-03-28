@@ -202,6 +202,30 @@ export default function MeineHundeScreen() {
             />
           }
           renderItem={({ item }) => <DogCard dog={item} />}
+          ListHeaderComponent={
+            <TouchableOpacity
+              onPress={() => router.push("/gassi/hund-anlegen")}
+              style={{
+                flexDirection: "row", alignItems: "center", gap: 10,
+                paddingVertical: 14, paddingHorizontal: 16,
+                backgroundColor: Colors.SECONDARY + "10",
+                borderRadius: 16, borderWidth: 1.5,
+                borderColor: Colors.SECONDARY + "40",
+                marginBottom: 14,
+              }}
+            >
+              <View style={{
+                width: 32, height: 32, borderRadius: 16,
+                backgroundColor: Colors.SECONDARY,
+                alignItems: "center", justifyContent: "center",
+              }}>
+                <Text style={{ color: Colors.WHITE, fontSize: 20, fontWeight: "700", lineHeight: 24 }}>+</Text>
+              </View>
+              <Text style={{ fontSize: 15, fontWeight: "600", color: Colors.SECONDARY }}>
+                {t.gassi_profil_add_first_dog}
+              </Text>
+            </TouchableOpacity>
+          }
         />
       )}
 
@@ -247,7 +271,9 @@ function DogCard({ dog }: { dog: OwnerPetItem }) {
     riese: t.gassi_size_giant_label,
   };
   return (
-    <View
+    <TouchableOpacity
+      activeOpacity={0.85}
+      onPress={() => router.push(`/gassi/hund-bearbeiten/${dog.id}`)}
       style={{
         backgroundColor: Colors.WHITE,
         borderRadius: Sizes.RADIUS_LG,
@@ -324,6 +350,6 @@ function DogCard({ dog }: { dog: OwnerPetItem }) {
           </View>
         )}
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }

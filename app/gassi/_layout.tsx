@@ -9,6 +9,8 @@ function TabIcon({ emoji, label, focused }: { emoji: string; label: string; focu
     <View style={{ alignItems: "center", justifyContent: "center", paddingTop: 6 }}>
       <Text style={{ fontSize: 22 }}>{emoji}</Text>
       <Text
+        numberOfLines={1}
+        adjustsFontSizeToFit
         style={{
           fontSize: 10,
           marginTop: 2,
@@ -72,12 +74,13 @@ export default function GassiLayout() {
       />
 
       {/* Hidden routes */}
-      <Tabs.Screen name="chat/[matchId]" options={{ href: null }} />
-      <Tabs.Screen name="meine-hunde"    options={{ href: null }} />
-      <Tabs.Screen name="hund-anlegen"   options={{ href: null }} />
-      <Tabs.Screen name="filter"         options={{ href: null }} />
-      <Tabs.Screen name="nachrichten"    options={{ href: null }} />
-      <Tabs.Screen name="profil"         options={{ href: null }} />
+      <Tabs.Screen name="chat/[matchId]"       options={{ href: null }} />
+      <Tabs.Screen name="meine-hunde"          options={{ href: null }} />
+      <Tabs.Screen name="hund-anlegen"         options={{ href: null }} />
+      <Tabs.Screen name="hund-bearbeiten/[id]" options={{ href: null }} />
+      <Tabs.Screen name="filter"               options={{ href: null }} />
+      <Tabs.Screen name="nachrichten"          options={{ href: null }} />
+      <Tabs.Screen name="profil"               options={{ href: null }} />
     </Tabs>
   );
 }

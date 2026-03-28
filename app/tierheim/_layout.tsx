@@ -9,6 +9,8 @@ function TabIcon({ emoji, label, focused }: { emoji: string; label: string; focu
     <View style={{ alignItems: "center", justifyContent: "center", paddingTop: 6 }}>
       <Text style={{ fontSize: 22 }}>{emoji}</Text>
       <Text
+        numberOfLines={1}
+        adjustsFontSizeToFit
         style={{
           fontSize: 10,
           marginTop: 2,
