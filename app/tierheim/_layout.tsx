@@ -4,14 +4,16 @@ import { Sizes } from "../../constants/sizes";
 import { Text, View } from "react-native";
 import { useLanguage } from "../../contexts/LanguageContext";
 
-function TabIcon({ label, focused }: { label: string; focused: boolean }) {
+function TabIcon({ emoji, label, focused }: { emoji: string; label: string; focused: boolean }) {
   return (
-    <View style={{ alignItems: "center", justifyContent: "center" }}>
+    <View style={{ alignItems: "center", justifyContent: "center", paddingTop: 6 }}>
+      <Text style={{ fontSize: 22 }}>{emoji}</Text>
       <Text
         style={{
-          fontSize: 11,
+          fontSize: 10,
+          marginTop: 2,
           color: focused ? Colors.PRIMARY : Colors.TEXT_MUTED,
-          fontWeight: focused ? "700" : "400",
+          fontWeight: focused ? "600" : "400",
         }}
       >
         {label}
@@ -47,30 +49,30 @@ export default function TierheimLayout() {
       <Tabs.Screen
         name="dashboard"
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon label={t.tierheim_tab_dashboard} focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon emoji="📊" label={t.tierheim_tab_dashboard} focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="hunde"
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon label={t.tierheim_tab_dogs} focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon emoji="🐕" label={t.tierheim_tab_dogs} focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="anfragen"
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon label={t.tierheim_tab_requests} focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon emoji="🔔" label={t.tierheim_tab_requests} focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="profil"
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon label={t.tierheim_tab_profile} focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon emoji="👤" label={t.tierheim_tab_profile} focused={focused} />,
         }}
       />
 
       {/* Hidden routes */}
-      <Tabs.Screen name="chat/[matchId]" options={{ href: null }} />
+      <Tabs.Screen name="chat/[matchId]" options={{ tabBarButton: () => null }} />
     </Tabs>
   );
 }

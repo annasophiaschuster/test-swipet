@@ -32,8 +32,7 @@ type TierhalterProfile = {
   geschlecht: string | null;
   bio: string | null;
   aktivitaetslevel: string | null;
-  bevorzugter_treffpunkt: string | null;
-  verfuegbarkeit: string[] | null;
+  treffpunkt: string | null;
 };
 
 type MyDog = {
@@ -100,13 +99,13 @@ function PillSelect({
   );
 }
 
-function InfoRow({ label, value }: { label: string; value: string }) {
+function InfoRow({ icon, label, value }: { icon: string; label: string; value: string }) {
   return (
     <View style={{
       flexDirection: "row", alignItems: "center",
-      paddingVertical: 11, paddingHorizontal: 14,
-      borderTopWidth: 1, borderTopColor: Colors.BORDER,
+      paddingVertical: 11, borderTopWidth: 1, borderTopColor: Colors.BORDER,
     }}>
+      <Text style={{ fontSize: 18, marginRight: 12 }}>{icon}</Text>
       <View style={{ flex: 1 }}>
         <Text style={{ fontSize: 11, color: Colors.TEXT_MUTED }}>{label}</Text>
         <Text style={{ fontSize: 15, fontWeight: "500", color: Colors.TEXT, marginTop: 1 }}>{value}</Text>
@@ -128,6 +127,7 @@ export default function GassiProfilScreen() {
   const [editMode, setEditMode]           = useState(false);
   const [saving, setSaving]               = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [faqOpen, setFaqOpen]             = useState<number | null>(null);
 
   // Edit state
   const [editName, setEditName]           = useState("");
@@ -154,8 +154,7 @@ export default function GassiProfilScreen() {
           geschlecht: "männlich",
           bio: "Ich bin Amir, 29, aus Düsseldorf. Ich liebe lange Spaziergänge und suche einen Gassi-Partner für meinen Hund.",
           aktivitaetslevel: "mittel",
-          bevorzugter_treffpunkt: "park",
-          verfuegbarkeit: ["morgens", "abends"],
+          treffpunkt: "park",
         });
         setMyDogs([{ id: "demo-zeus", name: "Zeus", rasse: "Zwergpudel", foto_url: null, modus: "gassidate" }]);
         setLoading(false);
@@ -165,7 +164,7 @@ export default function GassiProfilScreen() {
 
       const { data: p } = await supabase
         .from("profiles")
-        .select("id, name, city, avatar_url, alter_jahre, geschlecht, bio, aktivitaetslevel, bevorzugter_treffpunkt, verfuegbarkeit")
+        .select("id, name, city, avatar_url, alter_jahre, geschlecht, bio, aktivitaetslevel, treffpunkt")
         .eq("id", user.id)
         .single();
 
@@ -178,8 +177,7 @@ export default function GassiProfilScreen() {
         geschlecht: p?.geschlecht ?? null,
         bio: p?.bio ?? null,
         aktivitaetslevel: p?.aktivitaetslevel ?? null,
-        bevorzugter_treffpunkt: p?.bevorzugter_treffpunkt ?? null,
-        verfuegbarkeit: p?.verfuegbarkeit ?? null,
+        treffpunkt: p?.treffpunkt ?? null,
       });
 
       // Load my dogs
@@ -210,7 +208,7 @@ export default function GassiProfilScreen() {
     setEditAlter(profile.alter_jahre ? String(profile.alter_jahre) : "");
     setEditGeschlecht(profile.geschlecht);
     setEditAktiv(profile.aktivitaetslevel);
-    setEditTreffpunkt(profile.bevorzugter_treffpunkt);
+    setEditTreffpunkt(profile.treffpunkt);
     setEditBio(profile.bio ?? "");
     setEditMode(true);
   };
@@ -225,7 +223,7 @@ export default function GassiProfilScreen() {
         alter_jahre: editAlter ? parseInt(editAlter) : null,
         geschlecht: editGeschlecht,
         aktivitaetslevel: editAktiv,
-        bevorzugter_treffpunkt: editTreffpunkt,
+        treffpunkt: editTreffpunkt,
         bio: editBio.trim() || null,
       }).eq("id", profile.id);
 
@@ -236,7 +234,7 @@ export default function GassiProfilScreen() {
         alter_jahre: editAlter ? parseInt(editAlter) : null,
         geschlecht: editGeschlecht,
         aktivitaetslevel: editAktiv,
-        bevorzugter_treffpunkt: editTreffpunkt,
+        treffpunkt: editTreffpunkt,
         bio: editBio.trim() || null,
       } : prev);
       setEditMode(false);
@@ -377,14 +375,14 @@ export default function GassiProfilScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
       <GradientHeader
-        title="Profil"
+        title="👤 Profil"
         showBack backLabel={t.comp_switch_modes} onBack={() => router.replace("/")}
         rightElement={!isGuest ? (
           <TouchableOpacity
             onPress={startEdit}
             style={{ paddingHorizontal: 14, paddingVertical: 7, borderRadius: Sizes.RADIUS_FULL, backgroundColor: "rgba(255,255,255,0.25)" }}
           >
-            <Text style={{ fontSize: 13, fontWeight: "600", color: Colors.WHITE }}>{t.gassi_profil_edit_title}</Text>
+            <Text style={{ fontSize: 13, fontWeight: "600", color: Colors.WHITE }}>✏️ {t.gassi_profil_edit_title}</Text>
           </TouchableOpacity>
         ) : undefined}
       />
@@ -397,25 +395,18 @@ export default function GassiProfilScreen() {
               <Image source={{ uri: profile.avatar_url }} style={{ width: 90, height: 90, borderRadius: 45, borderWidth: 3, borderColor: Colors.SECONDARY }} />
             ) : (
               <View style={{ width: 90, height: 90, borderRadius: 45, backgroundColor: Colors.SECONDARY, alignItems: "center", justifyContent: "center" }}>
-                <Text style={{ fontSize: 32, fontWeight: "700", color: Colors.WHITE }}>
-                  {profile?.name ? profile.name[0].toUpperCase() : "?"}
-                </Text>
+                <Text style={{ fontSize: 36 }}>🐾</Text>
               </View>
             )}
-            {!isGuest && (
-              <View style={{
-                position: "absolute", bottom: 0, right: 0,
-                width: 28, height: 28, borderRadius: 14,
-                backgroundColor: uploadingAvatar ? Colors.TEXT_MUTED : Colors.SECONDARY,
-                alignItems: "center", justifyContent: "center",
-                borderWidth: 2, borderColor: Colors.WHITE,
-              }}>
-                {uploadingAvatar
-                  ? <ActivityIndicator size="small" color={Colors.WHITE} />
-                  : <Text style={{ fontSize: 14, fontWeight: "700", color: Colors.WHITE }}>+</Text>
-                }
-              </View>
-            )}
+            <View style={{
+              position: "absolute", bottom: 0, right: 0,
+              width: 28, height: 28, borderRadius: 14,
+              backgroundColor: uploadingAvatar ? Colors.TEXT_MUTED : Colors.SECONDARY,
+              alignItems: "center", justifyContent: "center",
+              borderWidth: 2, borderColor: Colors.WHITE,
+            }}>
+              {uploadingAvatar ? <ActivityIndicator size="small" color={Colors.WHITE} /> : <Text style={{ fontSize: 13 }}>📷</Text>}
+            </View>
           </TouchableOpacity>
 
           <Text style={{ fontSize: Sizes.FONT_XL, fontWeight: "700", color: Colors.TEXT }}>
@@ -445,12 +436,9 @@ export default function GassiProfilScreen() {
           <View style={{ padding: 14, backgroundColor: Colors.SURFACE }}>
             <Text style={{ fontSize: 13, fontWeight: "700", color: Colors.TEXT_MUTED, textTransform: "uppercase", letterSpacing: 1 }}>{t.gassi_profil_section_my_profile}</Text>
           </View>
-          {profile?.city && <InfoRow label={t.gassi_profil_label_city} value={profile.city} />}
-          {profile?.aktivitaetslevel && <InfoRow label={t.gassi_profil_label_activity} value={AKTIV_LABEL[profile.aktivitaetslevel] ?? profile.aktivitaetslevel} />}
-          {profile?.bevorzugter_treffpunkt && <InfoRow label={t.gassi_profil_label_meeting} value={TREFF_LABEL[profile.bevorzugter_treffpunkt] ?? profile.bevorzugter_treffpunkt} />}
-          {profile?.verfuegbarkeit && profile.verfuegbarkeit.length > 0 && (
-            <InfoRow label="Verfügbarkeit" value={profile.verfuegbarkeit.join(", ")} />
-          )}
+          {profile?.city && <InfoRow icon="📍" label={t.gassi_profil_label_city} value={profile.city} />}
+          {profile?.aktivitaetslevel && <InfoRow icon="🏃" label={t.gassi_profil_label_activity} value={AKTIV_LABEL[profile.aktivitaetslevel] ?? profile.aktivitaetslevel} />}
+          {profile?.treffpunkt && <InfoRow icon="🗺" label={t.gassi_profil_label_meeting} value={TREFF_LABEL[profile.treffpunkt] ?? profile.treffpunkt} />}
           {!profile?.city && (
             <TouchableOpacity onPress={startEdit} style={{ flexDirection: "row", alignItems: "center", padding: 16, gap: 10 }}>
               <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED, fontStyle: "italic" }}>{t.gassi_profil_complete}</Text>
@@ -462,66 +450,94 @@ export default function GassiProfilScreen() {
         <View style={{ marginBottom: 20 }}>
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
             <Text style={{ fontSize: 16, fontWeight: "700", color: Colors.TEXT }}>{t.gassi_my_dogs}</Text>
-            {myDogs.length > 0 && (
-              <TouchableOpacity onPress={() => router.push("/gassi/meine-hunde")}>
-                <Text style={{ fontSize: 13, color: Colors.SECONDARY, fontWeight: "600" }}>{t.gassi_profil_all_dogs}</Text>
-              </TouchableOpacity>
-            )}
+            <TouchableOpacity onPress={() => router.push("/gassi/meine-hunde")}>
+              <Text style={{ fontSize: 13, color: Colors.SECONDARY, fontWeight: "600" }}>{t.gassi_profil_all_dogs}</Text>
+            </TouchableOpacity>
           </View>
 
           {myDogs.length === 0 ? (
             <TouchableOpacity
               onPress={() => router.push("/gassi/hund-anlegen")}
               style={{
-                height: 64, borderRadius: 16, borderWidth: 2, borderStyle: "dashed",
+                height: 52, borderRadius: 16, borderWidth: 2, borderStyle: "dashed",
                 borderColor: Colors.BORDER, alignItems: "center", justifyContent: "center",
-                flexDirection: "row", gap: 10,
+                flexDirection: "row", gap: 8,
               }}
             >
-              <Text style={{ fontSize: 22, color: Colors.SECONDARY, fontWeight: "300", lineHeight: 26 }}>+</Text>
+              <Text style={{ fontSize: 18, color: Colors.SECONDARY }}>+</Text>
               <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED }}>{t.gassi_profil_add_first_dog}</Text>
             </TouchableOpacity>
           ) : (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -4 }}>
               {myDogs.map((dog) => (
-                <TouchableOpacity
-                  key={dog.id}
-                  onPress={() => !isGuest && router.push("/gassi/meine-hunde")}
-                  activeOpacity={isGuest ? 1 : 0.7}
-                  style={{
-                    marginHorizontal: 4, alignItems: "center",
-                    backgroundColor: Colors.SURFACE, borderRadius: 16, padding: 12, width: 100,
-                  }}
-                >
+                <View key={dog.id} style={{
+                  marginHorizontal: 4, alignItems: "center",
+                  backgroundColor: Colors.SURFACE, borderRadius: 16, padding: 12, width: 90,
+                }}>
                   {dog.foto_url ? (
-                    <Image source={{ uri: dog.foto_url }} style={{ width: 64, height: 64, borderRadius: 32, marginBottom: 6 }} />
+                    <Image source={{ uri: dog.foto_url }} style={{ width: 52, height: 52, borderRadius: 26, marginBottom: 6 }} />
                   ) : (
-                    <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: Colors.SECONDARY + "20", alignItems: "center", justifyContent: "center", marginBottom: 6 }}>
-                      <Text style={{ fontSize: 24, fontWeight: "700", color: Colors.SECONDARY }}>
-                        {dog.name ? dog.name[0].toUpperCase() : "?"}
-                      </Text>
+                    <View style={{ width: 52, height: 52, borderRadius: 26, backgroundColor: Colors.SECONDARY + "20", alignItems: "center", justifyContent: "center", marginBottom: 6 }}>
+                      <Text style={{ fontSize: 24 }}>🐶</Text>
                     </View>
                   )}
                   <Text style={{ fontSize: 12, fontWeight: "700", color: Colors.TEXT, textAlign: "center" }} numberOfLines={1}>{dog.name}</Text>
-                  {dog.rasse && (
-                    <Text style={{ fontSize: 10, color: Colors.TEXT_MUTED, textAlign: "center", marginTop: 2 }} numberOfLines={1}>{dog.rasse}</Text>
-                  )}
-                </TouchableOpacity>
+                  <View style={{
+                    marginTop: 4, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 99,
+                    backgroundColor: Colors.SECONDARY + "22",
+                  }}>
+                    <Text style={{ fontSize: 9, fontWeight: "700", color: Colors.SECONDARY }}>
+                      {t.gassi_mode_gassi}
+                    </Text>
+                  </View>
+                </View>
               ))}
               <TouchableOpacity
                 onPress={() => router.push("/gassi/hund-anlegen")}
                 style={{
                   marginHorizontal: 4, alignItems: "center", justifyContent: "center",
                   borderRadius: 16, borderWidth: 2, borderStyle: "dashed",
-                  borderColor: Colors.BORDER, width: 100, height: 120,
-                  gap: 4,
+                  borderColor: Colors.BORDER, width: 90, height: 110,
                 }}
               >
-                <Text style={{ fontSize: 24, color: Colors.SECONDARY, fontWeight: "300", lineHeight: 28 }}>+</Text>
-                <Text style={{ fontSize: 10, color: Colors.TEXT_MUTED, textAlign: "center" }}>{t.gassi_profil_add_first_dog}</Text>
+                <Text style={{ fontSize: 22, color: Colors.SECONDARY }}>+</Text>
               </TouchableOpacity>
             </ScrollView>
           )}
+        </View>
+
+        {/* FAQ */}
+        <View style={{ marginBottom: 20 }}>
+          <Text style={{ fontSize: 16, fontWeight: "700", color: Colors.TEXT, marginBottom: 12 }}>
+            ❓ FAQ
+          </Text>
+          {([1,2,3,4,5,6] as const).map((n) => {
+            const q = String(t[`faq_hb_q${n}` as keyof typeof t]);
+            const a = String(t[`faq_hb_a${n}` as keyof typeof t]);
+            const isOpen = faqOpen === n;
+            return (
+              <TouchableOpacity
+                key={n}
+                activeOpacity={0.75}
+                onPress={() => setFaqOpen(isOpen ? null : n)}
+                style={{
+                  marginBottom: 8, backgroundColor: Colors.SURFACE,
+                  borderRadius: 14, borderWidth: 1, borderColor: isOpen ? Colors.SECONDARY + "40" : Colors.BORDER,
+                  overflow: "hidden",
+                }}
+              >
+                <View style={{ flexDirection: "row", alignItems: "center", padding: 14, gap: 10 }}>
+                  <Text style={{ flex: 1, fontSize: 14, fontWeight: "600", color: Colors.TEXT }}>{q}</Text>
+                  <Text style={{ fontSize: 16, color: Colors.SECONDARY }}>{isOpen ? "−" : "+"}</Text>
+                </View>
+                {isOpen && (
+                  <View style={{ paddingHorizontal: 14, paddingBottom: 14 }}>
+                    <Text style={{ fontSize: 13, color: Colors.TEXT_MUTED, lineHeight: 20 }}>{a}</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
         {/* Logout / Login */}
