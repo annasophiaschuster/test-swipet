@@ -26,10 +26,6 @@
     }
   },
   "submit": {
-    "production": {
-      "ios": {
-        "autoIncrement": true
-      }
-    }
+    "production": {}
   }
 }
