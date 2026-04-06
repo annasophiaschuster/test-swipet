@@ -138,14 +138,12 @@ export default function LoginScreen() {
 
           <View style={{ gap: 12 }}>
             <TouchableOpacity style={styles.socialButton}>
-              <Text style={{ fontSize: 20 }}>G</Text>
               <Text style={styles.socialButtonText}>{t.login_google}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={[styles.socialButton, { backgroundColor: Colors.BLACK, borderColor: Colors.BLACK }]}
             >
-              <Text style={{ fontSize: 20 }}>🍎</Text>
               <Text style={[styles.socialButtonText, { color: Colors.WHITE }]}>
                 {t.login_apple}
               </Text>

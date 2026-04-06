@@ -10,12 +10,12 @@ const STORAGE_KEY = "@swipet_language";
 export const translations = {
   de: {
     // ── Splash / Index ──
-    splash_dog_seeker_title: "Hundesuchende",
-    splash_dog_seeker_sub: "Finde deinen perfekten Hund",
-    splash_dog_owner_title: "Hundehaber",
-    splash_dog_owner_sub: "Gassidate für Hundebesitzer",
-    splash_shelter_title: "Tierheim",
-    splash_shelter_sub: "Tiere verwalten & Anfragen bearbeiten",
+    splash_dog_seeker_title: "Ich suche ein Tier",
+    splash_dog_seeker_sub: "Finde dein perfektes Match",
+    splash_dog_owner_title: "Hundebesitzer",
+    splash_dog_owner_sub: "Finde deine perfekte Gassi-Begleitung",
+    splash_shelter_title: "Ich vermittle Tiere",
+    splash_shelter_sub: "Vermittle deine Tiere digital & effizient",
     splash_login_link: "Bereits registriert? Anmelden →",
 
     // ── Auth ──
@@ -40,7 +40,7 @@ export const translations = {
     register_step_role_sub: "Wähle deine Rolle um loszulegen",
     register_step_details_title: "Dein Konto",
     register_step_details_sub: "Erstelle dein kostenloses Konto",
-    register_role_adoptant_label: "Ich suche einen Hund",
+    register_role_adoptant_label: "Hundeinteressent",
     register_role_adoptant_desc: "Adoptiere einen Hund aus dem Tierheim",
     register_role_tierhalter_label: "Ich habe einen Hund",
     register_role_tierhalter_desc: "Finde Gassi-Partner in deiner Nähe",
@@ -328,7 +328,7 @@ export const translations = {
     profil_cancel: "Abbrechen",
     profil_err_upload: "Upload fehlgeschlagen.",
     profil_no_name: "Kein Name",
-    profil_role_adoptant: "Hundesucher",
+    profil_role_adoptant: "Hundeinteressent",
     profil_role_tierhalter: "Hundebesitzer",
     profil_role_tierheim: "Tierheim",
 
@@ -361,7 +361,7 @@ export const translations = {
     adoption_profil_placeholder_bio: "Erzähl etwas über dich…",
     adoption_profil_section: "Mein Profil",
     adoption_profil_complete: "Profil vervollständigen…",
-    adoption_profil_role: "❤️ Hundesucher",
+    adoption_profil_role: "❤️ Hundeinteressent",
     adoption_profil_edit_btn: "✏️ Bearbeiten",
     adoption_profil_location: "Stadt",
     adoption_profil_location_label: "Wohnsituation",
@@ -810,6 +810,7 @@ export const translations = {
 
     // ── Tab Bar (neue Keys) ──
     tab_news: "News",
+    tab_info: "Info",
     tab_ich: "Ich",
     tierheim_tab_my_shelter: "Mein Tierheim",
 
@@ -1041,6 +1042,27 @@ export const translations = {
     mein_tierheim_cancel: "Abbrechen",
     mein_tierheim_social: "Social Media",
 
+    // ── Info Tab ──
+    info_about_title: "Über Swipet",
+    info_about_text: "Swipet verbindet Hundeinteressenten mit Tierheimen in ihrer Nähe. Finde deinen Traumhund – einfach, schnell und mit Herz.",
+    info_counter_label: "Hunde haben über Swipet ein Zuhause gefunden 🐾",
+    info_faq_title: "Häufige Fragen",
+    info_starter_pack_title: "Hunde Starter-Pack",
+
+    // ── Meine Suchkriterien ──
+    adoption_profil_search_criteria: "Meine Suchkriterien",
+    adoption_profil_search_activity: "Aktivität",
+    adoption_profil_search_exp: "Erfahrung",
+    adoption_profil_search_children: "Kinderfreundlich",
+    adoption_profil_search_animals: "Andere Tiere",
+    adoption_profil_search_garden: "Garten",
+
+    // ── Tierheim Verifizierung Upload ──
+    onb_th_new_step5_upload_btn: "Dokument hochladen",
+    onb_th_new_step5_in_progress: "In Prüfung — wir melden uns innerhalb von 1–3 Werktagen",
+    onb_th_new_step5_doc_hint: "Vereinsregisterauszug oder behördliche Genehmigung hochladen",
+    onb_th_new_step5_required: "Bitte lade ein Dokument hoch um fortzufahren.",
+
     // ── General ──
     err_generic: "Fehler",
     err_not_logged_in: "Nicht angemeldet",
@@ -1048,12 +1070,12 @@ export const translations = {
 
   en: {
     // ── Splash / Index ──
-    splash_dog_seeker_title: "Dog Seekers",
-    splash_dog_seeker_sub: "Find your perfect dog",
-    splash_dog_owner_title: "Dog Owners",
-    splash_dog_owner_sub: "Walk dates for dog owners",
-    splash_shelter_title: "Animal Shelter",
-    splash_shelter_sub: "Manage animals & process requests",
+    splash_dog_seeker_title: "I'm looking for a pet",
+    splash_dog_seeker_sub: "Find your perfect match",
+    splash_dog_owner_title: "Dog Owner",
+    splash_dog_owner_sub: "Find your perfect walk companion",
+    splash_shelter_title: "I place animals",
+    splash_shelter_sub: "Place your animals digitally & efficiently",
     splash_login_link: "Already registered? Sign in →",
 
     // ── Auth ──
@@ -1078,7 +1100,7 @@ export const translations = {
     register_step_role_sub: "Choose your role to get started",
     register_step_details_title: "Your Account",
     register_step_details_sub: "Create your free account",
-    register_role_adoptant_label: "I'm looking for a dog",
+    register_role_adoptant_label: "Prospective Adopter",
     register_role_adoptant_desc: "Adopt a dog from a shelter",
     register_role_tierhalter_label: "I have a dog",
     register_role_tierhalter_desc: "Find walk partners near you",
@@ -1366,7 +1388,7 @@ export const translations = {
     profil_cancel: "Cancel",
     profil_err_upload: "Upload failed.",
     profil_no_name: "No name",
-    profil_role_adoptant: "Dog Seeker",
+    profil_role_adoptant: "Prospective Adopter",
     profil_role_tierhalter: "Dog Owner",
     profil_role_tierheim: "Animal Shelter",
 
@@ -1399,7 +1421,7 @@ export const translations = {
     adoption_profil_placeholder_bio: "Tell us something about yourself…",
     adoption_profil_section: "My Profile",
     adoption_profil_complete: "Complete profile…",
-    adoption_profil_role: "❤️ Pet Seeker",
+    adoption_profil_role: "❤️ Prospective Adopter",
     adoption_profil_edit_btn: "✏️ Edit",
     adoption_profil_location: "City",
     adoption_profil_location_label: "Living situation",
@@ -1848,6 +1870,7 @@ export const translations = {
 
     // ── Tab Bar (neue Keys) ──
     tab_news: "News",
+    tab_info: "Info",
     tab_ich: "Me",
     tierheim_tab_my_shelter: "My Shelter",
 
@@ -2078,6 +2101,27 @@ export const translations = {
     mein_tierheim_edit: "✏️ Edit",
     mein_tierheim_cancel: "Cancel",
     mein_tierheim_social: "Social Media",
+
+    // ── Info Tab ──
+    info_about_title: "About Swipet",
+    info_about_text: "Swipet connects prospective pet owners with local shelters. Find your dream dog – simple, fast and with heart.",
+    info_counter_label: "dogs found a home through Swipet 🐾",
+    info_faq_title: "Frequently Asked Questions",
+    info_starter_pack_title: "Dog Starter Pack",
+
+    // ── My Search Criteria ──
+    adoption_profil_search_criteria: "My Search Criteria",
+    adoption_profil_search_activity: "Activity",
+    adoption_profil_search_exp: "Experience",
+    adoption_profil_search_children: "Child-friendly",
+    adoption_profil_search_animals: "Other Pets",
+    adoption_profil_search_garden: "Garden",
+
+    // ── Shelter Verification Upload ──
+    onb_th_new_step5_upload_btn: "Upload Document",
+    onb_th_new_step5_in_progress: "Under Review — we'll get back to you within 1–3 business days",
+    onb_th_new_step5_doc_hint: "Upload association registry extract or official permit",
+    onb_th_new_step5_required: "Please upload a document to continue.",
 
     // ── General ──
     err_generic: "Error",

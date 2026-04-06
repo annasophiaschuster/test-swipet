@@ -36,7 +36,6 @@ type AdoptantProfile = {
   kinder_im_haushalt: boolean | null;
   andere_tiere: boolean | null;
   aktivitaetslevel: string | null;
-  arbeitszeit: string | null;
   bio: string | null;
 };
 
@@ -169,12 +168,6 @@ export default function AdoptionProfilScreen() {
     { key: "mittel", label: t.gassi_profil_activity_medium },
     { key: "sportlich", label: t.gassi_profil_activity_athletic },
   ];
-  const ARBEITSZEIT_OPTIONS = [
-    { key: "vollzeit", label: t.adoption_profil_work_full },
-    { key: "teilzeit", label: t.adoption_profil_work_part },
-    { key: "homeoffice", label: t.adoption_profil_work_home },
-  ];
-
   const [profile, setProfile]             = useState<AdoptantProfile | null>(null);
   const [loading, setLoading]             = useState(true);
   const [isGuest, setIsGuest]             = useState(false);
@@ -191,7 +184,6 @@ export default function AdoptionProfilScreen() {
   const [editKinder, setEditKinder]       = useState<boolean | null>(null);
   const [editTiere, setEditTiere]         = useState<boolean | null>(null);
   const [editAktiv, setEditAktiv]         = useState<string | null>(null);
-  const [editArbeitszeit, setEditArbeitszeit] = useState<string | null>(null);
   const [editBio, setEditBio]             = useState("");
 
   useEffect(() => { loadProfile(); }, []);
@@ -213,7 +205,6 @@ export default function AdoptionProfilScreen() {
           kinder_im_haushalt: false,
           andere_tiere: false,
           aktivitaetslevel: "mittel",
-          arbeitszeit: "teilzeit",
           bio: null,
         });
         setLoading(false);
@@ -224,7 +215,7 @@ export default function AdoptionProfilScreen() {
       const [{ data: p }, { data: ap }] = await Promise.all([
         supabase.from("profiles").select("id, name, city, avatar_url").eq("id", user.id).single(),
         supabase.from("adoptant_profiles")
-          .select("alter_jahre, geschlecht, wohnsituation, erfahrung, kinder_im_haushalt, andere_tiere, aktivitaetslevel, arbeitszeit, bio")
+          .select("alter_jahre, geschlecht, wohnsituation, erfahrung, kinder_im_haushalt, andere_tiere, aktivitaetslevel, bio")
           .eq("id", user.id).maybeSingle(),
       ]);
 
@@ -240,7 +231,6 @@ export default function AdoptionProfilScreen() {
         kinder_im_haushalt: ap?.kinder_im_haushalt ?? null,
         andere_tiere: ap?.andere_tiere ?? null,
         aktivitaetslevel: ap?.aktivitaetslevel ?? null,
-        arbeitszeit: ap?.arbeitszeit ?? null,
         bio: ap?.bio ?? null,
       });
     } catch (e) {
@@ -261,7 +251,6 @@ export default function AdoptionProfilScreen() {
     setEditKinder(profile.kinder_im_haushalt);
     setEditTiere(profile.andere_tiere);
     setEditAktiv(profile.aktivitaetslevel);
-    setEditArbeitszeit(profile.arbeitszeit);
     setEditBio(profile.bio ?? "");
     setEditMode(true);
   };
@@ -284,7 +273,6 @@ export default function AdoptionProfilScreen() {
         kinder_im_haushalt: editKinder,
         andere_tiere: editTiere,
         aktivitaetslevel: editAktiv,
-        arbeitszeit: editArbeitszeit,
         bio: editBio.trim() || null,
       });
 
@@ -299,7 +287,6 @@ export default function AdoptionProfilScreen() {
         kinder_im_haushalt: editKinder,
         andere_tiere: editTiere,
         aktivitaetslevel: editAktiv,
-        arbeitszeit: editArbeitszeit,
         bio: editBio.trim() || null,
       } : prev);
       setEditMode(false);
@@ -405,9 +392,6 @@ export default function AdoptionProfilScreen() {
           <FieldLabel>{t.adoption_profil_label_activity}</FieldLabel>
           <PillSelect options={AKTIV_OPTIONS} value={editAktiv} onChange={setEditAktiv} />
 
-          <FieldLabel>{t.adoption_profil_label_work}</FieldLabel>
-          <PillSelect options={ARBEITSZEIT_OPTIONS} value={editArbeitszeit} onChange={setEditArbeitszeit} />
-
           <FieldLabel>{t.adoption_profil_label_bio}</FieldLabel>
           <TextInput
             value={editBio} onChangeText={setEditBio}
@@ -428,7 +412,6 @@ export default function AdoptionProfilScreen() {
   // Strip leading emoji prefix for clean InfoRow display
   const noEmoji = (s: string) => s.replace(/^.{1,3}\s/, '');
   const AKTIV_LABEL: Record<string, string> = { ruhig: noEmoji(t.gassi_profil_activity_calm), mittel: noEmoji(t.gassi_profil_activity_medium), sportlich: noEmoji(t.gassi_profil_activity_athletic) };
-  const ARBEIT_LABEL: Record<string, string> = { vollzeit: t.adoption_profil_work_full, teilzeit: t.adoption_profil_work_part, homeoffice: t.adoption_profil_work_home };
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
@@ -463,7 +446,7 @@ export default function AdoptionProfilScreen() {
               alignItems: "center", justifyContent: "center",
               borderWidth: 2, borderColor: Colors.WHITE,
             }}>
-              {uploadingAvatar ? <ActivityIndicator size="small" color={Colors.WHITE} /> : <Text style={{ fontSize: 13 }}>📷</Text>}
+              {uploadingAvatar ? <ActivityIndicator size="small" color={Colors.WHITE} /> : <Text style={{ fontSize: 14, color: Colors.WHITE, fontWeight: "700" }}>+</Text>}
             </View>
           </TouchableOpacity>
 
@@ -512,7 +495,6 @@ export default function AdoptionProfilScreen() {
           {profile?.wohnsituation && <InfoRow label={t.adoption_profil_location_label} value={WOHN_LABEL[profile.wohnsituation] ?? profile.wohnsituation} />}
           {profile?.erfahrung && <InfoRow label={t.adoption_profil_exp_label} value={ERF_LABEL[profile.erfahrung] ?? profile.erfahrung} />}
           {profile?.aktivitaetslevel && <InfoRow label={t.adoption_profil_activity_label} value={AKTIV_LABEL[profile.aktivitaetslevel] ?? profile.aktivitaetslevel} />}
-          {profile?.arbeitszeit && <InfoRow label={t.adoption_profil_work_label} value={ARBEIT_LABEL[profile.arbeitszeit] ?? profile.arbeitszeit} />}
           {profile?.kinder_im_haushalt != null && <InfoRow label={t.adoption_profil_children_label} value={profile.kinder_im_haushalt ? t.adoption_profil_yes : t.adoption_profil_no} />}
           {profile?.andere_tiere != null && <InfoRow label={t.adoption_profil_animals_label} value={profile.andere_tiere ? t.adoption_profil_yes : t.adoption_profil_no} />}
           {!profile?.city && !profile?.wohnsituation && (
@@ -523,6 +505,23 @@ export default function AdoptionProfilScreen() {
               <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED, fontStyle: "italic" }}>{t.adoption_profil_complete}</Text>
             </TouchableOpacity>
           )}
+        </View>
+
+        {/* Meine Suchkriterien */}
+        <View style={{ borderRadius: 16, overflow: "hidden", borderWidth: 1, borderColor: Colors.BORDER, marginBottom: 20 }}>
+          <View style={{ padding: 14, backgroundColor: Colors.SURFACE, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+            <Text style={{ fontSize: 13, fontWeight: "700", color: Colors.TEXT_MUTED, textTransform: "uppercase", letterSpacing: 1 }}>{t.adoption_profil_search_criteria}</Text>
+            {!isGuest && (
+              <TouchableOpacity onPress={startEdit}>
+                <Text style={{ fontSize: 12, color: Colors.PRIMARY, fontWeight: "600" }}>{t.adoption_profil_edit_btn}</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+          {profile?.aktivitaetslevel && <InfoRow label={t.adoption_profil_search_activity} value={AKTIV_LABEL[profile.aktivitaetslevel] ?? profile.aktivitaetslevel} />}
+          {profile?.erfahrung && <InfoRow label={t.adoption_profil_search_exp} value={ERF_LABEL[profile.erfahrung] ?? profile.erfahrung} />}
+          {profile?.kinder_im_haushalt != null && <InfoRow label={t.adoption_profil_search_children} value={profile.kinder_im_haushalt ? t.adoption_profil_yes : t.adoption_profil_no} />}
+          {profile?.andere_tiere != null && <InfoRow label={t.adoption_profil_search_animals} value={profile.andere_tiere ? t.adoption_profil_yes : t.adoption_profil_no} />}
+          {profile?.wohnsituation && <InfoRow label={t.adoption_profil_search_garden} value={profile.wohnsituation === "haus_mit_garten" ? t.adoption_profil_yes : t.adoption_profil_no} />}
         </View>
 
         {/* Logout */}

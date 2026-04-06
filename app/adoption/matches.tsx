@@ -257,31 +257,23 @@ export default function AdoptionMatchesScreen() {
                   {item.pet_photo ? (
                     <Image
                       source={{ uri: item.pet_photo }}
-                      style={{ width: 60, height: 60, borderRadius: 30, backgroundColor: Colors.SURFACE }}
+                      style={{ width: 72, height: 72, borderRadius: 14, backgroundColor: Colors.SURFACE }}
                     />
                   ) : (
                     <View style={{
-                      width: 60, height: 60, borderRadius: 30,
+                      width: 72, height: 72, borderRadius: 14,
                       backgroundColor: Colors.SURFACE, alignItems: "center", justifyContent: "center",
                     }}>
-                      <Text style={{ fontSize: 28 }}>🐶</Text>
+                      <Text style={{ fontSize: 32 }}>🐶</Text>
                     </View>
                   )}
-                  <View style={{
-                    position: "absolute", bottom: -2, right: -2,
-                    width: 22, height: 22, borderRadius: 11,
-                    backgroundColor: Colors.PRIMARY, alignItems: "center", justifyContent: "center",
-                    borderWidth: 2, borderColor: Colors.BACKGROUND,
-                  }}>
-                    <Text style={{ fontSize: 10 }}>❤️</Text>
-                  </View>
                 </View>
 
                 {/* Content */}
                 <View style={{ flex: 1 }}>
                   <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 2 }}>
                     <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flex: 1 }}>
-                      <Text style={{ fontSize: Sizes.FONT_MD, fontWeight: "700", color: Colors.TEXT }}>
+                      <Text style={{ fontSize: 17, fontWeight: "800", color: Colors.TEXT }}>
                         {item.pet_name}
                       </Text>
                       {statusStyle && (

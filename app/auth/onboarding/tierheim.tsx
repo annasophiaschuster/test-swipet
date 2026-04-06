@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from "react-native";
+import * as ImagePicker from "expo-image-picker";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { supabase } from "../../../lib/supabase";
@@ -48,6 +49,9 @@ export default function TierheimOnboarding() {
   const [plz, setPlz] = useState("");
   const [stadt, setStadt] = useState("");
 
+  // Step 5 – Verifizierung
+  const [verifyUri, setVerifyUri] = useState<string | null>(null);
+
   // Step 6 – Optional
   const [beschreibung, setBeschreibung] = useState("");
   const [website, setWebsite] = useState("");
@@ -63,6 +67,10 @@ export default function TierheimOnboarding() {
     }
     if (step === 4 && !orgName.trim()) {
       Alert.alert(t.err_generic, t.onb_shelter_err_name);
+      return;
+    }
+    if (step === 5 && !verifyUri) {
+      Alert.alert(t.err_generic, t.onb_th_new_step5_required);
       return;
     }
     setStep((s) => Math.min(s + 1, TOTAL_STEPS));
@@ -310,12 +318,34 @@ export default function TierheimOnboarding() {
             <Text style={styles.stepTitle}>{t.onb_th_new_step5_title}</Text>
             <Text style={styles.stepSub}>{t.onb_th_new_step5_sub}</Text>
 
-            <View style={[styles.infoCard, { borderLeftColor: "#FFA726" }]}>
-              <Text style={[styles.infoCardTitle, { color: "#F57C00" }]}>
-                🚧 {t.onb_th_new_step5_coming}
-              </Text>
-              <Text style={styles.infoCardText}>{t.onb_th_new_step5_info}</Text>
-            </View>
+            {verifyUri ? (
+              <View style={[styles.infoCard, { borderLeftColor: "#00C853" }]}>
+                <Text style={[styles.infoCardTitle, { color: "#00C853" }]}>
+                  ✓ {t.onb_th_new_step5_in_progress}
+                </Text>
+              </View>
+            ) : (
+              <>
+                <View style={[styles.infoCard, { borderLeftColor: ACCENT }]}>
+                  <Text style={styles.infoCardText}>{t.onb_th_new_step5_doc_hint}</Text>
+                </View>
+                <TouchableOpacity
+                  onPress={async () => {
+                    const result = await ImagePicker.launchImageLibraryAsync({
+                      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                      allowsEditing: false,
+                      quality: 0.8,
+                    });
+                    if (!result.canceled && result.assets[0]) {
+                      setVerifyUri(result.assets[0].uri);
+                    }
+                  }}
+                  style={[styles.nextBtn, { backgroundColor: ACCENT, width: "100%", marginBottom: 20 }]}
+                >
+                  <Text style={styles.nextBtnText}>{t.onb_th_new_step5_upload_btn}</Text>
+                </TouchableOpacity>
+              </>
+            )}
 
             <View style={styles.verifyStepsList}>
               {([

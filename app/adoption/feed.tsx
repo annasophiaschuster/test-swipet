@@ -237,11 +237,6 @@ function AdoptionPetView({
               <Text style={{ fontSize: 96 }}>🐶</Text>
             </View>
           )}
-          {photos.length > 1 && (
-            <View style={{ position: "absolute", top: 14, right: 14, backgroundColor: "rgba(0,0,0,0.45)", borderRadius: 99, paddingHorizontal: 10, paddingVertical: 4 }}>
-              <Text style={{ color: "#FFF", fontSize: 12, fontWeight: "600" }}>1 / {photos.length}</Text>
-            </View>
-          )}
         </View>
 
         {/* 2. Name + Alter + Geschlecht + Rasse + Beschreibung */}
@@ -563,19 +558,8 @@ export default function AdoptionFeed() {
           <Text style={{ fontSize: 18, color: "rgba(255,255,255,0.9)" }}>‹</Text>
           <Text style={{ fontSize: 12, color: "rgba(255,255,255,0.85)", fontWeight: "500" }}> {t.comp_switch_modes}</Text>
         </TouchableOpacity>
-        <Text style={{ fontSize: 22, fontWeight: "800", color: Colors.WHITE }}>🐾 Adoption</Text>
-        <TouchableOpacity
-          onPress={() => setFilterVisible(true)}
-          style={{
-            paddingHorizontal: 14, paddingVertical: 7,
-            borderRadius: Sizes.RADIUS_FULL,
-            backgroundColor: "rgba(255,255,255,0.25)",
-            flexDirection: "row", alignItems: "center", gap: 6,
-          }}
-        >
-          <Text style={{ fontSize: 14 }}>⚙️</Text>
-          <Text style={{ color: Colors.WHITE, fontWeight: "600", fontSize: Sizes.FONT_SM }}>Filter</Text>
-        </TouchableOpacity>
+        <Text style={{ fontSize: 22, fontWeight: "800", color: Colors.WHITE }}>🐾 {t.tab_discover}</Text>
+        <View style={{ width: 60 }} />
       </LinearGradient>
 
       {/* Loading */}

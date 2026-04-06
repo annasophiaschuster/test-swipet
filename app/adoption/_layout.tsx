@@ -60,9 +60,9 @@ export default function AdoptionLayout() {
         }}
       />
       <Tabs.Screen
-        name="news"
+        name="info"
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon emoji="📰" label={t.tab_news} focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon emoji="ℹ️" label={t.tab_info} focused={focused} />,
         }}
       />
       <Tabs.Screen
@@ -77,6 +77,7 @@ export default function AdoptionLayout() {
       <Tabs.Screen name="tierheim/[id]"  options={{ href: null }} />
       <Tabs.Screen name="nachrichten"    options={{ href: null }} />
       <Tabs.Screen name="profil"         options={{ href: null }} />
+      <Tabs.Screen name="news"           options={{ href: null }} />
     </Tabs>
   );
 }
