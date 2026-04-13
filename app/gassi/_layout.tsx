@@ -2,29 +2,39 @@ import { Tabs } from "expo-router";
 import { Colors } from "../../constants/colors";
 import { Sizes } from "../../constants/sizes";
 import { Text, View } from "react-native";
-import { useLanguage } from "../../contexts/LanguageContext";
 
-function TabIcon({ emoji, label, focused }: { emoji: string; label: string; focused: boolean }) {
+function TabIcon({ emoji, focused }: { emoji: string; focused: boolean }) {
   return (
-    <View style={{ alignItems: "center", justifyContent: "center", paddingTop: 6 }}>
-      <Text style={{ fontSize: 22 }}>{emoji}</Text>
-      <Text
-        numberOfLines={1}
-        style={{
-          fontSize: 10,
-          marginTop: 2,
-          color: focused ? Colors.SECONDARY : Colors.TEXT_MUTED,
-          fontWeight: focused ? "600" : "400",
-        }}
-      >
-        {label}
-      </Text>
+    <View style={{ alignItems: "center", justifyContent: "center", paddingTop: 4 }}>
+      <Text style={{ fontSize: focused ? 26 : 23 }}>{emoji}</Text>
+    </View>
+  );
+}
+
+function SwipeTabIcon({ emoji, focused }: { emoji: string; focused: boolean }) {
+  return (
+    <View
+      style={{
+        width: 52,
+        height: 52,
+        borderRadius: 26,
+        backgroundColor: focused ? Colors.SECONDARY : Colors.SECONDARY + "22",
+        alignItems: "center",
+        justifyContent: "center",
+        marginTop: -10,
+        shadowColor: Colors.SECONDARY,
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: focused ? 0.4 : 0.1,
+        shadowRadius: 6,
+        elevation: focused ? 6 : 2,
+      }}
+    >
+      <Text style={{ fontSize: 26 }}>{emoji}</Text>
     </View>
   );
 }
 
 export default function GassiLayout() {
-  const { t } = useLanguage();
   return (
     <Tabs
       screenOptions={{
@@ -48,28 +58,24 @@ export default function GassiLayout() {
       }}
     >
       <Tabs.Screen
+        name="info"
+        options={{ tabBarIcon: ({ focused }) => <TabIcon emoji="ℹ️" focused={focused} /> }}
+      />
+      <Tabs.Screen
+        name="events"
+        options={{ tabBarIcon: ({ focused }) => <TabIcon emoji="📅" focused={focused} /> }}
+      />
+      <Tabs.Screen
         name="feed"
-        options={{
-          tabBarIcon: ({ focused }) => <TabIcon emoji="🐾" label={t.tab_discover} focused={focused} />,
-        }}
+        options={{ tabBarIcon: ({ focused }) => <SwipeTabIcon emoji="🐾" focused={focused} /> }}
       />
       <Tabs.Screen
         name="matches"
-        options={{
-          tabBarIcon: ({ focused }) => <TabIcon emoji="❤️" label={t.tab_matches} focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
-        name="news"
-        options={{
-          tabBarIcon: ({ focused }) => <TabIcon emoji="📰" label={t.tab_news} focused={focused} />,
-        }}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon emoji="💬" focused={focused} /> }}
       />
       <Tabs.Screen
         name="ich"
-        options={{
-          tabBarIcon: ({ focused }) => <TabIcon emoji="👤" label={t.tab_ich} focused={focused} />,
-        }}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon emoji="👤" focused={focused} /> }}
       />
 
       {/* Hidden routes */}
@@ -80,6 +86,7 @@ export default function GassiLayout() {
       <Tabs.Screen name="filter"               options={{ href: null }} />
       <Tabs.Screen name="nachrichten"          options={{ href: null }} />
       <Tabs.Screen name="profil"               options={{ href: null }} />
+      <Tabs.Screen name="news"                 options={{ href: null }} />
     </Tabs>
   );
 }

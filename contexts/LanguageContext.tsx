@@ -814,7 +814,20 @@ export const translations = {
     tab_ich: "Ich",
     tab_events: "Events",
     tab_swipen: "Swipen",
+    tab_chat: "Chat",
     tierheim_tab_my_shelter: "Mein Tierheim",
+
+    // ── Gassi Info Tab ──
+    gassi_info_title: "Über Swipet für Hundebesitzer",
+    gassi_info_sub: "Finde Gassi-Partner, verabrede Spieldates und erlebe Abenteuer mit deinem Hund.",
+    gassi_faq_q1: "Wie funktioniert das Swipen?",
+    gassi_faq_a1: "Swipe rechts auf Hunde, die du treffen möchtest. Wenn beide swipen, entsteht ein Match.",
+    gassi_faq_q2: "Was ist ein Spieldate?",
+    gassi_faq_a2: "Ein Spieldate ist ein geplantes Treffen zweier Hunde zum gemeinsamen Spielen.",
+    gassi_faq_q3: "Wie erstelle ich einen Walk?",
+    gassi_faq_a3: "Im Events-Tab kannst du eigene Walks anlegen und andere Hundebesitzer einladen.",
+    gassi_faq_q4: "Ist Swipet kostenlos?",
+    gassi_faq_a4: "Ja, Swipet ist für Hundebesitzer vollständig kostenlos.",
 
     // ── Onboarding Hundesucher (7 Schritte) ──
     onb_hs_welcome_title: "Finde deinen Traumhund 🐾",
@@ -1911,7 +1924,20 @@ export const translations = {
     tab_ich: "Me",
     tab_events: "Events",
     tab_swipen: "Swipe",
+    tab_chat: "Chat",
     tierheim_tab_my_shelter: "My Shelter",
+
+    // ── Gassi Info Tab ──
+    gassi_info_title: "About Swipet for Dog Owners",
+    gassi_info_sub: "Find walk partners, arrange playdates and experience adventures with your dog.",
+    gassi_faq_q1: "How does swiping work?",
+    gassi_faq_a1: "Swipe right on dogs you'd like to meet. When both swipe right, it's a match.",
+    gassi_faq_q2: "What is a playdate?",
+    gassi_faq_a2: "A playdate is a planned meeting between two dogs for some fun together.",
+    gassi_faq_q3: "How do I create a walk?",
+    gassi_faq_a3: "In the Events tab you can create your own walks and invite other dog owners.",
+    gassi_faq_q4: "Is Swipet free?",
+    gassi_faq_a4: "Yes, Swipet is completely free for dog owners.",
 
     // ── Onboarding Dog Seeker (7 Steps) ──
     onb_hs_welcome_title: "Find Your Dream Dog 🐾",
