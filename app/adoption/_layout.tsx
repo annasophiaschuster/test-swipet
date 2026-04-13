@@ -48,21 +48,27 @@ export default function AdoptionLayout() {
       }}
     >
       <Tabs.Screen
+        name="info"
+        options={{
+          tabBarIcon: ({ focused }) => <TabIcon emoji="ℹ️" label={t.tab_info} focused={focused} />,
+        }}
+      />
+      <Tabs.Screen
+        name="events"
+        options={{
+          tabBarIcon: ({ focused }) => <TabIcon emoji="📅" label={t.tab_events} focused={focused} />,
+        }}
+      />
+      <Tabs.Screen
         name="feed"
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon emoji="🐾" label={t.tab_discover} focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon emoji="🐾" label={t.tab_swipen} focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="matches"
         options={{
-          tabBarIcon: ({ focused }) => <TabIcon emoji="❤️" label={t.tab_matches} focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
-        name="info"
-        options={{
-          tabBarIcon: ({ focused }) => <TabIcon emoji="ℹ️" label={t.tab_info} focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon emoji="💬" label={t.tab_chat} focused={focused} />,
         }}
       />
       <Tabs.Screen

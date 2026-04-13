@@ -4,366 +4,487 @@ import {
   Text,
   TouchableOpacity,
   ScrollView,
+  TextInput,
   Alert,
   ActivityIndicator,
+  StyleSheet,
 } from "react-native";
 import { router } from "expo-router";
 import { supabase } from "../../../lib/supabase";
 import { Colors } from "../../../constants/colors";
 import { Sizes } from "../../../constants/sizes";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import { SafeAreaView } from "react-native-safe-area-context";
+import * as ImagePicker from "expo-image-picker";
 
-const TOTAL_STEPS = 6;
+const TOTAL_STEPS = 7;
 
 type Wohnsituation = "wohnung" | "haus" | "haus_mit_garten" | "bauernhof";
 type Erfahrung = "anfaenger" | "fortgeschritten" | "profi";
 type Aktivitaet = "sportlich" | "mittel" | "ruhig";
 type Arbeitszeit = "vollzeit" | "teilzeit" | "homeoffice" | "nicht_berufstaetig";
+type Ansprache = "mann" | "frau" | "divers";
+type AlleinePartner = "alleine" | "partner" | "familie";
+type MieterEigentuemer = "mieter" | "eigentuemer";
 
 export default function AdoptantOnboarding() {
   const { t } = useLanguage();
-
-  const WOHNSITUATION = [
-    { key: "wohnung" as Wohnsituation, label: t.onb_housing_apartment },
-    { key: "haus" as Wohnsituation, label: t.onb_housing_house },
-    { key: "haus_mit_garten" as Wohnsituation, label: t.onb_housing_garden },
-    { key: "bauernhof" as Wohnsituation, label: t.onb_housing_farm },
-  ];
-  const ERFAHRUNG = [
-    { key: "anfaenger" as Erfahrung, label: t.onb_exp_beginner, desc: t.onb_exp_beginner_sub },
-    { key: "fortgeschritten" as Erfahrung, label: t.onb_exp_intermediate, desc: t.onb_exp_intermediate_sub },
-    { key: "profi" as Erfahrung, label: t.onb_exp_pro, desc: t.onb_exp_pro_sub },
-  ];
-  const AKTIVITAET = [
-    { key: "sportlich" as Aktivitaet, label: t.onb_activity_athletic, desc: t.onb_activity_athletic_sub },
-    { key: "mittel" as Aktivitaet, label: t.onb_activity_medium, desc: t.onb_activity_medium_sub },
-    { key: "ruhig" as Aktivitaet, label: t.onb_activity_calm, desc: t.onb_activity_calm_sub },
-  ];
-  const ARBEITSZEIT = [
-    { key: "vollzeit" as Arbeitszeit, label: t.onb_work_fulltime },
-    { key: "teilzeit" as Arbeitszeit, label: t.onb_work_parttime },
-    { key: "homeoffice" as Arbeitszeit, label: t.onb_work_home },
-    { key: "nicht_berufstaetig" as Arbeitszeit, label: t.onb_work_none },
-  ];
-
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
 
-  const [wohnsituation, setWohnsituation] = useState<Wohnsituation | null>(null);
-  const [erfahrung, setErfahrung] = useState<Erfahrung | null>(null);
-  const [kinderImHaushalt, setKinderImHaushalt] = useState<boolean | null>(null);
-  const [andereTiere, setAndereTiere] = useState<boolean | null>(null);
-  const [aktivitaetslevel, setAktivitaetslevel] = useState<Aktivitaet | null>(null);
-  const [arbeitszeit, setArbeitszeit] = useState<Arbeitszeit | null>(null);
+  // Step 3 — Datenschutz
+  const [datenschutz, setDatenschutz] = useState(false);
+  const [newsletter, setNewsletter] = useState(false);
 
-  const canContinue = () => {
-    switch (step) {
-      case 1: return wohnsituation !== null;
-      case 2: return erfahrung !== null;
-      case 3: return kinderImHaushalt !== null;
-      case 4: return andereTiere !== null;
-      case 5: return aktivitaetslevel !== null;
-      case 6: return arbeitszeit !== null;
-      default: return false;
+  // Step 4 — Persönliche Infos
+  const [ansprache, setAnsprache] = useState<Ansprache | null>(null);
+  const [vorname, setVorname] = useState("");
+  const [geburtsdatum, setGeburtsdatum] = useState("");
+  const [plz, setPlz] = useState("");
+  const [avatarUri, setAvatarUri] = useState<string | null>(null);
+
+  // Step 5 — Lebenssituation
+  const [wohnsituation, setWohnsituation] = useState<Wohnsituation | null>(null);
+  const [sqm, setSqm] = useState("");
+  const [mieterEigentuemer, setMieterEigentuemer] = useState<MieterEigentuemer | null>(null);
+  const [kinder, setKinder] = useState<boolean | null>(null);
+  const [kinderAlter, setKinderAlter] = useState("");
+  const [andereTiere, setAndereTiere] = useState<boolean | null>(null);
+  const [alleinePartner, setAlleinePartner] = useState<AlleinePartner | null>(null);
+
+  // Step 6 — Erfahrung & Lifestyle
+  const [erfahrung, setErfahrung] = useState<Erfahrung | null>(null);
+  const [aktivitaet, setAktivitaet] = useState<Aktivitaet | null>(null);
+  const [arbeitszeit, setArbeitszeit] = useState<Arbeitszeit | null>(null);
+  const [stundenAlleine, setStundenAlleine] = useState("");
+
+  const goNext = () => setStep((s) => Math.min(s + 1, TOTAL_STEPS));
+  const goBack = () => setStep((s) => Math.max(s - 1, 1));
+
+  // ── Step 3: Validate privacy ──
+  const validateStep3 = () => {
+    if (!datenschutz) {
+      Alert.alert("Datenschutz", t.onb_hs_privacy_required);
+      return false;
     }
+    return true;
   };
 
+  // ── Step 4: Validate personal info ──
+  const validateStep4 = () => {
+    if (!vorname.trim() || !geburtsdatum.trim() || !plz.trim()) {
+      Alert.alert("Pflichtfeld", t.onb_hs_info_required);
+      return false;
+    }
+    // Age check: geburtsdatum format DD.MM.YYYY
+    const parts = geburtsdatum.split(".");
+    if (parts.length === 3) {
+      const dob = new Date(+parts[2], +parts[1] - 1, +parts[0]);
+      const today = new Date();
+      const age = today.getFullYear() - dob.getFullYear();
+      if (age < 18) {
+        Alert.alert("Alter", t.onb_hs_info_age_error);
+        return false;
+      }
+    }
+    return true;
+  };
+
+  // ── Pick avatar ──
+  const pickAvatar = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
+    if (!result.canceled && result.assets[0]) setAvatarUri(result.assets[0].uri);
+  };
+
+  // ── Save to Supabase ──
   const handleFinish = async () => {
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error(t.onb_err_not_logged_in);
 
-      const { error } = await supabase.from("adoptant_profiles").insert({
+      // Update profiles
+      await supabase.from("profiles").update({
+        ansprache,
+        vorname: vorname.trim() || null,
+        geburtsdatum: geburtsdatum || null,
+        plz: plz.trim() || null,
+        newsletter,
+        datenschutz,
+      }).eq("id", user.id);
+
+      // Upsert adoptant_profiles
+      await supabase.from("adoptant_profiles").upsert({
         id: user.id,
-        wohnsituation,
-        erfahrung,
-        kinder_im_haushalt: kinderImHaushalt ?? false,
+        wohnsituation: wohnsituation ?? undefined,
+        erfahrung: erfahrung ?? undefined,
+        kinder_im_haushalt: kinder ?? false,
+        kinder_alter: kinderAlter.trim() || null,
         andere_tiere: andereTiere ?? false,
-        aktivitaetslevel,
-        arbeitszeit,
+        aktivitaetslevel: aktivitaet ?? undefined,
+        arbeitszeit: arbeitszeit ?? undefined,
+        quadratmeter: sqm ? parseInt(sqm) : null,
+        mieter_eigentuemer: mieterEigentuemer ?? undefined,
+        alleine_partner: alleinePartner ?? undefined,
+        stunden_alleine: stundenAlleine ? parseInt(stundenAlleine) : null,
       });
-      if (error) throw error;
+
       router.replace("/adoption/feed");
-    } catch (error: any) {
-      Alert.alert(t.err_generic, error.message);
+    } catch (e: any) {
+      Alert.alert(t.err_generic, e.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const PillOption = ({
-    label,
-    desc,
-    selected,
-    onPress,
-  }: {
-    label: string;
-    desc?: string;
-    selected: boolean;
-    onPress: () => void;
-  }) => (
-    <TouchableOpacity
-      onPress={onPress}
-      style={{
-        padding: desc ? 16 : 12,
-        paddingHorizontal: 20,
-        borderRadius: Sizes.RADIUS_XL,
-        borderWidth: 2,
-        borderColor: selected ? Colors.PRIMARY : Colors.BORDER,
-        backgroundColor: selected ? "#FFF0F3" : Colors.SURFACE,
-        marginBottom: 10,
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-      }}
-    >
-      <View>
-        <Text
-          style={{
-            color: selected ? Colors.PRIMARY : Colors.TEXT,
-            fontWeight: selected ? "700" : "500",
-            fontSize: Sizes.FONT_MD,
-          }}
-        >
-          {label}
-        </Text>
-        {desc && (
-          <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM, marginTop: 2 }}>
-            {desc}
-          </Text>
-        )}
-      </View>
-      <View
-        style={{
-          width: 22,
-          height: 22,
-          borderRadius: 11,
-          borderWidth: 2,
-          borderColor: selected ? Colors.PRIMARY : Colors.BORDER,
-          backgroundColor: selected ? Colors.PRIMARY : "transparent",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        {selected && <Text style={{ color: Colors.WHITE, fontSize: 11, fontWeight: "700" }}>✓</Text>}
-      </View>
-    </TouchableOpacity>
-  );
-
-  const YesNoToggle = ({
-    value,
-    onChange,
-  }: {
-    value: boolean | null;
-    onChange: (v: boolean) => void;
-  }) => (
-    <View style={{ flexDirection: "row", gap: 12 }}>
-      {[
-        { v: true, label: t.onb_yes },
-        { v: false, label: t.onb_no },
-      ].map(({ v, label }) => (
-        <TouchableOpacity
-          key={label}
-          onPress={() => onChange(v)}
-          style={{
-            flex: 1,
-            height: 52,
-            borderRadius: Sizes.RADIUS_FULL,
-            borderWidth: 2,
-            borderColor: value === v ? Colors.PRIMARY : Colors.BORDER,
-            backgroundColor: value === v ? Colors.PRIMARY : Colors.SURFACE,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Text
-            style={{
-              color: value === v ? Colors.WHITE : Colors.TEXT,
-              fontWeight: "600",
-              fontSize: Sizes.FONT_MD,
-            }}
-          >
-            {label}
-          </Text>
-        </TouchableOpacity>
-      ))}
-    </View>
-  );
-
-  const STEPS = [
-    {
-      title: t.onb_housing_title,
-      subtitle: t.onb_housing_sub,
-      content: (
-        <View>
-          {WOHNSITUATION.map((o) => (
-            <PillOption
-              key={o.key}
-              label={o.label}
-              selected={wohnsituation === o.key}
-              onPress={() => setWohnsituation(o.key)}
-            />
-          ))}
-        </View>
-      ),
-    },
-    {
-      title: t.onb_exp_title,
-      subtitle: t.onb_exp_sub,
-      content: (
-        <View>
-          {ERFAHRUNG.map((o) => (
-            <PillOption
-              key={o.key}
-              label={o.label}
-              desc={o.desc}
-              selected={erfahrung === o.key}
-              onPress={() => setErfahrung(o.key)}
-            />
-          ))}
-        </View>
-      ),
-    },
-    {
-      title: t.onb_children_title,
-      subtitle: t.onb_children_sub,
-      content: <YesNoToggle value={kinderImHaushalt} onChange={setKinderImHaushalt} />,
-    },
-    {
-      title: t.onb_other_pets_title,
-      subtitle: t.onb_other_pets_sub,
-      content: <YesNoToggle value={andereTiere} onChange={setAndereTiere} />,
-    },
-    {
-      title: t.onb_activity_title,
-      subtitle: t.onb_activity_sub,
-      content: (
-        <View>
-          {AKTIVITAET.map((o) => (
-            <PillOption
-              key={o.key}
-              label={o.label}
-              desc={o.desc}
-              selected={aktivitaetslevel === o.key}
-              onPress={() => setAktivitaetslevel(o.key)}
-            />
-          ))}
-        </View>
-      ),
-    },
-    {
-      title: t.onb_work_title,
-      subtitle: t.onb_work_sub,
-      content: (
-        <View>
-          {ARBEITSZEIT.map((o) => (
-            <PillOption
-              key={o.key}
-              label={o.label}
-              selected={arbeitszeit === o.key}
-              onPress={() => setArbeitszeit(o.key)}
-            />
-          ))}
-        </View>
-      ),
-    },
-  ];
-
-  const current = STEPS[step - 1];
+  // ─── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
-      {/* Header */}
-      <View
-        style={{
-          paddingTop: 60,
-          paddingHorizontal: Sizes.SPACING_LG,
-          paddingBottom: Sizes.SPACING_MD,
-          backgroundColor: Colors.BACKGROUND,
-          borderBottomWidth: 1,
-          borderBottomColor: Colors.BORDER,
-        }}
-      >
-        <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM, marginBottom: 8 }}>
-          {t.onb_step} {step} {t.onb_of} {TOTAL_STEPS}
-        </Text>
-        {/* Progress Bar */}
-        <View style={{ height: 6, backgroundColor: Colors.BORDER, borderRadius: 3, marginBottom: 16 }}>
-          <View
-            style={{
-              height: 6,
-              width: `${(step / TOTAL_STEPS) * 100}%`,
-              backgroundColor: Colors.PRIMARY,
-              borderRadius: 3,
-            }}
-          />
+    <SafeAreaView style={s.safe}>
+      {/* Progress Bar */}
+      {step > 1 && step < TOTAL_STEPS && (
+        <View style={s.progressWrap}>
+          <View style={s.progressBg}>
+            <View
+              style={[s.progressFill, { width: `${((step - 1) / (TOTAL_STEPS - 2)) * 100}%` }]}
+            />
+          </View>
+          <Text style={s.progressText}>
+            {t.onb_step} {step - 1} {t.onb_of} {TOTAL_STEPS - 2}
+          </Text>
         </View>
-        <Text style={{ fontSize: Sizes.FONT_XL, fontWeight: "700", color: Colors.TEXT }}>
-          {current.title}
-        </Text>
-        <Text style={{ color: Colors.TEXT_MUTED, marginTop: 4, fontSize: Sizes.FONT_SM }}>
-          {current.subtitle}
-        </Text>
-      </View>
+      )}
 
       <ScrollView
-        contentContainerStyle={{ padding: Sizes.SPACING_LG, paddingTop: 24, flexGrow: 1 }}
+        style={s.scroll}
+        contentContainerStyle={s.scrollContent}
+        keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {current.content}
+        {/* ── Step 1: Welcome ── */}
+        {step === 1 && (
+          <View style={s.centerBlock}>
+            <Text style={s.welcomeEmoji}>🐾</Text>
+            <Text style={s.welcomeTitle}>{t.onb_hs_welcome_title}</Text>
+            <Text style={s.welcomeSub}>{t.onb_hs_welcome_sub}</Text>
+            <View style={s.featureList}>
+              {["🏠 Lokale Tierheime entdecken", "❤️ Passende Hunde finden", "💬 Direkt mit Tierheimen chatten"].map((f) => (
+                <View key={f} style={s.featureRow}>
+                  <Text style={s.featureText}>{f}</Text>
+                </View>
+              ))}
+            </View>
+            <TouchableOpacity style={[s.primaryBtn, { backgroundColor: Colors.PRIMARY }]} onPress={goNext}>
+              <Text style={s.primaryBtnText}>{t.onb_hs_welcome_btn}</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* ── Step 2: Email confirmation hint ── */}
+        {step === 2 && (
+          <View style={s.centerBlock}>
+            <Text style={s.stepEmoji}>📧</Text>
+            <Text style={s.stepTitle}>Konto erstellt!</Text>
+            <Text style={s.stepSub}>
+              Wir haben dir eine Bestätigungs-E-Mail gesendet. Du kannst trotzdem direkt loslegen — bitte bestätige deine E-Mail sobald du kannst.
+            </Text>
+            <TouchableOpacity style={[s.primaryBtn, { backgroundColor: Colors.PRIMARY }]} onPress={goNext}>
+              <Text style={s.primaryBtnText}>{t.onb_next}</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* ── Step 3: Datenschutz ── */}
+        {step === 3 && (
+          <View>
+            <Text style={s.stepTitle}>{t.onb_hs_privacy_title}</Text>
+            <Text style={s.stepSub}>{t.onb_hs_privacy_sub}</Text>
+
+            <TouchableOpacity style={s.checkRow} onPress={() => setDatenschutz(!datenschutz)}>
+              <View style={[s.checkbox, datenschutz && { backgroundColor: Colors.PRIMARY, borderColor: Colors.PRIMARY }]}>
+                {datenschutz && <Text style={s.checkMark}>✓</Text>}
+              </View>
+              <Text style={s.checkLabel}>{t.onb_hs_privacy_accept}</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={s.checkRow} onPress={() => setNewsletter(!newsletter)}>
+              <View style={[s.checkbox, newsletter && { backgroundColor: Colors.PRIMARY, borderColor: Colors.PRIMARY }]}>
+                {newsletter && <Text style={s.checkMark}>✓</Text>}
+              </View>
+              <Text style={s.checkLabel}>{t.onb_hs_privacy_newsletter}</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* ── Step 4: Persönliche Infos ── */}
+        {step === 4 && (
+          <View>
+            <Text style={s.stepTitle}>{t.onb_hs_info_title}</Text>
+
+            <Text style={s.label}>{t.onb_hs_info_salutation}</Text>
+            <View style={s.chipRow}>
+              {(["mann", "frau", "divers"] as Ansprache[]).map((a) => {
+                const labels = { mann: t.onb_hs_info_salutation_male, frau: t.onb_hs_info_salutation_female, divers: t.onb_hs_info_salutation_diverse };
+                return (
+                  <TouchableOpacity
+                    key={a}
+                    style={[s.chip, ansprache === a && { backgroundColor: Colors.PRIMARY, borderColor: Colors.PRIMARY }]}
+                    onPress={() => setAnsprache(a)}
+                  >
+                    <Text style={[s.chipText, ansprache === a && { color: "#FFF" }]}>{labels[a]}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            <Text style={s.label}>{t.onb_hs_info_firstname}</Text>
+            <TextInput style={s.input} value={vorname} onChangeText={setVorname} placeholder="z.B. Max" placeholderTextColor={Colors.TEXT_MUTED} />
+
+            <Text style={s.label}>{t.onb_hs_info_dob}</Text>
+            <TextInput style={s.input} value={geburtsdatum} onChangeText={setGeburtsdatum} placeholder="TT.MM.JJJJ" placeholderTextColor={Colors.TEXT_MUTED} keyboardType="numbers-and-punctuation" />
+            <Text style={s.hint}>{t.onb_hs_info_dob_hint}</Text>
+
+            <Text style={s.label}>{t.onb_hs_info_plz}</Text>
+            <TextInput style={s.input} value={plz} onChangeText={setPlz} placeholder="z.B. 80331" placeholderTextColor={Colors.TEXT_MUTED} keyboardType="numeric" />
+
+            <Text style={s.label}>{t.onb_hs_info_avatar}</Text>
+            <TouchableOpacity style={s.avatarPicker} onPress={pickAvatar}>
+              <Text style={s.avatarPickerText}>
+                {avatarUri ? "✅ Foto ausgewählt" : "📷 Foto auswählen"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* ── Step 5: Lebenssituation ── */}
+        {step === 5 && (
+          <View>
+            <Text style={s.stepTitle}>{t.onb_hs_living_title}</Text>
+            <Text style={s.stepSub}>{t.onb_hs_living_sub}</Text>
+
+            <Text style={s.label}>{t.onb_housing_title}</Text>
+            {([
+              { key: "wohnung", label: t.onb_housing_apartment },
+              { key: "haus", label: t.onb_housing_house },
+              { key: "haus_mit_garten", label: t.onb_housing_garden },
+              { key: "bauernhof", label: t.onb_housing_farm },
+            ] as { key: Wohnsituation; label: string }[]).map((o) => (
+              <TouchableOpacity
+                key={o.key}
+                style={[s.optionCard, wohnsituation === o.key && s.optionCardActive]}
+                onPress={() => setWohnsituation(o.key)}
+              >
+                <Text style={[s.optionText, wohnsituation === o.key && s.optionTextActive]}>{o.label}</Text>
+              </TouchableOpacity>
+            ))}
+
+            <Text style={s.label}>{t.onb_hs_living_sqm}</Text>
+            <TextInput style={s.input} value={sqm} onChangeText={setSqm} placeholder={t.onb_hs_living_sqm_placeholder} placeholderTextColor={Colors.TEXT_MUTED} keyboardType="numeric" />
+
+            <Text style={s.label}>{t.profil_label_rent_own}</Text>
+            <View style={s.chipRow}>
+              {([["mieter", t.onb_hs_living_rent], ["eigentuemer", t.onb_hs_living_own]] as [MieterEigentuemer, string][]).map(([k, label]) => (
+                <TouchableOpacity key={k} style={[s.chip, mieterEigentuemer === k && { backgroundColor: Colors.PRIMARY, borderColor: Colors.PRIMARY }]} onPress={() => setMieterEigentuemer(k)}>
+                  <Text style={[s.chipText, mieterEigentuemer === k && { color: "#FFF" }]}>{label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <Text style={s.label}>{t.onb_children_title}</Text>
+            <View style={s.chipRow}>
+              <TouchableOpacity style={[s.chip, kinder === true && { backgroundColor: Colors.PRIMARY, borderColor: Colors.PRIMARY }]} onPress={() => setKinder(true)}>
+                <Text style={[s.chipText, kinder === true && { color: "#FFF" }]}>{t.onb_yes}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[s.chip, kinder === false && { backgroundColor: Colors.PRIMARY, borderColor: Colors.PRIMARY }]} onPress={() => setKinder(false)}>
+                <Text style={[s.chipText, kinder === false && { color: "#FFF" }]}>{t.onb_no}</Text>
+              </TouchableOpacity>
+            </View>
+            {kinder && (
+              <TextInput style={s.input} value={kinderAlter} onChangeText={setKinderAlter} placeholder="Alter der Kinder (z.B. 5, 8)" placeholderTextColor={Colors.TEXT_MUTED} />
+            )}
+
+            <Text style={s.label}>{t.onb_other_pets_title}</Text>
+            <View style={s.chipRow}>
+              <TouchableOpacity style={[s.chip, andereTiere === true && { backgroundColor: Colors.PRIMARY, borderColor: Colors.PRIMARY }]} onPress={() => setAndereTiere(true)}>
+                <Text style={[s.chipText, andereTiere === true && { color: "#FFF" }]}>{t.onb_yes}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[s.chip, andereTiere === false && { backgroundColor: Colors.PRIMARY, borderColor: Colors.PRIMARY }]} onPress={() => setAndereTiere(false)}>
+                <Text style={[s.chipText, andereTiere === false && { color: "#FFF" }]}>{t.onb_no}</Text>
+              </TouchableOpacity>
+            </View>
+
+            <Text style={s.label}>{t.profil_label_alone_partner}</Text>
+            <View style={s.chipRow}>
+              {([["alleine", t.onb_hs_living_alone], ["partner", t.onb_hs_living_partner], ["familie", t.onb_hs_living_family]] as [AlleinePartner, string][]).map(([k, label]) => (
+                <TouchableOpacity key={k} style={[s.chip, alleinePartner === k && { backgroundColor: Colors.PRIMARY, borderColor: Colors.PRIMARY }]} onPress={() => setAlleinePartner(k)}>
+                  <Text style={[s.chipText, alleinePartner === k && { color: "#FFF" }]}>{label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* ── Step 6: Erfahrung & Lifestyle ── */}
+        {step === 6 && (
+          <View>
+            <Text style={s.stepTitle}>{t.onb_hs_lifestyle_title}</Text>
+            <Text style={s.stepSub}>{t.onb_hs_lifestyle_sub}</Text>
+
+            <Text style={s.label}>{t.onb_exp_title}</Text>
+            {([
+              { key: "anfaenger", label: t.onb_exp_beginner, sub: t.onb_exp_beginner_sub },
+              { key: "fortgeschritten", label: t.onb_exp_intermediate, sub: t.onb_exp_intermediate_sub },
+              { key: "profi", label: t.onb_exp_pro, sub: t.onb_exp_pro_sub },
+            ] as { key: Erfahrung; label: string; sub: string }[]).map((o) => (
+              <TouchableOpacity key={o.key} style={[s.optionCard, erfahrung === o.key && s.optionCardActive]} onPress={() => setErfahrung(o.key)}>
+                <Text style={[s.optionText, erfahrung === o.key && s.optionTextActive]}>{o.label}</Text>
+                <Text style={s.optionSub}>{o.sub}</Text>
+              </TouchableOpacity>
+            ))}
+
+            <Text style={s.label}>{t.onb_activity_title}</Text>
+            {([
+              { key: "sportlich", label: t.onb_activity_athletic, sub: t.onb_activity_athletic_sub },
+              { key: "mittel", label: t.onb_activity_medium, sub: t.onb_activity_medium_sub },
+              { key: "ruhig", label: t.onb_activity_calm, sub: t.onb_activity_calm_sub },
+            ] as { key: Aktivitaet; label: string; sub: string }[]).map((o) => (
+              <TouchableOpacity key={o.key} style={[s.optionCard, aktivitaet === o.key && s.optionCardActive]} onPress={() => setAktivitaet(o.key)}>
+                <Text style={[s.optionText, aktivitaet === o.key && s.optionTextActive]}>{o.label}</Text>
+                <Text style={s.optionSub}>{o.sub}</Text>
+              </TouchableOpacity>
+            ))}
+
+            <Text style={s.label}>{t.onb_work_title}</Text>
+            {([
+              { key: "vollzeit", label: t.onb_work_fulltime },
+              { key: "teilzeit", label: t.onb_work_parttime },
+              { key: "homeoffice", label: t.onb_work_home },
+              { key: "nicht_berufstaetig", label: t.onb_work_none },
+            ] as { key: Arbeitszeit; label: string }[]).map((o) => (
+              <TouchableOpacity key={o.key} style={[s.optionCard, arbeitszeit === o.key && s.optionCardActive]} onPress={() => setArbeitszeit(o.key)}>
+                <Text style={[s.optionText, arbeitszeit === o.key && s.optionTextActive]}>{o.label}</Text>
+              </TouchableOpacity>
+            ))}
+
+            <Text style={s.label}>{t.onb_hs_lifestyle_hours_alone}</Text>
+            <TextInput
+              style={s.input}
+              value={stundenAlleine}
+              onChangeText={setStundenAlleine}
+              placeholder={t.onb_hs_lifestyle_hours_placeholder}
+              placeholderTextColor={Colors.TEXT_MUTED}
+              keyboardType="numeric"
+            />
+          </View>
+        )}
+
+        {/* ── Step 7: Fertig ── */}
+        {step === 7 && (
+          <View style={s.centerBlock}>
+            <Text style={s.welcomeEmoji}>🐾</Text>
+            <Text style={s.welcomeTitle}>{t.onb_hs_done_title}</Text>
+            <Text style={s.welcomeSub}>{t.onb_hs_done_sub}</Text>
+            {loading ? (
+              <ActivityIndicator color={Colors.PRIMARY} style={{ marginTop: 24 }} />
+            ) : (
+              <TouchableOpacity style={[s.primaryBtn, { backgroundColor: Colors.PRIMARY }]} onPress={handleFinish}>
+                <Text style={s.primaryBtnText}>{t.onb_hs_done_btn}</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
       </ScrollView>
 
-      {/* Footer Buttons */}
-      <View
-        style={{
-          padding: Sizes.SPACING_LG,
-          flexDirection: "row",
-          gap: 12,
-          borderTopWidth: 1,
-          borderTopColor: Colors.BORDER,
-          backgroundColor: Colors.WHITE,
-        }}
-      >
-        {step > 1 && (
+      {/* ── Navigation Buttons ── */}
+      {step > 1 && step < TOTAL_STEPS && (
+        <View style={s.navRow}>
+          <TouchableOpacity style={s.backBtn} onPress={goBack}>
+            <Text style={s.backBtnText}>{t.onb_back}</Text>
+          </TouchableOpacity>
           <TouchableOpacity
-            onPress={() => setStep(step - 1)}
-            style={{
-              flex: 1,
-              height: Sizes.BUTTON_HEIGHT,
-              borderWidth: 1.5,
-              borderColor: Colors.BORDER,
-              borderRadius: Sizes.RADIUS_FULL,
-              alignItems: "center",
-              justifyContent: "center",
+            style={[s.nextBtn, { backgroundColor: Colors.PRIMARY }]}
+            onPress={() => {
+              if (step === 3 && !validateStep3()) return;
+              if (step === 4 && !validateStep4()) return;
+              goNext();
             }}
           >
-            <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_MD, fontWeight: "600" }}>
-              {t.onb_back}
-            </Text>
+            <Text style={s.nextBtnText}>{t.onb_next}</Text>
           </TouchableOpacity>
-        )}
-        <TouchableOpacity
-          onPress={step === TOTAL_STEPS ? handleFinish : () => setStep(step + 1)}
-          disabled={!canContinue() || loading}
-          style={{
-            flex: 2,
-            height: Sizes.BUTTON_HEIGHT,
-            backgroundColor: canContinue() ? Colors.PRIMARY : Colors.BORDER,
-            borderRadius: Sizes.RADIUS_FULL,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          {loading ? (
-            <ActivityIndicator color={Colors.WHITE} />
-          ) : (
-            <Text style={{ color: Colors.WHITE, fontSize: Sizes.FONT_MD, fontWeight: "600" }}>
-              {step === TOTAL_STEPS ? t.onb_finish : t.onb_next}
-            </Text>
-          )}
-        </TouchableOpacity>
-      </View>
-    </View>
+        </View>
+      )}
+    </SafeAreaView>
   );
 }
+
+// ─── Styles ───────────────────────────────────────────────────────────────────
+
+const s = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: Colors.BACKGROUND },
+  progressWrap: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 4 },
+  progressBg: { height: 4, backgroundColor: Colors.BORDER, borderRadius: 2 },
+  progressFill: { height: 4, backgroundColor: Colors.PRIMARY, borderRadius: 2 },
+  progressText: { fontSize: 12, color: Colors.TEXT_MUTED, marginTop: 4, textAlign: "right" },
+  scroll: { flex: 1 },
+  scrollContent: { padding: 24, paddingBottom: 40 },
+
+  centerBlock: { alignItems: "center", paddingTop: 20 },
+  welcomeEmoji: { fontSize: 64, marginBottom: 16 },
+  welcomeTitle: { fontSize: 26, fontWeight: "700", color: Colors.TEXT, textAlign: "center", marginBottom: 12 },
+  welcomeSub: { fontSize: 16, color: Colors.TEXT_MUTED, textAlign: "center", lineHeight: 24, marginBottom: 24 },
+  featureList: { width: "100%", marginBottom: 32 },
+  featureRow: { paddingVertical: 10, paddingHorizontal: 16, backgroundColor: Colors.SURFACE, borderRadius: 12, marginBottom: 8 },
+  featureText: { fontSize: 15, color: Colors.TEXT },
+
+  stepEmoji: { fontSize: 48, textAlign: "center", marginBottom: 12 },
+  stepTitle: { fontSize: 22, fontWeight: "700", color: Colors.TEXT, marginBottom: 8 },
+  stepSub: { fontSize: 15, color: Colors.TEXT_MUTED, lineHeight: 22, marginBottom: 20 },
+
+  label: { fontSize: 14, fontWeight: "600", color: Colors.TEXT, marginTop: 16, marginBottom: 6 },
+  hint: { fontSize: 12, color: Colors.TEXT_MUTED, marginTop: 4 },
+  input: {
+    borderWidth: 1, borderColor: Colors.BORDER, borderRadius: 10,
+    paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: Colors.TEXT, backgroundColor: "#FFF",
+  },
+
+  chipRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  chip: {
+    paddingHorizontal: 16, paddingVertical: 8, borderRadius: 99,
+    borderWidth: 1.5, borderColor: Colors.BORDER, backgroundColor: "#FFF",
+  },
+  chipText: { fontSize: 14, color: Colors.TEXT },
+
+  optionCard: {
+    borderWidth: 1.5, borderColor: Colors.BORDER, borderRadius: 12,
+    padding: 14, marginBottom: 8, backgroundColor: "#FFF",
+  },
+  optionCardActive: { borderColor: Colors.PRIMARY, backgroundColor: "#FFF0F3" },
+  optionText: { fontSize: 15, fontWeight: "600", color: Colors.TEXT },
+  optionTextActive: { color: Colors.PRIMARY },
+  optionSub: { fontSize: 12, color: Colors.TEXT_MUTED, marginTop: 2 },
+
+  checkRow: { flexDirection: "row", alignItems: "flex-start", gap: 12, marginBottom: 16, marginTop: 8 },
+  checkbox: { width: 22, height: 22, borderRadius: 6, borderWidth: 2, borderColor: Colors.BORDER, alignItems: "center", justifyContent: "center" },
+  checkMark: { color: "#FFF", fontSize: 13, fontWeight: "700" },
+  checkLabel: { flex: 1, fontSize: 14, color: Colors.TEXT, lineHeight: 20 },
+
+  avatarPicker: {
+    borderWidth: 1.5, borderColor: Colors.BORDER, borderRadius: 10, borderStyle: "dashed",
+    paddingVertical: 16, alignItems: "center", backgroundColor: Colors.SURFACE,
+  },
+  avatarPickerText: { fontSize: 15, color: Colors.TEXT_MUTED },
+
+  primaryBtn: { width: "100%", paddingVertical: 16, borderRadius: 14, alignItems: "center", marginTop: 8 },
+  primaryBtnText: { color: "#FFF", fontSize: 16, fontWeight: "700" },
+
+  navRow: { flexDirection: "row", paddingHorizontal: 20, paddingVertical: 12, gap: 12, borderTopWidth: 1, borderTopColor: Colors.BORDER },
+  backBtn: { flex: 1, paddingVertical: 14, borderRadius: 12, borderWidth: 1.5, borderColor: Colors.BORDER, alignItems: "center" },
+  backBtnText: { fontSize: 15, color: Colors.TEXT, fontWeight: "500" },
+  nextBtn: { flex: 2, paddingVertical: 14, borderRadius: 12, alignItems: "center" },
+  nextBtnText: { color: "#FFF", fontSize: 15, fontWeight: "700" },
+});
