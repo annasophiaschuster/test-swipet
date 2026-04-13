@@ -56,6 +56,7 @@ export default function TierheimDashboard() {
   const [loading, setLoading]   = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [isGuest, setIsGuest]   = useState(false);
+  const [filterStatus, setFilterStatus] = useState<string | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -253,11 +254,39 @@ export default function TierheimDashboard() {
 
       {/* All Pets */}
       <View style={{ paddingHorizontal: Sizes.SPACING_LG, paddingTop: 8 }}>
-        <Text style={{ fontSize: 16, fontWeight: "700", color: Colors.TEXT, marginBottom: 12 }}>
-          {t.tierheim_dashboard_all_dogs(pets.length)}
-        </Text>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+          <Text style={{ fontSize: 16, fontWeight: "700", color: Colors.TEXT }}>
+            {t.tierheim_dashboard_all_dogs(filterStatus ? pets.filter(p => p.status === filterStatus).length : pets.length)}
+          </Text>
+        </View>
+        {/* Status Filter Chips */}
+        <View style={{ flexDirection: "row", gap: 6, marginBottom: 12, flexWrap: "wrap" }}>
+          {([null, "verfuegbar", "reserviert", "vermittelt"] as (string | null)[]).map((s) => {
+            const active = filterStatus === s;
+            const label = s === null
+              ? t.tierheim_dashboard_filter_all
+              : STATUS_LABEL[s] ?? s;
+            const color = s ? (STATUS_COLOR[s] ?? Colors.TEXT_MUTED) : Colors.PRIMARY;
+            return (
+              <TouchableOpacity
+                key={s ?? "all"}
+                onPress={() => setFilterStatus(active ? null : s)}
+                style={{
+                  paddingHorizontal: 12, paddingVertical: 5,
+                  borderRadius: 99, borderWidth: 1,
+                  borderColor: active ? color : Colors.BORDER,
+                  backgroundColor: active ? color + "18" : Colors.WHITE,
+                }}
+              >
+                <Text style={{ fontSize: 12, fontWeight: active ? "700" : "500", color: active ? color : Colors.TEXT_MUTED }}>
+                  {label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
         <View style={{ gap: 10 }}>
-          {pets.map((pet) => (
+          {(filterStatus ? pets.filter(p => p.status === filterStatus) : pets).map((pet) => (
             <TouchableOpacity
               key={pet.id}
               onPress={() => router.push("/tierheim/hunde")}

@@ -20,6 +20,8 @@ interface AnfrageItem {
   id: string;
   status: string;
   created_at: string;
+  pet_id: string | null;
+  adoptant_id: string | null;
   pet_name: string;
   pet_tierart: string;
   pet_photo: string | null;
@@ -127,7 +129,7 @@ export default function TierheimAnfragenScreen() {
       const { data, error } = await supabase
         .from("adoption_matches")
         .select(`
-          id, status, created_at,
+          id, status, created_at, pet_id, adoptant_id,
           pet:pets(name, tierart, pet_photos(url, position)),
           adoptant:profiles!adoptant_id(name, city)
         `)
@@ -158,6 +160,8 @@ export default function TierheimAnfragenScreen() {
             id: m.id,
             status: m.status ?? "pending",
             created_at: m.created_at,
+            pet_id: m.pet_id ?? null,
+            adoptant_id: m.adoptant_id ?? null,
             pet_name: m.pet?.name ?? "Unbekannt",
             pet_tierart: m.pet?.tierart ?? "hund",
             pet_photo: photos[0]?.url ?? null,
@@ -291,6 +295,8 @@ export default function TierheimAnfragenScreen() {
                         petName: item.pet_name,
                         petPhoto: item.pet_photo ?? "",
                         adoptantName: item.adoptant_name ?? t.tierheim_req_guest_nav,
+                        petId: item.pet_id ?? "",
+                        adoptantId: item.adoptant_id ?? "",
                       },
                     });
                   }}

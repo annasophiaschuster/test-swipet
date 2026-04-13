@@ -26,11 +26,13 @@ interface Message {
 
 export default function TierheimChatScreen() {
   const { t, lang } = useLanguage();
-  const { matchId, petName, petPhoto, adoptantName } = useLocalSearchParams<{
+  const { matchId, petName, petPhoto, adoptantName, petId, adoptantId } = useLocalSearchParams<{
     matchId: string;
     petName: string;
     petPhoto: string;
     adoptantName: string;
+    petId: string;
+    adoptantId: string;
   }>();
 
   const [messages, setMessages] = useState<Message[]>([]);
@@ -39,6 +41,10 @@ export default function TierheimChatScreen() {
   const [sending, setSending] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const flatListRef = useRef<FlatList>(null);
+  const [noteOpen, setNoteOpen] = useState(false);
+  const [noteText, setNoteText] = useState("");
+  const [noteSaving, setNoteSaving] = useState(false);
+  const [noteSaved, setNoteSaved] = useState(false);
 
   useEffect(() => {
     initChat();
@@ -55,6 +61,17 @@ export default function TierheimChatScreen() {
       if (!user) return;
       setUserId(user.id);
       await loadMessages();
+
+      // Load intern note if we have pet+adoptant IDs
+      if (petId && adoptantId) {
+        const { data: anfrage } = await supabase
+          .from("adoption_anfragen")
+          .select("notiz_intern")
+          .eq("hund_id", petId)
+          .eq("interessent_id", adoptantId)
+          .maybeSingle();
+        if (anfrage?.notiz_intern) setNoteText(anfrage.notiz_intern);
+      }
 
       supabase
         .channel(`tierheim-chat-${matchId}`)
@@ -129,6 +146,23 @@ export default function TierheimChatScreen() {
     }
   };
 
+  const saveNote = async () => {
+    if (!petId || !adoptantId || noteSaving) return;
+    setNoteSaving(true);
+    try {
+      await supabase
+        .from("adoption_anfragen")
+        .upsert({ hund_id: petId, interessent_id: adoptantId, notiz_intern: noteText.trim() || null },
+          { onConflict: "hund_id,interessent_id" });
+      setNoteSaved(true);
+      setTimeout(() => setNoteSaved(false), 2000);
+    } catch (e) {
+      console.error("saveNote error", e);
+    } finally {
+      setNoteSaving(false);
+    }
+  };
+
   return (
     <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
       {/* Header */}
@@ -175,7 +209,53 @@ export default function TierheimChatScreen() {
           </Text>
           <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED }}>{adoptantName}</Text>
         </View>
+        {petId && adoptantId ? (
+          <TouchableOpacity
+            onPress={() => setNoteOpen((v) => !v)}
+            style={{
+              paddingHorizontal: 10, paddingVertical: 5,
+              borderRadius: 99, borderWidth: 1,
+              borderColor: noteText ? Colors.PRIMARY : Colors.BORDER,
+              backgroundColor: noteText ? Colors.PRIMARY + "12" : Colors.SURFACE,
+            }}
+          >
+            <Text style={{ fontSize: 12, color: noteText ? Colors.PRIMARY : Colors.TEXT_MUTED }}>📝</Text>
+          </TouchableOpacity>
+        ) : null}
       </View>
+
+      {/* Intern Note Panel */}
+      {noteOpen && petId && adoptantId && (
+        <View style={{
+          paddingHorizontal: Sizes.SPACING_LG, paddingVertical: 10,
+          backgroundColor: "#FFFBEC",
+          borderBottomWidth: 1, borderBottomColor: "#F0E68C",
+        }}>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+            <Text style={{ fontSize: 11, fontWeight: "700", color: "#B8860B", textTransform: "uppercase", letterSpacing: 0.5 }}>
+              🔒 {t.tierheim_chat_intern_note}
+            </Text>
+            {noteSaved && (
+              <Text style={{ fontSize: 11, color: Colors.SUCCESS, fontWeight: "600" }}>✓ {t.tierheim_chat_intern_note_saved}</Text>
+            )}
+          </View>
+          <TextInput
+            value={noteText}
+            onChangeText={setNoteText}
+            onBlur={saveNote}
+            placeholder={t.tierheim_chat_intern_note_placeholder}
+            placeholderTextColor="#C8A200"
+            multiline
+            style={{
+              minHeight: 52, maxHeight: 120,
+              backgroundColor: "rgba(255,255,255,0.7)",
+              borderRadius: 10, borderWidth: 1, borderColor: "#E8D080",
+              paddingHorizontal: 12, paddingVertical: 8,
+              fontSize: 13, color: Colors.TEXT,
+            }}
+          />
+        </View>
+      )}
 
       {/* Messages */}
       <KeyboardAvoidingView
