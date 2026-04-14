@@ -79,11 +79,10 @@ function HouseIcon({ size = 36, color = Colors.PRIMARY }: { size?: number; color
   );
 }
 
-function RoleIcon({ roleKey, size, active }: { roleKey: Role; size: number; active: boolean }) {
-  const color = active ? Colors.PRIMARY : Colors.TEXT_MUTED;
-  if (roleKey === "adoptant")   return <HeartIcon size={size} color={color} />;
+function RoleIcon({ roleKey, size }: { roleKey: Role; size: number }) {
+  if (roleKey === "adoptant")   return <HeartIcon size={size} color={Colors.PRIMARY} />;
   if (roleKey === "tierhalter") return <PawsIcon size={size} />;
-  return <HouseIcon size={size} color={color} />;
+  return <HouseIcon size={size} color={Colors.PRIMARY} />;
 }
 
 export default function RegisterScreen() {
@@ -199,7 +198,7 @@ export default function RegisterScreen() {
                         alignItems: "center", justifyContent: "center",
                       }}
                     >
-                      <RoleIcon roleKey={r.key} size={34} active={role === r.key} />
+                      <RoleIcon roleKey={r.key} size={34} />
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={{ fontSize: Sizes.FONT_MD, fontWeight: "700", color: Colors.TEXT }}>
@@ -303,7 +302,7 @@ export default function RegisterScreen() {
                   gap: 8,
                 }}
               >
-                {role && <RoleIcon roleKey={role} size={22} active={true} />}
+                {role && <RoleIcon roleKey={role} size={22} />}
                 <Text style={{ color: Colors.PRIMARY, fontWeight: "600", flex: 1 }}>
                   {ROLES.find((r) => r.key === role)?.label}
                 </Text>
