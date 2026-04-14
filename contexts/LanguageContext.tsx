@@ -38,7 +38,7 @@ export const translations = {
     register_role_adoptant_label: "Ich suche einen Hund",
     register_role_adoptant_desc: "Adoptiere einen Hund aus dem Tierheim",
     register_role_tierhalter_label: "Ich habe einen Hund",
-    register_role_tierhalter_desc: "Finde deine Gassi-Community für gemeinsame Spaziergänge",
+    register_role_tierhalter_desc: "Finde deine Gassi-Community für gemeinsame Walks",
     register_role_tierheim_label: "Ich vermittle Hunde",
     register_role_tierheim_desc: "Finde ein neues Zuhause für deine Hunde",
     register_next: "Weiter →",
