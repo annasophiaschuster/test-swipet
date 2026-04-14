@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -8,8 +8,12 @@ import {
   Alert,
   ActivityIndicator,
   StyleSheet,
+  Modal,
+  Animated,
+  Easing,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { supabase } from "../../../lib/supabase";
@@ -18,14 +22,14 @@ import { Sizes } from "../../../constants/sizes";
 import { useLanguage } from "../../../contexts/LanguageContext";
 
 const ACCENT = Colors.PRIMARY;
-const TOTAL_STEPS = 7;
+const TOTAL_STEPS = 5;
 
 // ─── ORG TYPE OPTIONS ──────────────────────────────────────────────────────────
 const ORG_TYPES = [
-  { key: "eingetragener_verein", labelKey: "onb_th_org_type_ev" },
-  { key: "gemeinnuetzig", labelKey: "onb_th_org_type_gemeinn" },
-  { key: "staatlich", labelKey: "onb_th_org_type_staatlich" },
-  { key: "privat", labelKey: "onb_th_org_type_privat" },
+  { key: "tierheim",               labelKey: "onb_th_org_type_tierheim"    },
+  { key: "tierschutzorganisation", labelKey: "onb_th_org_type_schutzorg"   },
+  { key: "tierschutzverein",       labelKey: "onb_th_org_type_schutzverein"},
+  { key: "auffangstation",         labelKey: "onb_th_org_type_auffang"     },
 ] as const;
 
 // ─── COMPONENT ────────────────────────────────────────────────────────────────
@@ -34,42 +38,68 @@ export default function TierheimOnboarding() {
   const { t } = useLanguage();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [showNewsletter, setShowNewsletter] = useState(false);
 
-  // Step 3 – Datenschutz
-  const [datenschutz, setDatenschutz] = useState(false);
-  const [newsletter, setNewsletter] = useState(false);
-
-  // Step 4 – Organisations-Profil
-  const [orgName, setOrgName] = useState("");
-  const [orgTyp, setOrgTyp] = useState<string>("");
+  // Step 2 – Organisations-Profil
+  const [orgTyp, setOrgTyp]                   = useState<string>("");
+  const [orgName, setOrgName]                 = useState("");
   const [ansprechpartner, setAnsprechpartner] = useState("");
-  const [kontaktEmail, setKontaktEmail] = useState("");
-  const [telefon, setTelefon] = useState("");
-  const [adresse, setAdresse] = useState("");
-  const [plz, setPlz] = useState("");
-  const [stadt, setStadt] = useState("");
+  const [kontaktEmail, setKontaktEmail]       = useState("");
+  const [telefon, setTelefon]                 = useState("");
+  const [adresse, setAdresse]                 = useState("");
+  const [plz, setPlz]                         = useState("");
+  const [stadt, setStadt]                     = useState("");
 
-  // Step 5 – Verifizierung
+  // Step 3 – Verifizierung
   const [verifyUri, setVerifyUri] = useState<string | null>(null);
 
-  // Step 6 – Optional
+  // Step 4 – Optional
   const [beschreibung, setBeschreibung] = useState("");
-  const [website, setWebsite] = useState("");
+  const [website, setWebsite]           = useState("");
   const [oeffnungszeiten, setOeffnungszeiten] = useState("");
-  const [richtlinien, setRichtlinien] = useState("");
+  const [richtlinien, setRichtlinien]   = useState("");
+  const [instagram, setInstagram]       = useState("");
+
+  // Newsletter (set via modal)
+  const [newsletter, setNewsletter] = useState(false);
+
+  // ── Pulse animation for "Weiter" button ─────────────────────────────────────
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.05,
+          duration: 900,
+          useNativeDriver: true,
+          easing: Easing.inOut(Easing.ease),
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 900,
+          useNativeDriver: true,
+          easing: Easing.inOut(Easing.ease),
+        }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, []);
 
   // ── Navigation ──────────────────────────────────────────────────────────────
 
   const next = () => {
-    if (step === 3 && !datenschutz) {
-      Alert.alert(t.err_generic, t.onb_hs_privacy_required);
-      return;
+    if (step === 2) {
+      if (!orgTyp)                  { Alert.alert(t.err_generic, t.onb_th_err_orgtyp);       return; }
+      if (!orgName.trim())          { Alert.alert(t.err_generic, t.onb_th_err_orgname);      return; }
+      if (!ansprechpartner.trim())  { Alert.alert(t.err_generic, t.onb_th_err_contact);      return; }
+      if (!kontaktEmail.trim())     { Alert.alert(t.err_generic, t.onb_th_err_kontaktemail); return; }
+      if (!telefon.trim())          { Alert.alert(t.err_generic, t.onb_th_err_phone);        return; }
+      if (!adresse.trim())          { Alert.alert(t.err_generic, t.onb_th_err_address);      return; }
+      if (!plz.trim())              { Alert.alert(t.err_generic, t.onb_th_err_plz);          return; }
+      if (!stadt.trim())            { Alert.alert(t.err_generic, t.onb_th_err_city);         return; }
     }
-    if (step === 4 && !orgName.trim()) {
-      Alert.alert(t.err_generic, t.onb_shelter_err_name);
-      return;
-    }
-    if (step === 5 && !verifyUri) {
+    if (step === 3 && !verifyUri) {
       Alert.alert(t.err_generic, t.onb_th_new_step5_required);
       return;
     }
@@ -78,45 +108,41 @@ export default function TierheimOnboarding() {
 
   const back = () => setStep((s) => Math.max(s - 1, 1));
 
-  // ── Finish ──────────────────────────────────────────────────────────────────
+  // ── Finish (shows newsletter modal first) ────────────────────────────────────
 
-  const handleFinish = async () => {
+  const triggerFinish = () => setShowNewsletter(true);
+
+  const handleFinish = async (wantsNewsletter: boolean) => {
+    setShowNewsletter(false);
     setLoading(true);
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error(t.err_not_logged_in);
 
-      // Update profiles
-      const { error: profErr } = await supabase.from("profiles").upsert({
+      await supabase.from("profiles").upsert({
         id: user.id,
-        newsletter,
-        datenschutz,
+        newsletter: wantsNewsletter,
+        datenschutz: true,
         updated_at: new Date().toISOString(),
       });
-      if (profErr) throw profErr;
 
-      // Upsert shelter_profiles
-      const { error: shelterErr } = await supabase
-        .from("shelter_profiles")
-        .upsert({
-          id: user.id,
-          org_name: orgName.trim(),
-          org_typ: orgTyp || null,
-          ansprechpartner: ansprechpartner.trim() || null,
-          kontakt_email: kontaktEmail.trim() || null,
-          telefon: telefon.trim() || null,
-          adresse: adresse.trim() || null,
-          plz: plz.trim() || null,
-          stadt: stadt.trim() || null,
-          beschreibung: beschreibung.trim() || null,
-          website: website.trim() || null,
-          oeffnungszeiten: oeffnungszeiten.trim() || null,
-          vermittlungsrichtlinien: richtlinien.trim() || null,
-          updated_at: new Date().toISOString(),
-        });
-      if (shelterErr) throw shelterErr;
+      await supabase.from("shelter_profiles").upsert({
+        id: user.id,
+        org_name:              orgName.trim(),
+        org_typ:               orgTyp || null,
+        ansprechpartner:       ansprechpartner.trim() || null,
+        kontakt_email:         kontaktEmail.trim() || null,
+        telefon:               telefon.trim() || null,
+        adresse:               adresse.trim() || null,
+        plz:                   plz.trim() || null,
+        stadt:                 stadt.trim() || null,
+        beschreibung:          beschreibung.trim() || null,
+        website:               website.trim() || null,
+        oeffnungszeiten:       oeffnungszeiten.trim() || null,
+        vermittlungsrichtlinien: richtlinien.trim() || null,
+        instagram:             instagram.trim() || null,
+        updated_at:            new Date().toISOString(),
+      });
 
       router.replace("/tierheim/dashboard");
     } catch (err: any) {
@@ -135,14 +161,18 @@ export default function TierheimOnboarding() {
           key={i}
           style={[
             styles.progressSegment,
-            {
-              backgroundColor:
-                i < step ? ACCENT : Colors.BORDER,
-              flex: 1,
-            },
+            { backgroundColor: i < step ? ACCENT : Colors.BORDER },
           ]}
         />
       ))}
+    </View>
+  );
+
+  // ── Step Header Icon ─────────────────────────────────────────────────────────
+
+  const StepIcon = ({ name }: { name: React.ComponentProps<typeof Ionicons>["name"] }) => (
+    <View style={styles.iconCircle}>
+      <Ionicons name={name} size={44} color={ACCENT} />
     </View>
   );
 
@@ -150,23 +180,18 @@ export default function TierheimOnboarding() {
 
   const renderStep = () => {
     switch (step) {
-      // ── Step 1: Welcome ────────────────────────────────────────────────────
+
+      // ── Step 1: Welcome ──────────────────────────────────────────────────────
       case 1:
         return (
           <View style={styles.centerContent}>
-            <Text style={styles.bigEmoji}>🏠</Text>
+            <StepIcon name="home-outline" />
             <Text style={styles.heroTitle}>{t.onb_th_new_step1_title}</Text>
             <Text style={styles.heroSub}>{t.onb_th_new_step1_sub}</Text>
-
             <View style={styles.featureList}>
-              {([
-                "onb_th_new_feat1",
-                "onb_th_new_feat2",
-                "onb_th_new_feat3",
-                "onb_th_new_feat4",
-              ] as const).map((key) => (
+              {(["onb_th_new_feat1","onb_th_new_feat2","onb_th_new_feat3","onb_th_new_feat4"] as const).map((key) => (
                 <View key={key} style={styles.featureRow}>
-                  <Text style={styles.featureCheck}>✓</Text>
+                  <Ionicons name="checkmark-circle" size={20} color={ACCENT} />
                   <Text style={styles.featureText}>{String(t[key])}</Text>
                 </View>
               ))}
@@ -174,69 +199,16 @@ export default function TierheimOnboarding() {
           </View>
         );
 
-      // ── Step 2: E-Mail ─────────────────────────────────────────────────────
+      // ── Step 2: Eure Organisation ────────────────────────────────────────────
       case 2:
         return (
-          <View style={styles.centerContent}>
-            <Text style={styles.bigEmoji}>📧</Text>
-            <Text style={styles.stepTitle}>{t.onb_th_new_step2_title}</Text>
-            <View style={[styles.infoCard, { borderLeftColor: ACCENT }]}>
-              <Text style={styles.infoCardText}>{t.onb_th_new_step2_info}</Text>
-            </View>
-            <Text style={styles.stepSub}>{t.onb_th_new_step2_sub}</Text>
-          </View>
-        );
-
-      // ── Step 3: Datenschutz ────────────────────────────────────────────────
-      case 3:
-        return (
           <View>
-            <Text style={styles.stepTitle}>{t.onb_hs_privacy_title}</Text>
-            <Text style={styles.stepSub}>{t.onb_hs_privacy_sub}</Text>
-
-            <TouchableOpacity
-              style={styles.checkRow}
-              onPress={() => setDatenschutz((v) => !v)}
-              activeOpacity={0.7}
-            >
-              <View
-                style={[
-                  styles.checkbox,
-                  datenschutz && { backgroundColor: ACCENT, borderColor: ACCENT },
-                ]}
-              >
-                {datenschutz && <Text style={styles.checkmark}>✓</Text>}
-              </View>
-              <Text style={styles.checkLabel}>{t.onb_hs_privacy_accept}</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.checkRow}
-              onPress={() => setNewsletter((v) => !v)}
-              activeOpacity={0.7}
-            >
-              <View
-                style={[
-                  styles.checkbox,
-                  newsletter && { backgroundColor: ACCENT, borderColor: ACCENT },
-                ]}
-              >
-                {newsletter && <Text style={styles.checkmark}>✓</Text>}
-              </View>
-              <Text style={styles.checkLabel}>{t.onb_hs_privacy_newsletter}</Text>
-            </TouchableOpacity>
-          </View>
-        );
-
-      // ── Step 4: Organisations-Profil ───────────────────────────────────────
-      case 4:
-        return (
-          <View>
+            <StepIcon name="business-outline" />
             <Text style={styles.stepTitle}>{t.onb_th_new_step4_title}</Text>
             <Text style={styles.stepSub}>{t.onb_th_new_step4_sub}</Text>
 
             {/* Org Type Pills */}
-            <Text style={styles.fieldLabel}>{t.onb_th_new_org_type}</Text>
+            <Text style={styles.fieldLabel}>{t.onb_th_new_org_type} *</Text>
             <View style={styles.pillRow}>
               {ORG_TYPES.map(({ key, labelKey }) => (
                 <TouchableOpacity
@@ -247,46 +219,50 @@ export default function TierheimOnboarding() {
                     orgTyp === key && { backgroundColor: ACCENT, borderColor: ACCENT },
                   ]}
                 >
-                  <Text
-                    style={[
-                      styles.pillText,
-                      orgTyp === key && { color: "#FFF" },
-                    ]}
-                  >
+                  <Text style={[styles.pillText, orgTyp === key && { color: "#FFF" }]}>
                     {String(t[labelKey as keyof typeof t])}
                   </Text>
                 </TouchableOpacity>
               ))}
             </View>
 
-            {/* Fields */}
+            {/* Name der Organisation */}
+            <View style={styles.fieldGroup}>
+              <Text style={styles.fieldLabel}>{t.onb_th_new_org_name}</Text>
+              <TextInput
+                style={styles.input}
+                placeholder={t.onb_th_new_org_name_ph}
+                placeholderTextColor={Colors.TEXT_MUTED}
+                value={orgName}
+                onChangeText={setOrgName}
+              />
+            </View>
+
+            {/* Remaining mandatory fields */}
             {[
-              { label: t.onb_shelter_name, value: orgName, setter: setOrgName, placeholder: t.onb_shelter_name_placeholder, required: true },
-              { label: t.onb_th_new_ansprechpartner, value: ansprechpartner, setter: setAnsprechpartner, placeholder: t.onb_th_new_ansprechpartner_ph },
-              { label: t.onb_th_new_kontakt_email, value: kontaktEmail, setter: setKontaktEmail, placeholder: "info@tierheim.de", keyboardType: "email-address" as const },
-              { label: t.onb_shelter_phone, value: telefon, setter: setTelefon, placeholder: t.onb_shelter_phone_placeholder, keyboardType: "phone-pad" as const },
-              { label: t.onb_shelter_address, value: adresse, setter: setAdresse, placeholder: t.onb_shelter_address_placeholder },
+              { label: `${t.onb_th_new_ansprechpartner} *`, value: ansprechpartner, setter: setAnsprechpartner, placeholder: t.onb_th_new_ansprechpartner_ph },
+              { label: `${t.onb_th_new_kontakt_email} *`,   value: kontaktEmail,    setter: setKontaktEmail,    placeholder: "info@organisation.de", keyboard: "email-address" as const },
+              { label: `${t.onb_shelter_phone} *`,          value: telefon,         setter: setTelefon,         placeholder: t.onb_shelter_phone_placeholder, keyboard: "phone-pad" as const },
+              { label: `${t.onb_shelter_address} *`,        value: adresse,         setter: setAdresse,         placeholder: t.onb_shelter_address_placeholder },
             ].map((f) => (
               <View key={f.label} style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>
-                  {f.label}
-                  {f.required ? " *" : ""}
-                </Text>
+                <Text style={styles.fieldLabel}>{f.label}</Text>
                 <TextInput
                   style={styles.input}
                   placeholder={f.placeholder}
                   placeholderTextColor={Colors.TEXT_MUTED}
                   value={f.value}
                   onChangeText={f.setter}
-                  keyboardType={f.keyboardType ?? "default"}
+                  keyboardType={f.keyboard ?? "default"}
                   autoCapitalize="sentences"
                 />
               </View>
             ))}
 
+            {/* PLZ + Stadt row */}
             <View style={styles.rowFields}>
               <View style={[styles.fieldGroup, { flex: 1, marginRight: 8 }]}>
-                <Text style={styles.fieldLabel}>{t.onb_th_new_plz}</Text>
+                <Text style={styles.fieldLabel}>{t.onb_th_new_plz} *</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="12345"
@@ -297,7 +273,7 @@ export default function TierheimOnboarding() {
                 />
               </View>
               <View style={[styles.fieldGroup, { flex: 2 }]}>
-                <Text style={styles.fieldLabel}>{t.onb_th_new_stadt}</Text>
+                <Text style={styles.fieldLabel}>{t.onb_th_new_stadt} *</Text>
                 <TextInput
                   style={styles.input}
                   placeholder={t.onb_th_new_stadt_ph}
@@ -310,11 +286,11 @@ export default function TierheimOnboarding() {
           </View>
         );
 
-      // ── Step 5: Verifizierung ──────────────────────────────────────────────
-      case 5:
+      // ── Step 3: Verifizierung ────────────────────────────────────────────────
+      case 3:
         return (
           <View style={styles.centerContent}>
-            <Text style={styles.bigEmoji}>🔐</Text>
+            <StepIcon name="shield-checkmark-outline" />
             <Text style={styles.stepTitle}>{t.onb_th_new_step5_title}</Text>
             <Text style={styles.stepSub}>{t.onb_th_new_step5_sub}</Text>
 
@@ -340,19 +316,16 @@ export default function TierheimOnboarding() {
                       setVerifyUri(result.assets[0].uri);
                     }
                   }}
-                  style={[styles.nextBtn, { backgroundColor: ACCENT, width: "100%", marginBottom: 20 }]}
+                  style={[styles.uploadBtn]}
                 >
-                  <Text style={styles.nextBtnText}>{t.onb_th_new_step5_upload_btn}</Text>
+                  <Ionicons name="cloud-upload-outline" size={20} color="#FFF" />
+                  <Text style={styles.uploadBtnText}>{t.onb_th_new_step5_upload_btn}</Text>
                 </TouchableOpacity>
               </>
             )}
 
             <View style={styles.verifyStepsList}>
-              {([
-                "onb_th_new_vstep1",
-                "onb_th_new_vstep2",
-                "onb_th_new_vstep3",
-              ] as const).map((key, i) => (
+              {(["onb_th_new_vstep1","onb_th_new_vstep2","onb_th_new_vstep3"] as const).map((key, i) => (
                 <View key={key} style={styles.verifyStepRow}>
                   <View style={[styles.verifyStepNum, { backgroundColor: ACCENT + "22" }]}>
                     <Text style={[styles.verifyStepNumText, { color: ACCENT }]}>{i + 1}</Text>
@@ -364,10 +337,11 @@ export default function TierheimOnboarding() {
           </View>
         );
 
-      // ── Step 6: Optional ───────────────────────────────────────────────────
-      case 6:
+      // ── Step 4: Optionale Details ────────────────────────────────────────────
+      case 4:
         return (
           <View>
+            <StepIcon name="create-outline" />
             <Text style={styles.stepTitle}>{t.onb_th_new_step6_title}</Text>
             <Text style={styles.stepSub}>{t.onb_th_new_step6_sub}</Text>
 
@@ -379,9 +353,7 @@ export default function TierheimOnboarding() {
                 placeholderTextColor={Colors.TEXT_MUTED}
                 value={beschreibung}
                 onChangeText={setBeschreibung}
-                multiline
-                numberOfLines={4}
-                textAlignVertical="top"
+                multiline numberOfLines={4} textAlignVertical="top"
               />
             </View>
 
@@ -389,12 +361,23 @@ export default function TierheimOnboarding() {
               <Text style={styles.fieldLabel}>{t.onb_th_new_website}</Text>
               <TextInput
                 style={styles.input}
-                placeholder="https://mein-tierheim.de"
+                placeholder="https://eure-organisation.de"
                 placeholderTextColor={Colors.TEXT_MUTED}
                 value={website}
                 onChangeText={setWebsite}
-                keyboardType="url"
-                autoCapitalize="none"
+                keyboardType="url" autoCapitalize="none"
+              />
+            </View>
+
+            <View style={styles.fieldGroup}>
+              <Text style={styles.fieldLabel}>{t.onb_th_new_instagram}</Text>
+              <TextInput
+                style={styles.input}
+                placeholder={t.onb_th_new_instagram_ph}
+                placeholderTextColor={Colors.TEXT_MUTED}
+                value={instagram}
+                onChangeText={setInstagram}
+                autoCapitalize="none" autoCorrect={false}
               />
             </View>
 
@@ -406,9 +389,7 @@ export default function TierheimOnboarding() {
                 placeholderTextColor={Colors.TEXT_MUTED}
                 value={oeffnungszeiten}
                 onChangeText={setOeffnungszeiten}
-                multiline
-                numberOfLines={3}
-                textAlignVertical="top"
+                multiline numberOfLines={3} textAlignVertical="top"
               />
             </View>
 
@@ -420,30 +401,30 @@ export default function TierheimOnboarding() {
                 placeholderTextColor={Colors.TEXT_MUTED}
                 value={richtlinien}
                 onChangeText={setRichtlinien}
-                multiline
-                numberOfLines={3}
-                textAlignVertical="top"
+                multiline numberOfLines={3} textAlignVertical="top"
               />
             </View>
           </View>
         );
 
-      // ── Step 7: Fertig ─────────────────────────────────────────────────────
-      case 7:
+      // ── Step 5: Fertig ───────────────────────────────────────────────────────
+      case 5:
         return (
           <View style={styles.centerContent}>
-            <Text style={styles.bigEmoji}>🎉</Text>
+            <StepIcon name="checkmark-circle-outline" />
             <Text style={styles.heroTitle}>{t.onb_th_new_step7_title}</Text>
             <Text style={styles.heroSub}>{t.onb_th_new_step7_sub}</Text>
 
             <View style={[styles.summaryCard, { borderColor: ACCENT + "33" }]}>
               <Text style={[styles.summaryOrg, { color: ACCENT }]}>{orgName}</Text>
-              {stadt ? (
-                <Text style={styles.summaryDetail}>📍 {plz} {stadt}</Text>
-              ) : null}
+              {stadt ? <Text style={styles.summaryDetail}>📍 {plz} {stadt}</Text> : null}
               {orgTyp ? (
                 <Text style={styles.summaryDetail}>
-                  🏷 {String(t[`onb_th_org_type_${orgTyp.replace("eingetragener_verein", "ev").replace("gemeinnuetzig", "gemeinn").replace("staatlich", "staatlich").replace("privat", "privat")}` as keyof typeof t] ?? orgTyp)}
+                  🏷 {String(t[`onb_th_org_type_${
+                    orgTyp === "tierheim" ? "tierheim" :
+                    orgTyp === "tierschutzorganisation" ? "schutzorg" :
+                    orgTyp === "tierschutzverein" ? "schutzverein" : "auffang"
+                  }` as keyof typeof t] ?? orgTyp)}
                 </Text>
               ) : null}
             </View>
@@ -455,8 +436,7 @@ export default function TierheimOnboarding() {
   };
 
   // ── Bottom Nav ────────────────────────────────────────────────────────────
-
-  const isLastStep = step === TOTAL_STEPS;
+  const isLastStep  = step === TOTAL_STEPS;
   const isFirstStep = step === 1;
 
   return (
@@ -476,36 +456,71 @@ export default function TierheimOnboarding() {
       <View style={styles.bottomNav}>
         {!isFirstStep ? (
           <TouchableOpacity onPress={back} style={styles.backBtn}>
-            <Text style={styles.backBtnText}>← {t.onb_back}</Text>
+            <Ionicons name="arrow-back" size={18} color={Colors.TEXT} />
+            <Text style={styles.backBtnText}>{t.onb_back}</Text>
           </TouchableOpacity>
         ) : (
           <View style={{ flex: 1 }} />
         )}
 
-        {/* Skip button for step 6 */}
-        {step === 6 && (
-          <TouchableOpacity
-            onPress={() => setStep(7)}
-            style={styles.skipBtn}
-          >
+        {/* Skip button for step 4 (optional details) */}
+        {step === 4 && (
+          <TouchableOpacity onPress={() => setStep(5)} style={styles.skipBtn}>
             <Text style={styles.skipBtnText}>{t.onb_skip}</Text>
           </TouchableOpacity>
         )}
 
-        <TouchableOpacity
-          onPress={isLastStep ? handleFinish : next}
-          disabled={loading}
-          style={[styles.nextBtn, { backgroundColor: ACCENT }]}
-        >
-          {loading ? (
-            <ActivityIndicator color="#FFF" />
-          ) : (
-            <Text style={styles.nextBtnText}>
-              {isLastStep ? t.onb_th_new_step7_btn : t.onb_next} {isLastStep ? "" : "→"}
-            </Text>
-          )}
-        </TouchableOpacity>
+        <Animated.View style={{ flex: 2, transform: [{ scale: pulseAnim }] }}>
+          <TouchableOpacity
+            onPress={isLastStep ? triggerFinish : next}
+            disabled={loading}
+            style={[styles.nextBtn, { backgroundColor: ACCENT }, loading && { opacity: 0.7 }]}
+          >
+            {loading ? (
+              <ActivityIndicator color="#FFF" />
+            ) : (
+              <>
+                <Text style={styles.nextBtnText}>
+                  {isLastStep ? t.onb_th_new_step7_btn : t.onb_next}
+                </Text>
+                {!isLastStep && <Ionicons name="arrow-forward" size={18} color="#FFF" style={{ marginLeft: 6 }} />}
+              </>
+            )}
+          </TouchableOpacity>
+        </Animated.View>
       </View>
+
+      {/* Newsletter Modal */}
+      <Modal
+        visible={showNewsletter}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowNewsletter(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Ionicons name="mail-outline" size={40} color={ACCENT} style={{ marginBottom: 12 }} />
+            <Text style={styles.modalTitle}>{t.onb_th_newsletter_title}</Text>
+            <Text style={styles.modalSub}>{t.onb_th_newsletter_sub}</Text>
+
+            <TouchableOpacity
+              onPress={() => handleFinish(true)}
+              style={[styles.modalBtn, { backgroundColor: ACCENT }]}
+            >
+              <Text style={styles.modalBtnText}>{t.onb_th_newsletter_yes}</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => handleFinish(false)}
+              style={[styles.modalBtn, { backgroundColor: "transparent", borderWidth: 1.5, borderColor: Colors.BORDER }]}
+            >
+              <Text style={[styles.modalBtnText, { color: Colors.TEXT_MUTED }]}>
+                {t.onb_th_newsletter_no}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -522,23 +537,27 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     paddingBottom: 4,
   },
-  progressSegment: {
-    height: 4,
-    borderRadius: 2,
-  },
+  progressSegment: { height: 4, borderRadius: 2, flex: 1 },
 
   scroll: { flex: 1 },
-  scrollContent: {
-    padding: 24,
-    paddingBottom: 12,
+  scrollContent: { padding: 24, paddingBottom: 12 },
+
+  // Center layout
+  centerContent: { alignItems: "center", paddingTop: 8 },
+
+  // Step icon circle
+  iconCircle: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: Colors.SURFACE,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 20,
+    borderWidth: 2,
+    borderColor: Colors.BORDER,
   },
 
-  // Center layout (welcome / email / verify / done)
-  centerContent: {
-    alignItems: "center",
-    paddingTop: 16,
-  },
-  bigEmoji: { fontSize: 64, marginBottom: 16 },
   heroTitle: {
     fontSize: 26,
     fontWeight: "700",
@@ -558,18 +577,19 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: Colors.TEXT,
     marginBottom: 8,
+    textAlign: "center",
   },
   stepSub: {
     fontSize: 14,
     color: Colors.TEXT_MUTED,
     lineHeight: 20,
     marginBottom: 20,
+    textAlign: "center",
   },
 
   // Feature list
   featureList: { width: "100%", gap: 10, marginTop: 4 },
   featureRow: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
-  featureCheck: { fontSize: 16, color: Colors.PRIMARY, fontWeight: "700", marginTop: 1 },
   featureText: { fontSize: 15, color: Colors.TEXT, flex: 1, lineHeight: 21 },
 
   // Info card
@@ -581,49 +601,26 @@ const styles = StyleSheet.create({
     width: "100%",
     marginBottom: 16,
   },
-  infoCardTitle: {
-    fontSize: 14,
-    fontWeight: "700",
-    marginBottom: 6,
-  },
-  infoCardText: {
-    fontSize: 14,
-    color: Colors.TEXT_MUTED,
-    lineHeight: 20,
-  },
+  infoCardTitle: { fontSize: 14, fontWeight: "700", marginBottom: 6 },
+  infoCardText: { fontSize: 14, color: Colors.TEXT_MUTED, lineHeight: 20 },
 
-  // Checkboxes
-  checkRow: {
+  // Upload button (step 3)
+  uploadBtn: {
     flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 12,
-    marginBottom: 16,
-    padding: 14,
-    backgroundColor: Colors.SURFACE,
-    borderRadius: Sizes.RADIUS_L,
-    borderWidth: 1,
-    borderColor: Colors.BORDER,
-  },
-  checkbox: {
-    width: 22,
-    height: 22,
-    borderRadius: 6,
-    borderWidth: 2,
-    borderColor: Colors.BORDER,
     alignItems: "center",
+    gap: 8,
+    backgroundColor: ACCENT,
+    borderRadius: 99,
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    marginBottom: 20,
+    width: "100%",
     justifyContent: "center",
-    marginTop: 1,
   },
-  checkmark: { color: "#FFF", fontSize: 13, fontWeight: "700" },
-  checkLabel: { flex: 1, fontSize: 14, color: Colors.TEXT, lineHeight: 20 },
+  uploadBtnText: { color: "#FFF", fontSize: 15, fontWeight: "700" },
 
   // Pills (org type)
-  pillRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    marginBottom: 16,
-  },
+  pillRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 16 },
   pill: {
     paddingHorizontal: 14,
     paddingVertical: 8,
@@ -664,16 +661,13 @@ const styles = StyleSheet.create({
   verifyStepsList: { width: "100%", gap: 12, marginTop: 8 },
   verifyStepRow: { flexDirection: "row", alignItems: "center", gap: 12 },
   verifyStepNum: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
+    width: 32, height: 32, borderRadius: 16,
+    alignItems: "center", justifyContent: "center",
   },
   verifyStepNumText: { fontWeight: "700", fontSize: 14 },
   verifyStepText: { flex: 1, fontSize: 14, color: Colors.TEXT, lineHeight: 20 },
 
-  // Summary card (step 7)
+  // Summary card (step 5)
   summaryCard: {
     width: "100%",
     backgroundColor: Colors.SURFACE,
@@ -706,6 +700,8 @@ const styles = StyleSheet.create({
     borderColor: Colors.BORDER,
     alignItems: "center",
     justifyContent: "center",
+    flexDirection: "row",
+    gap: 6,
   },
   backBtnText: { fontSize: 15, color: Colors.TEXT, fontWeight: "500" },
   skipBtn: {
@@ -716,11 +712,57 @@ const styles = StyleSheet.create({
   },
   skipBtnText: { fontSize: 14, color: Colors.TEXT_MUTED, fontWeight: "500" },
   nextBtn: {
-    flex: 2,
+    flex: 1,
     height: 50,
     borderRadius: 99,
     alignItems: "center",
     justifyContent: "center",
+    flexDirection: "row",
   },
   nextBtnText: { color: "#FFF", fontSize: 16, fontWeight: "700" },
+
+  // Newsletter modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    paddingBottom: 32,
+    paddingHorizontal: 16,
+  },
+  modalCard: {
+    width: "100%",
+    backgroundColor: Colors.BACKGROUND,
+    borderRadius: 24,
+    padding: 28,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 12,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: Colors.TEXT,
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  modalSub: {
+    fontSize: 14,
+    color: Colors.TEXT_MUTED,
+    textAlign: "center",
+    lineHeight: 21,
+    marginBottom: 24,
+  },
+  modalBtn: {
+    width: "100%",
+    height: 50,
+    borderRadius: 99,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 10,
+  },
+  modalBtnText: { fontSize: 16, fontWeight: "700", color: "#FFF" },
 });
