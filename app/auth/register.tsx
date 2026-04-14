@@ -16,6 +16,7 @@ import {
 import Svg, { Path } from "react-native-svg";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Link, router } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { Colors } from "../../constants/colors";
@@ -174,197 +175,115 @@ export default function RegisterScreen() {
     }
   };
 
+  // ── Progress bar (2 segments) ────────────────────────────────────────────────
+  const stepIndex = step === "role" ? 0 : 1;
+
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}
-    >
-      <ScrollView
-        contentContainerStyle={{ flexGrow: 1 }}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
+    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.BACKGROUND }} edges={["bottom"]}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
       >
+        {/* ── Header ─────────────────────────────────────────────────────────── */}
         <LinearGradient
           colors={[Colors.SECONDARY, Colors.PRIMARY]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={{
-            paddingTop: 60,
-            paddingBottom: 28,
-            paddingHorizontal: Sizes.SPACING_LG,
-          }}
+          style={{ paddingTop: 56, paddingBottom: 24, paddingHorizontal: Sizes.SPACING_LG }}
         >
-          <TouchableOpacity
-            onPress={() => step === "details" ? setStep("role") : router.back()}
-            style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
-          >
-            <Ionicons name="arrow-back" size={18} color={Colors.WHITE} />
-            <Text style={{ color: Colors.WHITE, opacity: 0.85, fontSize: 15 }}>{t.register_back.replace("← ", "")}</Text>
-          </TouchableOpacity>
-          <Text style={{ fontSize: 28, fontWeight: "800", color: Colors.WHITE, marginTop: 12 }}>
+          {/* Progress segments */}
+          <View style={{ flexDirection: "row", gap: 4, marginBottom: 16 }}>
+            {[0, 1].map((i) => (
+              <View
+                key={i}
+                style={{
+                  flex: 1, height: 3, borderRadius: 2,
+                  backgroundColor: i <= stepIndex ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.3)",
+                }}
+              />
+            ))}
+          </View>
+          <Text style={{ fontSize: 26, fontWeight: "800", color: Colors.WHITE }}>
             {step === "role" ? t.register_step_role_title : t.register_step_details_title}
           </Text>
-          <Text style={{ color: Colors.WHITE, opacity: 0.8, marginTop: 4 }}>
+          <Text style={{ color: Colors.WHITE, opacity: 0.8, marginTop: 4, fontSize: 14 }}>
             {step === "role" ? t.register_step_role_sub : t.register_step_details_sub}
           </Text>
         </LinearGradient>
 
-        <View style={{ padding: Sizes.SPACING_LG, flex: 1 }}>
+        {/* ── Scrollable Content ──────────────────────────────────────────────── */}
+        <ScrollView
+          contentContainerStyle={{ padding: Sizes.SPACING_LG, paddingBottom: 24 }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
           {step === "role" ? (
-            <>
-              <View style={{ gap: 12, marginBottom: 24 }}>
-                {ROLES.map((r) => (
-                  <TouchableOpacity
-                    key={r.key}
-                    onPress={() => setRole(r.key)}
-                    style={{
-                      padding: 18,
-                      borderRadius: Sizes.RADIUS_XL,
-                      borderWidth: 2,
-                      borderColor: role === r.key ? Colors.PRIMARY : Colors.BORDER,
-                      backgroundColor: role === r.key ? "#FFF0F3" : Colors.SURFACE,
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: 14,
-                    }}
-                  >
-                    <View
-                      style={{
-                        width: 58, height: 58, borderRadius: 14,
-                        backgroundColor: "#FFFFFF",
-                        borderWidth: 2,
-                        borderColor: role === r.key ? Colors.PRIMARY : Colors.BORDER,
-                        alignItems: "center", justifyContent: "center",
-                      }}
-                    >
-                      <RoleIcon roleKey={r.key} size={34} />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: Sizes.FONT_MD, fontWeight: "700", color: Colors.TEXT }}>
-                        {r.label}
-                      </Text>
-                      <Text style={{ fontSize: Sizes.FONT_SM, color: Colors.TEXT_MUTED, marginTop: 2 }}>
-                        {r.description}
-                      </Text>
-                    </View>
-                    <View
-                      style={{
-                        width: 24, height: 24, borderRadius: 12,
-                        borderWidth: 2,
-                        borderColor: role === r.key ? Colors.PRIMARY : Colors.BORDER,
-                        backgroundColor: role === r.key ? Colors.PRIMARY : "transparent",
-                        alignItems: "center", justifyContent: "center",
-                      }}
-                    >
-                      {role === r.key && (
-                        <Text style={{ color: Colors.WHITE, fontSize: 12, fontWeight: "700" }}>✓</Text>
-                      )}
-                    </View>
-                  </TouchableOpacity>
-                ))}
-              </View>
-
-              <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+            /* ── STEP 1: Rolle wählen ── */
+            <View style={{ gap: 12 }}>
+              {ROLES.map((r) => (
                 <TouchableOpacity
-                  onPress={() => {
-                    if (!role) {
-                      Alert.alert(t.register_pick_role, t.register_pick_role_msg);
-                      return;
-                    }
-                    setStep("details");
-                  }}
+                  key={r.key}
+                  onPress={() => setRole(r.key)}
                   style={{
-                    height: Sizes.BUTTON_HEIGHT,
-                    backgroundColor: Colors.PRIMARY,
-                    borderRadius: Sizes.RADIUS_FULL,
-                    alignItems: "center",
-                    justifyContent: "center",
+                    padding: 18,
+                    borderRadius: Sizes.RADIUS_XL,
+                    borderWidth: 2,
+                    borderColor: role === r.key ? Colors.PRIMARY : Colors.BORDER,
+                    backgroundColor: role === r.key ? "#FFF0F3" : Colors.SURFACE,
                     flexDirection: "row",
-                    gap: 8,
-                    shadowColor: Colors.PRIMARY,
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.3,
-                    shadowRadius: 8,
-                    elevation: 4,
+                    alignItems: "center",
+                    gap: 14,
                   }}
                 >
-                  <Text style={{ color: Colors.WHITE, fontSize: Sizes.FONT_MD, fontWeight: "700" }}>
-                    {t.register_next.replace(" →", "")}
-                  </Text>
-                  <Ionicons name="arrow-forward" size={18} color={Colors.WHITE} />
+                  <View style={{
+                    width: 58, height: 58, borderRadius: 14,
+                    backgroundColor: "#FFFFFF", borderWidth: 2,
+                    borderColor: role === r.key ? Colors.PRIMARY : Colors.BORDER,
+                    alignItems: "center", justifyContent: "center",
+                  }}>
+                    <RoleIcon roleKey={r.key} size={34} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: Sizes.FONT_MD, fontWeight: "700", color: Colors.TEXT }}>
+                      {r.label}
+                    </Text>
+                    <Text style={{ fontSize: Sizes.FONT_SM, color: Colors.TEXT_MUTED, marginTop: 2 }}>
+                      {r.description}
+                    </Text>
+                  </View>
+                  <View style={{
+                    width: 24, height: 24, borderRadius: 12, borderWidth: 2,
+                    borderColor: role === r.key ? Colors.PRIMARY : Colors.BORDER,
+                    backgroundColor: role === r.key ? Colors.PRIMARY : "transparent",
+                    alignItems: "center", justifyContent: "center",
+                  }}>
+                    {role === r.key && (
+                      <Text style={{ color: Colors.WHITE, fontSize: 12, fontWeight: "700" }}>✓</Text>
+                    )}
+                  </View>
                 </TouchableOpacity>
-              </Animated.View>
-            </>
-          ) : (
-            <>
-              <View style={{ gap: 14, marginBottom: 8 }}>
-                <View>
-                  <Text style={styles.label}>{t.register_name}</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder={t.register_name_placeholder}
-                    placeholderTextColor={Colors.TEXT_MUTED}
-                    value={name}
-                    onChangeText={setName}
-                    autoCapitalize="words"
-                  />
-                </View>
-                <View>
-                  <Text style={styles.label}>{t.login_email}</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder={t.register_email_placeholder}
-                    placeholderTextColor={Colors.TEXT_MUTED}
-                    value={email}
-                    onChangeText={setEmail}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                  />
-                </View>
-                <View>
-                  <Text style={styles.label}>{t.login_password}</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder={t.register_password_placeholder}
-                    placeholderTextColor={Colors.TEXT_MUTED}
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry
-                  />
-                </View>
-                <View>
-                  <Text style={styles.label}>{t.register_confirm_password}</Text>
-                  <TextInput
-                    style={[
-                      styles.input,
-                      confirmPassword.length > 0 && password !== confirmPassword && {
-                        borderColor: "#E55",
-                      },
-                    ]}
-                    placeholder={t.register_confirm_password_placeholder}
-                    placeholderTextColor={Colors.TEXT_MUTED}
-                    value={confirmPassword}
-                    onChangeText={setConfirmPassword}
-                    secureTextEntry
-                    returnKeyType="go"
-                    onSubmitEditing={handleRegister}
-                  />
-                </View>
-              </View>
+              ))}
 
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  backgroundColor: "#FFF0F3",
-                  borderRadius: Sizes.RADIUS_LG,
-                  padding: 12,
-                  marginBottom: 20,
-                  gap: 8,
-                }}
-              >
-                {role && <RoleIcon roleKey={role} size={22} />}
+              {/* Login link */}
+              <View style={{ alignItems: "center", marginTop: 8 }}>
+                <Link href="/auth/login">
+                  <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM }}>
+                    {t.register_has_account}{" "}
+                    <Text style={{ color: Colors.PRIMARY, fontWeight: "700" }}>{t.register_sign_in}</Text>
+                  </Text>
+                </Link>
+              </View>
+            </View>
+          ) : (
+            /* ── STEP 2: Konto-Details ── */
+            <View style={{ gap: 14 }}>
+              {/* Role badge */}
+              <View style={{
+                flexDirection: "row", alignItems: "center",
+                backgroundColor: "#FFF0F3", borderRadius: Sizes.RADIUS_LG,
+                padding: 12, gap: 8,
+              }}>
+                {role && <RoleIcon roleKey={role} size={20} />}
                 <Text style={{ color: Colors.PRIMARY, fontWeight: "600", flex: 1 }}>
                   {ROLES.find((r) => r.key === role)?.label}
                 </Text>
@@ -373,84 +292,113 @@ export default function RegisterScreen() {
                 </TouchableOpacity>
               </View>
 
+              <View>
+                <Text style={styles.label}>{t.register_name}</Text>
+                <TextInput style={styles.input} placeholder={t.register_name_placeholder}
+                  placeholderTextColor={Colors.TEXT_MUTED} value={name} onChangeText={setName} autoCapitalize="words" />
+              </View>
+              <View>
+                <Text style={styles.label}>{t.login_email}</Text>
+                <TextInput style={styles.input} placeholder={t.register_email_placeholder}
+                  placeholderTextColor={Colors.TEXT_MUTED} value={email} onChangeText={setEmail}
+                  keyboardType="email-address" autoCapitalize="none" autoCorrect={false} />
+              </View>
+              <View>
+                <Text style={styles.label}>{t.login_password}</Text>
+                <TextInput style={styles.input} placeholder={t.register_password_placeholder}
+                  placeholderTextColor={Colors.TEXT_MUTED} value={password} onChangeText={setPassword} secureTextEntry />
+              </View>
+              <View>
+                <Text style={styles.label}>{t.register_confirm_password}</Text>
+                <TextInput
+                  style={[styles.input, confirmPassword.length > 0 && password !== confirmPassword && { borderColor: Colors.ERROR }]}
+                  placeholder={t.register_confirm_password_placeholder}
+                  placeholderTextColor={Colors.TEXT_MUTED} value={confirmPassword}
+                  onChangeText={setConfirmPassword} secureTextEntry returnKeyType="go" onSubmitEditing={handleRegister} />
+              </View>
+
               {/* Datenschutz Checkbox */}
               <TouchableOpacity
                 onPress={() => setDatenschutz((v) => !v)}
                 style={{
-                  flexDirection: "row",
-                  alignItems: "flex-start",
-                  gap: 10,
-                  marginBottom: 16,
-                  padding: 12,
+                  flexDirection: "row", alignItems: "flex-start", gap: 10, padding: 12,
                   backgroundColor: datenschutz ? "#FFF0F3" : Colors.SURFACE,
-                  borderRadius: Sizes.RADIUS_LG,
-                  borderWidth: 1.5,
+                  borderRadius: Sizes.RADIUS_LG, borderWidth: 1.5,
                   borderColor: datenschutz ? Colors.PRIMARY : Colors.BORDER,
                 }}
                 activeOpacity={0.7}
               >
                 <View style={{
-                  width: 22, height: 22, borderRadius: 6, borderWidth: 2,
+                  width: 22, height: 22, borderRadius: 6, borderWidth: 2, flexShrink: 0,
                   borderColor: datenschutz ? Colors.PRIMARY : Colors.BORDER,
                   backgroundColor: datenschutz ? Colors.PRIMARY : "transparent",
-                  alignItems: "center", justifyContent: "center",
-                  marginTop: 1, flexShrink: 0,
+                  alignItems: "center", justifyContent: "center", marginTop: 1,
                 }}>
                   {datenschutz && <Text style={{ color: "#FFF", fontSize: 12, fontWeight: "700" }}>✓</Text>}
                 </View>
                 <Text style={{ flex: 1, fontSize: Sizes.FONT_SM, color: Colors.TEXT, lineHeight: 20 }}>
                   {t.register_datenschutz_label.replace(" *", "")}{" "}
-                  <Text
-                    style={{ color: Colors.PRIMARY, textDecorationLine: "underline" }}
-                    onPress={() => Linking.openURL("https://swipet.de/datenschutz")}
-                  >
+                  <Text style={{ color: Colors.PRIMARY, textDecorationLine: "underline" }}
+                    onPress={() => Linking.openURL("https://swipet.de/datenschutz")}>
                     {t.register_datenschutz_link}
                   </Text>
                   {" *"}
                 </Text>
               </TouchableOpacity>
 
-              <TouchableOpacity
-                onPress={handleRegister}
-                disabled={loading}
-                style={[
-                  {
-                    height: Sizes.BUTTON_HEIGHT,
-                    backgroundColor: Colors.PRIMARY,
-                    borderRadius: Sizes.RADIUS_FULL,
-                    alignItems: "center",
-                    justifyContent: "center",
-                    shadowColor: Colors.PRIMARY,
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.3,
-                    shadowRadius: 8,
-                    elevation: 4,
-                  },
-                  loading && { opacity: 0.7 },
-                ]}
-              >
-                {loading ? (
-                  <ActivityIndicator color={Colors.WHITE} />
-                ) : (
-                  <Text style={{ color: Colors.WHITE, fontSize: Sizes.FONT_MD, fontWeight: "600" }}>
-                    {t.register_create_btn}
+              {/* Login link */}
+              <View style={{ alignItems: "center", marginTop: 4 }}>
+                <Link href="/auth/login">
+                  <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM }}>
+                    {t.register_has_account}{" "}
+                    <Text style={{ color: Colors.PRIMARY, fontWeight: "700" }}>{t.register_sign_in}</Text>
                   </Text>
-                )}
-              </TouchableOpacity>
-            </>
+                </Link>
+              </View>
+            </View>
+          )}
+        </ScrollView>
+
+        {/* ── Fixed Bottom Nav ────────────────────────────────────────────────── */}
+        <View style={styles.bottomNav}>
+          {/* Zurück */}
+          {step === "details" ? (
+            <TouchableOpacity onPress={() => setStep("role")} style={styles.backBtn}>
+              <Ionicons name="arrow-back" size={18} color={Colors.TEXT} />
+              <Text style={styles.backBtnText}>{t.register_back.replace("← ", "")}</Text>
+            </TouchableOpacity>
+          ) : (
+            <View style={{ flex: 1 }} />
           )}
 
-          <View style={{ alignItems: "center", marginTop: 24 }}>
-            <Link href="/auth/login">
-              <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM }}>
-                {t.register_has_account}{" "}
-                <Text style={{ color: Colors.PRIMARY, fontWeight: "700" }}>{t.register_sign_in}</Text>
-              </Text>
-            </Link>
-          </View>
+          {/* Weiter / Konto erstellen */}
+          <Animated.View style={{ flex: 2, transform: [{ scale: pulseAnim }] }}>
+            <TouchableOpacity
+              onPress={step === "role"
+                ? () => {
+                    if (!role) { Alert.alert(t.register_pick_role, t.register_pick_role_msg); return; }
+                    setStep("details");
+                  }
+                : handleRegister
+              }
+              disabled={loading}
+              style={[styles.nextBtn, loading && { opacity: 0.7 }]}
+            >
+              {loading ? (
+                <ActivityIndicator color={Colors.WHITE} />
+              ) : step === "role" ? (
+                <>
+                  <Text style={styles.nextBtnText}>{t.register_next.replace(" →", "")}</Text>
+                  <Ionicons name="arrow-forward" size={18} color="#FFF" />
+                </>
+              ) : (
+                <Text style={styles.nextBtnText}>{t.register_create_btn.replace(" 🎉", "")}</Text>
+              )}
+            </TouchableOpacity>
+          </Animated.View>
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
@@ -471,4 +419,42 @@ const styles = {
     color: Colors.TEXT,
     backgroundColor: Colors.SURFACE,
   },
+  bottomNav: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    borderTopColor: Colors.BORDER,
+    backgroundColor: Colors.BACKGROUND,
+    gap: 10,
+  },
+  backBtn: {
+    flex: 1,
+    height: 50,
+    borderRadius: 99,
+    borderWidth: 1.5,
+    borderColor: Colors.BORDER,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    flexDirection: "row" as const,
+    gap: 6,
+  },
+  backBtnText: { fontSize: 15, color: Colors.TEXT, fontWeight: "500" as const },
+  nextBtn: {
+    flex: 1,
+    height: 50,
+    borderRadius: 99,
+    backgroundColor: Colors.PRIMARY,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    flexDirection: "row" as const,
+    gap: 8,
+    shadowColor: Colors.PRIMARY,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  nextBtnText: { color: "#FFF" as const, fontSize: 16, fontWeight: "700" as const },
 };
