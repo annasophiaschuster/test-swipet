@@ -9,6 +9,7 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  Linking,
 } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { Ionicons } from "@expo/vector-icons";
@@ -87,6 +88,7 @@ export default function RegisterScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [datenschutz, setDatenschutz] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const ROLES = [
@@ -96,7 +98,12 @@ export default function RegisterScreen() {
   ];
 
   const handleRegister = async () => {
-    if (!name.trim() || !email.trim() || !password || !role) {
+    // Capture role locally to avoid stale closure
+    const currentRole = role;
+    const currentName = name.trim();
+    const currentEmail = email.trim();
+
+    if (!currentName || !currentEmail || !password || !currentRole) {
       Alert.alert(t.register_err_missing, t.register_err_missing_msg);
       return;
     }
@@ -108,25 +115,39 @@ export default function RegisterScreen() {
       Alert.alert(t.register_err_pw_mismatch, t.register_err_pw_mismatch_msg);
       return;
     }
+    if (!datenschutz) {
+      Alert.alert(t.register_err_datenschutz, t.register_err_datenschutz_msg);
+      return;
+    }
     setLoading(true);
     try {
       const { data, error } = await supabase.auth.signUp({
-        email: email.trim(),
+        email: currentEmail,
         password,
       });
       if (error) throw error;
       if (!data.user) throw new Error(t.register_err_no_user);
 
-      const { error: profileError } = await supabase.from("profiles").insert({
+      // Email confirmation required (session is null) → show confirm screen
+      if (!data.session) {
+        router.replace({
+          pathname: "/auth/confirm-email",
+          params: { role: currentRole, name: currentName, email: currentEmail },
+        });
+        return;
+      }
+
+      // No confirmation required → create profile immediately
+      const { error: profileError } = await supabase.from("profiles").upsert({
         id: data.user.id,
-        role,
-        name: name.trim(),
+        role: currentRole,
+        name: currentName,
       });
       if (profileError) throw profileError;
 
-      if (role === "adoptant") {
+      if (currentRole === "adoptant") {
         router.replace("/auth/onboarding/adoptant");
-      } else if (role === "tierhalter") {
+      } else if (currentRole === "tierhalter") {
         router.replace("/auth/onboarding/tierhalter");
       } else {
         router.replace("/auth/onboarding/tierheim");
@@ -327,6 +348,43 @@ export default function RegisterScreen() {
                   <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM }}>{t.register_change}</Text>
                 </TouchableOpacity>
               </View>
+
+              {/* Datenschutz Checkbox */}
+              <TouchableOpacity
+                onPress={() => setDatenschutz((v) => !v)}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "flex-start",
+                  gap: 10,
+                  marginBottom: 16,
+                  padding: 12,
+                  backgroundColor: datenschutz ? "#FFF0F3" : Colors.SURFACE,
+                  borderRadius: Sizes.RADIUS_LG,
+                  borderWidth: 1.5,
+                  borderColor: datenschutz ? Colors.PRIMARY : Colors.BORDER,
+                }}
+                activeOpacity={0.7}
+              >
+                <View style={{
+                  width: 22, height: 22, borderRadius: 6, borderWidth: 2,
+                  borderColor: datenschutz ? Colors.PRIMARY : Colors.BORDER,
+                  backgroundColor: datenschutz ? Colors.PRIMARY : "transparent",
+                  alignItems: "center", justifyContent: "center",
+                  marginTop: 1, flexShrink: 0,
+                }}>
+                  {datenschutz && <Text style={{ color: "#FFF", fontSize: 12, fontWeight: "700" }}>✓</Text>}
+                </View>
+                <Text style={{ flex: 1, fontSize: Sizes.FONT_SM, color: Colors.TEXT, lineHeight: 20 }}>
+                  {t.register_datenschutz_label.replace(" *", "")}{" "}
+                  <Text
+                    style={{ color: Colors.PRIMARY, textDecorationLine: "underline" }}
+                    onPress={() => Linking.openURL("https://swipet.de/datenschutz")}
+                  >
+                    {t.register_datenschutz_link}
+                  </Text>
+                  {" *"}
+                </Text>
+              </TouchableOpacity>
 
               <TouchableOpacity
                 onPress={handleRegister}
