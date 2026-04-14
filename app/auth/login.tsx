@@ -11,7 +11,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { Link, router } from "expo-router";
+import { router } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { Colors } from "../../constants/colors";
 import { Sizes } from "../../constants/sizes";
@@ -130,33 +130,13 @@ export default function LoginScreen() {
             </TouchableOpacity>
           </View>
 
-          <View style={{ flexDirection: "row", alignItems: "center", marginVertical: 24 }}>
-            <View style={{ flex: 1, height: 1, backgroundColor: Colors.BORDER }} />
-            <Text style={{ marginHorizontal: 12, color: Colors.TEXT_MUTED, fontSize: 13 }}>{t.login_or}</Text>
-            <View style={{ flex: 1, height: 1, backgroundColor: Colors.BORDER }} />
-          </View>
-
-          <View style={{ gap: 12 }}>
-            <TouchableOpacity style={styles.socialButton}>
-              <Text style={styles.socialButtonText}>{t.login_google}</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.socialButton, { backgroundColor: Colors.BLACK, borderColor: Colors.BLACK }]}
-            >
-              <Text style={[styles.socialButtonText, { color: Colors.WHITE }]}>
-                {t.login_apple}
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={{ alignItems: "center", marginTop: 32, marginBottom: 16 }}>
-            <Link href="/auth/register">
+          <View style={{ alignItems: "center", marginTop: 28, marginBottom: 16 }}>
+            <TouchableOpacity onPress={() => router.push("/auth/register")}>
               <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM }}>
                 {t.login_no_account}{" "}
                 <Text style={{ color: Colors.PRIMARY, fontWeight: "700" }}>{t.login_register}</Text>
               </Text>
-            </Link>
+            </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
@@ -198,21 +178,5 @@ const styles = {
     color: Colors.WHITE,
     fontSize: Sizes.FONT_MD,
     fontWeight: "600" as const,
-  },
-  socialButton: {
-    height: Sizes.BUTTON_HEIGHT,
-    borderWidth: 1.5,
-    borderColor: Colors.BORDER,
-    borderRadius: Sizes.RADIUS_FULL,
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-    gap: 10,
-    backgroundColor: Colors.WHITE,
-  },
-  socialButtonText: {
-    fontSize: Sizes.FONT_MD,
-    fontWeight: "500" as const,
-    color: Colors.TEXT,
   },
 };

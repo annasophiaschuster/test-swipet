@@ -115,10 +115,11 @@ export default function RootLayout() {
     };
     registerToken();
 
-    // Re-register on sign-in (e.g. new login)
+    // Re-register on sign-in; redirect to login on sign-out
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event) => {
         if (event === "SIGNED_IN") registerToken();
+        if (event === "SIGNED_OUT") router.replace("/auth/login");
       }
     );
 

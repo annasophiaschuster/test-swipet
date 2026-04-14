@@ -10,13 +10,7 @@ const STORAGE_KEY = "@swipet_language";
 export const translations = {
   de: {
     // ── Splash / Index ──
-    splash_dog_seeker_title: "Ich suche ein Tier",
-    splash_dog_seeker_sub: "Finde dein perfektes Match",
-    splash_dog_owner_title: "Hundebesitzer",
-    splash_dog_owner_sub: "Finde deine perfekte Gassi-Begleitung",
-    splash_shelter_title: "Ich vermittle Tiere",
-    splash_shelter_sub: "Vermittle deine Tiere digital & effizient",
-    splash_login_link: "Bereits registriert? Anmelden →",
+    splash_tagline: "Love at first sniff 🐾",
 
     // ── Auth ──
     login_welcome_back: "Willkommen zurück!",
@@ -25,11 +19,9 @@ export const translations = {
     login_email_placeholder: "deine@email.de",
     login_password: "Passwort",
     login_btn: "Anmelden",
-    login_or: "oder",
-    login_google: "Mit Google anmelden",
-    login_apple: "Mit Apple anmelden",
-    login_no_account: "Noch kein Konto?",
-    login_register: "Registrieren",
+    login_forgot_password: "Passwort vergessen?",
+    login_no_account: "Noch nicht registriert?",
+    login_register: "Registriere dich jetzt",
     login_err_missing: "Fehlende Angaben",
     login_err_missing_msg: "Bitte E-Mail und Passwort eingeben.",
     login_err_failed: "Login fehlgeschlagen",
@@ -1152,13 +1144,7 @@ export const translations = {
 
   en: {
     // ── Splash / Index ──
-    splash_dog_seeker_title: "I'm looking for a pet",
-    splash_dog_seeker_sub: "Find your perfect match",
-    splash_dog_owner_title: "Dog Owner",
-    splash_dog_owner_sub: "Find your perfect walk companion",
-    splash_shelter_title: "I place animals",
-    splash_shelter_sub: "Place your animals digitally & efficiently",
-    splash_login_link: "Already registered? Sign in →",
+    splash_tagline: "Love at first sniff 🐾",
 
     // ── Auth ──
     login_welcome_back: "Welcome back!",
@@ -1167,11 +1153,9 @@ export const translations = {
     login_email_placeholder: "your@email.com",
     login_password: "Password",
     login_btn: "Sign In",
-    login_or: "or",
-    login_google: "Sign in with Google",
-    login_apple: "Sign in with Apple",
-    login_no_account: "No account yet?",
-    login_register: "Register",
+    login_forgot_password: "Forgot password?",
+    login_no_account: "Not registered yet?",
+    login_register: "Register now",
     login_err_missing: "Missing Information",
     login_err_missing_msg: "Please enter your email and password.",
     login_err_failed: "Login failed",

@@ -1,31 +1,57 @@
 import { useEffect, useRef } from "react";
-import { View, Text, Animated, Image, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, Animated, Image, StyleSheet, TouchableOpacity } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
+import { supabase } from "../lib/supabase";
 import { useLanguage, type Lang } from "../contexts/LanguageContext";
 
 export default function SplashScreen() {
-  const { lang, setLang, t } = useLanguage();
+  const { lang, setLang } = useLanguage();
 
-  const fadeAnim    = useRef(new Animated.Value(0)).current;
-  const scaleAnim   = useRef(new Animated.Value(0.82)).current;
-  const sloganAnim  = useRef(new Animated.Value(0)).current;
-  const buttonsAnim = useRef(new Animated.Value(0)).current;
-  const buttonsSlide = useRef(new Animated.Value(30)).current;
+  const fadeAnim   = useRef(new Animated.Value(0)).current;
+  const scaleAnim  = useRef(new Animated.Value(0.82)).current;
+  const sloganAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    // Animate logo → then check session and navigate
     Animated.parallel([
       Animated.timing(fadeAnim,  { toValue: 1, duration: 500, useNativeDriver: true }),
       Animated.spring(scaleAnim, { toValue: 1, tension: 50, friction: 7, useNativeDriver: true }),
     ]).start(() =>
-      Animated.timing(sloganAnim, { toValue: 1, duration: 400, delay: 100, useNativeDriver: true }).start(() =>
-        Animated.parallel([
-          Animated.timing(buttonsAnim,  { toValue: 1, duration: 420, delay: 100, useNativeDriver: true }),
-          Animated.timing(buttonsSlide, { toValue: 0, duration: 380, delay: 100, useNativeDriver: true }),
-        ]).start()
-      )
+      Animated.timing(sloganAnim, { toValue: 1, duration: 400, delay: 100, useNativeDriver: true })
+        .start(() => {
+          // Small pause so user sees the slogan, then navigate
+          setTimeout(navigateAfterSplash, 600);
+        })
     );
   }, []);
+
+  const navigateAfterSplash = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        router.replace("/auth/login");
+        return;
+      }
+
+      // Session exists → route by role
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", session.user.id)
+        .maybeSingle();
+
+      if (profile?.role === "tierheim") {
+        router.replace("/tierheim/dashboard");
+      } else if (profile?.role === "tierhalter") {
+        router.replace("/gassi/feed");
+      } else {
+        router.replace("/adoption/feed");
+      }
+    } catch {
+      router.replace("/auth/login");
+    }
+  };
 
   return (
     <LinearGradient
@@ -33,7 +59,7 @@ export default function SplashScreen() {
       start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
       style={{ flex: 1 }}
     >
-      {/* ── Language Toggle (top right) ── */}
+      {/* Language toggle */}
       <View style={styles.langToggleContainer}>
         {(["de", "en"] as Lang[]).map((l, i) => (
           <TouchableOpacity
@@ -53,8 +79,8 @@ export default function SplashScreen() {
         ))}
       </View>
 
-      {/* ── LOGO ── */}
-      <View style={styles.logoSection}>
+      {/* Logo + Title + Slogan — centred, takes full screen */}
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
         <Animated.View style={{ alignItems: "center", opacity: fadeAnim, transform: [{ scale: scaleAnim }] }}>
           <View style={styles.logoContainer}>
             <Image
@@ -69,59 +95,9 @@ export default function SplashScreen() {
           </Animated.Text>
         </Animated.View>
       </View>
-
-      {/* ── BUTTONS ── */}
-      <Animated.View style={[styles.buttonsSection, { opacity: buttonsAnim, transform: [{ translateY: buttonsSlide }] }]}>
-        <DemoButton
-          icon="🔍"
-          title={t.splash_dog_seeker_title}
-          subtitle={t.splash_dog_seeker_sub}
-          onPress={() => router.push("/adoption/feed")}
-        />
-        <DemoButton
-          icon="🦮"
-          title={t.splash_dog_owner_title}
-          subtitle={t.splash_dog_owner_sub}
-          onPress={() => router.push("/gassi/feed")}
-        />
-        <DemoButton
-          icon="🏢"
-          title={t.splash_shelter_title}
-          subtitle={t.splash_shelter_sub}
-          onPress={() => router.push("/tierheim/dashboard")}
-        />
-
-        <TouchableOpacity
-          onPress={() => router.push("/auth/login")}
-          style={styles.loginLink}
-        >
-          <Text style={styles.loginLinkText}>{t.splash_login_link}</Text>
-        </TouchableOpacity>
-      </Animated.View>
     </LinearGradient>
   );
 }
-
-// ── Demo-Button ──────────────────────────────────────────────────────────────
-
-function DemoButton({
-  icon, title, subtitle, onPress,
-}: {
-  icon: string; title: string; subtitle: string; onPress: () => void;
-}) {
-  return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.85} style={styles.demoButton}>
-      <Text style={styles.demoButtonIcon}>{icon}</Text>
-      <View style={styles.demoButtonText}>
-        <Text style={styles.demoButtonTitle}>{title}</Text>
-        <Text style={styles.demoButtonSubtitle}>{subtitle}</Text>
-      </View>
-      <Text style={styles.demoButtonChevron}>›</Text>
-    </TouchableOpacity>
-  );
-}
-
-// ── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   langToggleContainer: {
@@ -152,11 +128,6 @@ const styles = StyleSheet.create({
   langBtnTextActive: {
     color: "#E27289",
   },
-  logoSection: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
   logoContainer: {
     width: 160, height: 160, borderRadius: 40,
     backgroundColor: "rgba(255,255,255,0.15)",
@@ -171,40 +142,5 @@ const styles = StyleSheet.create({
   slogan: {
     fontSize: 15, color: "rgba(255,255,255,0.9)",
     fontWeight: "300", letterSpacing: 1.5, fontStyle: "italic",
-  },
-  buttonsSection: {
-    paddingHorizontal: 20,
-    paddingBottom: 44,
-    gap: 12,
-  },
-  demoButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.18)",
-    borderRadius: 18,
-    paddingVertical: 18,
-    paddingHorizontal: 20,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.3)",
-    gap: 14,
-  },
-  demoButtonIcon: { fontSize: 30 },
-  demoButtonText: { flex: 1 },
-  demoButtonTitle: {
-    fontSize: 17, fontWeight: "700", color: "#FFFFFF", marginBottom: 2,
-  },
-  demoButtonSubtitle: {
-    fontSize: 13, color: "rgba(255,255,255,0.75)",
-  },
-  demoButtonChevron: {
-    fontSize: 24, color: "rgba(255,255,255,0.7)", fontWeight: "300",
-  },
-  loginLink: {
-    alignItems: "center",
-    paddingTop: 4,
-    paddingBottom: 8,
-  },
-  loginLinkText: {
-    fontSize: 14, color: "rgba(255,255,255,0.8)", letterSpacing: 0.3,
   },
 });
