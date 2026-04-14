@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -10,6 +10,8 @@ import {
   Alert,
   ActivityIndicator,
   Linking,
+  Animated,
+  Easing,
 } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { Ionicons } from "@expo/vector-icons";
@@ -90,6 +92,19 @@ export default function RegisterScreen() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [datenschutz, setDatenschutz] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Pulse animation for Weiter button
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 1.05, duration: 900, useNativeDriver: true, easing: Easing.inOut(Easing.ease) }),
+        Animated.timing(pulseAnim, { toValue: 1,    duration: 900, useNativeDriver: true, easing: Easing.inOut(Easing.ease) }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, []);
 
   const ROLES = [
     { key: "adoptant" as Role,    label: t.register_role_adoptant_label,   description: t.register_role_adoptant_desc },
@@ -179,8 +194,12 @@ export default function RegisterScreen() {
             paddingHorizontal: Sizes.SPACING_LG,
           }}
         >
-          <TouchableOpacity onPress={() => step === "details" ? setStep("role") : router.back()}>
-            <Text style={{ color: Colors.WHITE, opacity: 0.85, fontSize: 15 }}>{t.register_back}</Text>
+          <TouchableOpacity
+            onPress={() => step === "details" ? setStep("role") : router.back()}
+            style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
+          >
+            <Ionicons name="arrow-back" size={18} color={Colors.WHITE} />
+            <Text style={{ color: Colors.WHITE, opacity: 0.85, fontSize: 15 }}>{t.register_back.replace("← ", "")}</Text>
           </TouchableOpacity>
           <Text style={{ fontSize: 28, fontWeight: "800", color: Colors.WHITE, marginTop: 12 }}>
             {step === "role" ? t.register_step_role_title : t.register_step_details_title}
@@ -245,31 +264,36 @@ export default function RegisterScreen() {
                 ))}
               </View>
 
-              <TouchableOpacity
-                onPress={() => {
-                  if (!role) {
-                    Alert.alert(t.register_pick_role, t.register_pick_role_msg);
-                    return;
-                  }
-                  setStep("details");
-                }}
-                style={{
-                  height: Sizes.BUTTON_HEIGHT,
-                  backgroundColor: Colors.PRIMARY,
-                  borderRadius: Sizes.RADIUS_FULL,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  shadowColor: Colors.PRIMARY,
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.3,
-                  shadowRadius: 8,
-                  elevation: 4,
-                }}
-              >
-                <Text style={{ color: Colors.WHITE, fontSize: Sizes.FONT_MD, fontWeight: "600" }}>
-                  {t.register_next}
-                </Text>
-              </TouchableOpacity>
+              <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+                <TouchableOpacity
+                  onPress={() => {
+                    if (!role) {
+                      Alert.alert(t.register_pick_role, t.register_pick_role_msg);
+                      return;
+                    }
+                    setStep("details");
+                  }}
+                  style={{
+                    height: Sizes.BUTTON_HEIGHT,
+                    backgroundColor: Colors.PRIMARY,
+                    borderRadius: Sizes.RADIUS_FULL,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexDirection: "row",
+                    gap: 8,
+                    shadowColor: Colors.PRIMARY,
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 8,
+                    elevation: 4,
+                  }}
+                >
+                  <Text style={{ color: Colors.WHITE, fontSize: Sizes.FONT_MD, fontWeight: "700" }}>
+                    {t.register_next.replace(" →", "")}
+                  </Text>
+                  <Ionicons name="arrow-forward" size={18} color={Colors.WHITE} />
+                </TouchableOpacity>
+              </Animated.View>
             </>
           ) : (
             <>
