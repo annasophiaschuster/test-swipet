@@ -10,7 +10,8 @@ import {
   Alert,
   ActivityIndicator,
 } from "react-native";
-import Svg, { Path, Circle, Ellipse } from "react-native-svg";
+import Svg, { Path } from "react-native-svg";
+import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Link, router } from "expo-router";
 import { supabase } from "../../lib/supabase";
@@ -40,21 +41,7 @@ function HeartIcon({ size = 36, color = Colors.PRIMARY }: { size?: number; color
 }
 
 function PawsIcon({ size = 36, color = Colors.PRIMARY }: { size?: number; color?: string }) {
-  // 100×100 viewBox: main pad + 4 toe pads
-  return (
-    <Svg width={size} height={size} viewBox="0 0 100 100">
-      {/* Main pad */}
-      <Ellipse cx="50" cy="68" rx="22" ry="18" fill={color} />
-      {/* Top-left toe */}
-      <Ellipse cx="22" cy="44" rx="10" ry="12" fill={color} transform="rotate(-20 22 44)" />
-      {/* Top-center-left toe */}
-      <Ellipse cx="38" cy="34" rx="10" ry="12" fill={color} transform="rotate(-8 38 34)" />
-      {/* Top-center-right toe */}
-      <Ellipse cx="62" cy="34" rx="10" ry="12" fill={color} transform="rotate(8 62 34)" />
-      {/* Top-right toe */}
-      <Ellipse cx="78" cy="44" rx="10" ry="12" fill={color} transform="rotate(20 78 44)" />
-    </Svg>
-  );
+  return <Ionicons name="paw" size={size} color={color} />;
 }
 
 function HouseIcon({ size = 36, color = Colors.PRIMARY }: { size?: number; color?: string }) {
@@ -211,7 +198,7 @@ export default function RegisterScreen() {
                       <Text style={{ fontSize: Sizes.FONT_MD, fontWeight: "700", color: Colors.TEXT }}>
                         {r.label}
                       </Text>
-                      <Text style={{ fontSize: Sizes.FONT_SM, color: Colors.TEXT_MUTED, marginTop: 2 }} numberOfLines={2}>
+                      <Text style={{ fontSize: Sizes.FONT_SM, color: Colors.TEXT_MUTED, marginTop: 2 }}>
                         {r.description}
                       </Text>
                     </View>
