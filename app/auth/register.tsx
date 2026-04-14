@@ -361,41 +361,41 @@ export default function RegisterScreen() {
 
         {/* ── Fixed Bottom Nav ────────────────────────────────────────────────── */}
         <View style={styles.bottomNav}>
-          {/* Zurück */}
-          {step === "details" ? (
+          {/* Zurück — nur auf Schritt 2 sichtbar */}
+          {step === "details" && (
             <TouchableOpacity onPress={() => setStep("role")} style={styles.backBtn}>
               <Ionicons name="arrow-back" size={18} color={Colors.TEXT} />
               <Text style={styles.backBtnText}>{t.register_back.replace("← ", "")}</Text>
             </TouchableOpacity>
-          ) : (
-            <View style={{ flex: 1 }} />
           )}
 
-          {/* Weiter / Konto erstellen */}
-          <Animated.View style={{ flex: 2, transform: [{ scale: pulseAnim }] }}>
-            <TouchableOpacity
-              onPress={step === "role"
-                ? () => {
-                    if (!role) { Alert.alert(t.register_pick_role, t.register_pick_role_msg); return; }
-                    setStep("details");
-                  }
-                : handleRegister
-              }
-              disabled={loading}
-              style={[styles.nextBtn, loading && { opacity: 0.7 }]}
-            >
-              {loading ? (
-                <ActivityIndicator color={Colors.WHITE} />
-              ) : step === "role" ? (
-                <>
-                  <Text style={styles.nextBtnText}>{t.register_next.replace(" →", "")}</Text>
-                  <Ionicons name="arrow-forward" size={18} color="#FFF" />
-                </>
-              ) : (
-                <Text style={styles.nextBtnText}>{t.register_create_btn.replace(" 🎉", "")}</Text>
-              )}
-            </TouchableOpacity>
-          </Animated.View>
+          {/* Weiter / Konto erstellen — pulsierend */}
+          <View style={styles.nextBtnWrap}>
+            <Animated.View style={{ transform: [{ scale: pulseAnim }], width: "100%" }}>
+              <TouchableOpacity
+                onPress={step === "role"
+                  ? () => {
+                      if (!role) { Alert.alert(t.register_pick_role, t.register_pick_role_msg); return; }
+                      setStep("details");
+                    }
+                  : handleRegister
+                }
+                disabled={loading}
+                style={[styles.nextBtn, loading && { opacity: 0.7 }]}
+              >
+                {loading ? (
+                  <ActivityIndicator color={Colors.WHITE} />
+                ) : step === "role" ? (
+                  <>
+                    <Text style={styles.nextBtnText}>{t.register_next.replace(" →", "")}</Text>
+                    <Ionicons name="arrow-forward" size={18} color="#FFF" />
+                  </>
+                ) : (
+                  <Text style={styles.nextBtnText}>{t.register_create_btn.replace(" 🎉", "")}</Text>
+                )}
+              </TouchableOpacity>
+            </Animated.View>
+          </View>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -441,8 +441,12 @@ const styles = {
     gap: 6,
   },
   backBtnText: { fontSize: 15, color: Colors.TEXT, fontWeight: "500" as const },
+  nextBtnWrap: {
+    flex: 2,
+    alignItems: "stretch" as const,
+  },
   nextBtn: {
-    flex: 1,
+    width: "100%" as const,
     height: 50,
     borderRadius: 99,
     backgroundColor: Colors.PRIMARY,
