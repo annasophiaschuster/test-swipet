@@ -86,6 +86,7 @@ export default function RegisterScreen() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   const ROLES = [
@@ -101,6 +102,10 @@ export default function RegisterScreen() {
     }
     if (password.length < 6) {
       Alert.alert(t.register_err_pw_short, t.register_err_pw_short_msg);
+      return;
+    }
+    if (password !== confirmPassword) {
+      Alert.alert(t.register_err_pw_mismatch, t.register_err_pw_mismatch_msg);
       return;
     }
     setLoading(true);
@@ -281,6 +286,24 @@ export default function RegisterScreen() {
                     value={password}
                     onChangeText={setPassword}
                     secureTextEntry
+                  />
+                </View>
+                <View>
+                  <Text style={styles.label}>{t.register_confirm_password}</Text>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      confirmPassword.length > 0 && password !== confirmPassword && {
+                        borderColor: "#E55",
+                      },
+                    ]}
+                    placeholder={t.register_confirm_password_placeholder}
+                    placeholderTextColor={Colors.TEXT_MUTED}
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    secureTextEntry
+                    returnKeyType="go"
+                    onSubmitEditing={handleRegister}
                   />
                 </View>
               </View>
