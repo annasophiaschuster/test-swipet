@@ -456,7 +456,6 @@ export default function TierheimOnboarding() {
       <View style={styles.bottomNav}>
         {!isFirstStep ? (
           <TouchableOpacity onPress={back} style={styles.backBtn}>
-            <Ionicons name="arrow-back" size={18} color={Colors.TEXT} />
             <Text style={styles.backBtnText}>{t.onb_back}</Text>
           </TouchableOpacity>
         ) : (
@@ -470,24 +469,23 @@ export default function TierheimOnboarding() {
           </TouchableOpacity>
         )}
 
-        <Animated.View style={{ flex: 2, transform: [{ scale: pulseAnim }] }}>
-          <TouchableOpacity
-            onPress={isLastStep ? triggerFinish : next}
-            disabled={loading}
-            style={[styles.nextBtn, { backgroundColor: ACCENT }, loading && { opacity: 0.7 }]}
-          >
-            {loading ? (
-              <ActivityIndicator color="#FFF" />
-            ) : (
-              <>
+        <View style={{ flex: 2 }}>
+          <Animated.View style={{ transform: [{ scale: pulseAnim }], width: "100%" }}>
+            <TouchableOpacity
+              onPress={isLastStep ? triggerFinish : next}
+              disabled={loading}
+              style={[styles.nextBtn, { backgroundColor: ACCENT }, loading && { opacity: 0.7 }]}
+            >
+              {loading ? (
+                <ActivityIndicator color="#FFF" />
+              ) : (
                 <Text style={styles.nextBtnText}>
                   {isLastStep ? t.onb_th_new_step7_btn : t.onb_next}
                 </Text>
-                {!isLastStep && <Ionicons name="arrow-forward" size={18} color="#FFF" style={{ marginLeft: 6 }} />}
-              </>
-            )}
-          </TouchableOpacity>
-        </Animated.View>
+              )}
+            </TouchableOpacity>
+          </Animated.View>
+        </View>
       </View>
 
       {/* Newsletter Modal */}
@@ -553,6 +551,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.SURFACE,
     alignItems: "center",
     justifyContent: "center",
+    alignSelf: "center",
     marginBottom: 20,
     borderWidth: 2,
     borderColor: Colors.BORDER,
@@ -712,7 +711,7 @@ const styles = StyleSheet.create({
   },
   skipBtnText: { fontSize: 14, color: Colors.TEXT_MUTED, fontWeight: "500" },
   nextBtn: {
-    flex: 1,
+    width: "100%",
     height: 50,
     borderRadius: 99,
     alignItems: "center",
