@@ -12,14 +12,51 @@ import {
   Animated,
   Easing,
   StyleSheet,
+  Image,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { AntDesign } from "@expo/vector-icons";
+import Svg, { Path } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
 import { Colors } from "../../constants/colors";
 import { Sizes } from "../../constants/sizes";
 import { useLanguage } from "../../contexts/LanguageContext";
+
+// ── Apple logo from uploaded SVG ─────────────────────────────────────────────
+function AppleIcon({ size = 19, color = "#FFFFFF" }: { size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="139.6875 0 1221 1500">
+      <Path
+        fill={color}
+        d={
+          "M 1321.835938 511.421875 C 1313.136719 518.171875 1159.539062 604.695312 " +
+          "1159.539062 797.085938 C 1159.539062 1019.617188 1354.988281 1098.34375 " +
+          "1360.835938 1100.292969 C 1359.9375 1105.089844 1329.789062 1208.109375 " +
+          "1257.789062 1313.078125 C 1193.585938 1405.449219 1126.539062 1497.671875 " +
+          "1024.539062 1497.671875 C 922.539062 1497.671875 896.289062 1438.4375 " +
+          "778.539062 1438.4375 C 663.789062 1438.4375 622.988281 1499.621094 " +
+          "529.6875 1499.621094 C 436.386719 1499.621094 371.289062 1414.144531 " +
+          "296.4375 1309.179688 C 209.738281 1185.914062 139.6875 994.425781 " +
+          "139.6875 812.679688 C 139.6875 521.171875 329.289062 366.566406 " +
+          "515.886719 366.566406 C 615.039062 366.566406 697.6875 431.648438 " +
+          "759.9375 431.648438 C 819.1875 431.648438 911.585938 362.667969 " +
+          "1024.386719 362.667969 C 1067.136719 362.667969 1220.738281 366.566406 " +
+          "1321.835938 511.421875 Z " +
+          "M 970.835938 239.257812 C 1017.488281 183.925781 1050.488281 107.148438 " +
+          "1050.488281 30.371094 C 1050.488281 19.722656 1049.585938 8.925781 " +
+          "1047.636719 0.230469 C 971.738281 3.078125 881.4375 50.765625 " +
+          "826.988281 113.894531 C 784.238281 162.480469 744.335938 239.257812 " +
+          "744.335938 317.082031 C 744.335938 328.78125 746.289062 340.476562 " +
+          "747.1875 344.222656 C 751.988281 345.125 759.789062 346.175781 " +
+          "767.585938 346.175781 C 835.6875 346.175781 921.335938 300.589844 " +
+          "970.835938 239.257812 Z"
+        }
+      />
+    </Svg>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 export default function LoginScreen() {
   const { t } = useLanguage();
@@ -28,7 +65,7 @@ export default function LoginScreen() {
   const [loading, setLoading]   = useState(false);
 
   // ── Entrance animation ────────────────────────────────────────────────────
-  const slideAnim   = useRef(new Animated.Value(40)).current;
+  const slideAnim   = useRef(new Animated.Value(36)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -79,49 +116,46 @@ export default function LoginScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}
+      style={{ flex: 1 }}
     >
+      {/* Full-screen gradient background */}
+      <LinearGradient
+        colors={["#F0956A", "#E27289"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
+
       <ScrollView
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {/* Header gradient */}
-        <LinearGradient
-          colors={[Colors.SECONDARY, Colors.PRIMARY]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={{ height: 200, alignItems: "center", justifyContent: "flex-end", paddingBottom: 32 }}
-        >
-          <Text style={{ fontSize: 36, fontWeight: "800", color: Colors.WHITE, letterSpacing: 4 }}>
-            🐾 SWIPET
-          </Text>
-          <Text style={{ color: Colors.WHITE, opacity: 0.85, marginTop: 4, fontSize: 14 }}>
-            {t.login_welcome_back}
-          </Text>
-        </LinearGradient>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>🐾 SWIPET</Text>
+          <Text style={styles.headerSub}>{t.login_welcome_back}</Text>
+        </View>
 
-        {/* Animated form content */}
+        {/* Animated form content — floats on gradient */}
         <Animated.View
-          style={{
-            padding: Sizes.SPACING_LG,
-            paddingTop: 32,
-            flex: 1,
-            opacity: opacityAnim,
-            transform: [{ translateY: slideAnim }],
-          }}
+          style={[
+            styles.formArea,
+            {
+              opacity: opacityAnim,
+              transform: [{ translateY: slideAnim }],
+            },
+          ]}
         >
-          <Text style={{ fontSize: 26, fontWeight: "700", color: Colors.TEXT, marginBottom: 24 }}>
-            {t.login_title}
-          </Text>
+          <Text style={styles.formTitle}>{t.login_title}</Text>
 
-          <View style={{ gap: 14 }}>
+          <View style={{ gap: 12 }}>
             <View>
-              <Text style={styles.label}>{t.login_email}</Text>
+              <Text style={styles.inputLabel}>{t.login_email}</Text>
               <TextInput
-                style={styles.input}
+                style={styles.inputField}
                 placeholder={t.login_email_placeholder}
-                placeholderTextColor={Colors.TEXT_MUTED}
+                placeholderTextColor="rgba(0,0,0,0.35)"
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
@@ -131,11 +165,11 @@ export default function LoginScreen() {
             </View>
 
             <View>
-              <Text style={styles.label}>{t.login_password}</Text>
+              <Text style={styles.inputLabel}>{t.login_password}</Text>
               <TextInput
-                style={styles.input}
+                style={styles.inputField}
                 placeholder="••••••••"
-                placeholderTextColor={Colors.TEXT_MUTED}
+                placeholderTextColor="rgba(0,0,0,0.35)"
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
@@ -145,23 +179,20 @@ export default function LoginScreen() {
             </View>
           </View>
 
-          {/* Forgot password */}
           <TouchableOpacity style={{ alignSelf: "flex-end", marginTop: 10 }}>
-            <Text style={{ color: Colors.TEXT_MUTED, fontSize: 13 }}>
-              {t.login_forgot_password}
-            </Text>
+            <Text style={styles.forgotText}>{t.login_forgot_password}</Text>
           </TouchableOpacity>
 
           {/* Login button */}
           <TouchableOpacity
             onPress={handleLogin}
             disabled={loading}
-            style={[styles.primaryButton, loading && { opacity: 0.7 }]}
+            style={[styles.primaryBtn, loading && { opacity: 0.7 }]}
           >
             {loading ? (
-              <ActivityIndicator color={Colors.WHITE} />
+              <ActivityIndicator color={Colors.PRIMARY} />
             ) : (
-              <Text style={styles.primaryButtonText}>{t.login_btn}</Text>
+              <Text style={styles.primaryBtnText}>{t.login_btn}</Text>
             )}
           </TouchableOpacity>
 
@@ -174,30 +205,34 @@ export default function LoginScreen() {
 
           {/* Apple */}
           <TouchableOpacity
-            style={styles.socialButton}
+            style={styles.socialBtn}
             onPress={() => Alert.alert("Coming soon 🍎", t.login_apple)}
-            activeOpacity={0.75}
+            activeOpacity={0.8}
           >
-            <AntDesign name="apple1" size={20} color="#000000" />
-            <Text style={styles.socialButtonText}>{t.login_apple}</Text>
+            <AppleIcon size={19} color="#FFFFFF" />
+            <Text style={styles.socialBtnText}>{t.login_apple}</Text>
           </TouchableOpacity>
 
           {/* Google */}
           <TouchableOpacity
-            style={[styles.socialButton, { marginTop: 12 }]}
-            onPress={() => Alert.alert("Coming soon 🔍", t.login_google)}
-            activeOpacity={0.75}
+            style={[styles.socialBtn, { marginTop: 12 }]}
+            onPress={() => Alert.alert("Coming soon", t.login_google)}
+            activeOpacity={0.8}
           >
-            <AntDesign name="google" size={18} color="#DB4437" />
-            <Text style={styles.socialButtonText}>{t.login_google}</Text>
+            <Image
+              source={require("../../assets/google-logo.png")}
+              style={{ width: 20, height: 20, borderRadius: 3 }}
+              resizeMode="contain"
+            />
+            <Text style={styles.socialBtnText}>{t.login_google}</Text>
           </TouchableOpacity>
 
           {/* Register link */}
           <View style={{ alignItems: "center", marginTop: 28, marginBottom: 16 }}>
             <TouchableOpacity onPress={() => router.push("/auth/register")}>
-              <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM }}>
+              <Text style={styles.registerText}>
                 {t.login_no_account}{" "}
-                <Text style={{ color: Colors.PRIMARY, fontWeight: "700" }}>{t.login_register}</Text>
+                <Text style={styles.registerLink}>{t.login_register}</Text>
               </Text>
             </TouchableOpacity>
           </View>
@@ -208,69 +243,104 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  label: {
-    color: Colors.TEXT_MUTED,
+  header: {
+    paddingTop: 80,
+    paddingBottom: 36,
+    alignItems: "center",
+  },
+  headerTitle: {
+    fontSize: 34,
+    fontWeight: "800",
+    color: "#FFFFFF",
+    letterSpacing: 4,
+    marginBottom: 6,
+  },
+  headerSub: {
+    color: "rgba(255,255,255,0.85)",
+    fontSize: 15,
+  },
+  formArea: {
+    paddingHorizontal: 28,
+    paddingBottom: 48,
+  },
+  formTitle: {
+    fontSize: 28,
+    fontWeight: "800",
+    color: "#FFFFFF",
+    marginBottom: 20,
+    letterSpacing: 0.3,
+  },
+  inputLabel: {
+    color: "rgba(255,255,255,0.9)",
     fontSize: Sizes.FONT_SM,
     marginBottom: 6,
-    fontWeight: "500",
+    fontWeight: "600",
   },
-  input: {
+  inputField: {
     height: Sizes.INPUT_HEIGHT,
-    borderWidth: 1.5,
-    borderColor: Colors.BORDER,
     borderRadius: Sizes.RADIUS_LG,
     paddingHorizontal: Sizes.SPACING_MD,
     fontSize: Sizes.FONT_MD,
-    color: Colors.TEXT,
-    backgroundColor: Colors.SURFACE,
+    color: "#1A1A1A",
+    backgroundColor: "rgba(255,255,255,0.95)",
   },
-  primaryButton: {
+  forgotText: {
+    color: "rgba(255,255,255,0.75)",
+    fontSize: 13,
+  },
+  primaryBtn: {
     height: Sizes.BUTTON_HEIGHT,
-    backgroundColor: Colors.PRIMARY,
+    backgroundColor: "#FFFFFF",
     borderRadius: Sizes.RADIUS_FULL,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 20,
-    shadowColor: Colors.PRIMARY,
+    marginTop: 18,
+    shadowColor: "rgba(0,0,0,0.2)",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOpacity: 1,
+    shadowRadius: 10,
+    elevation: 6,
   },
-  primaryButtonText: {
-    color: Colors.WHITE,
+  primaryBtnText: {
+    color: Colors.PRIMARY,
     fontSize: Sizes.FONT_MD,
-    fontWeight: "600",
+    fontWeight: "700",
   },
   dividerRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: 22,
+    marginVertical: 18,
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: Colors.BORDER,
+    backgroundColor: "rgba(255,255,255,0.35)",
   },
   dividerText: {
     marginHorizontal: 12,
-    color: Colors.TEXT_MUTED,
+    color: "rgba(255,255,255,0.7)",
     fontSize: 13,
   },
-  socialButton: {
+  socialBtn: {
     height: Sizes.BUTTON_HEIGHT,
-    borderWidth: 1.5,
-    borderColor: Colors.BORDER,
     borderRadius: Sizes.RADIUS_FULL,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 10,
-    backgroundColor: Colors.WHITE,
+    backgroundColor: "#000000",
   },
-  socialButtonText: {
+  socialBtnText: {
     fontSize: Sizes.FONT_MD,
-    fontWeight: "500",
-    color: Colors.TEXT,
+    fontWeight: "600",
+    color: "#FFFFFF",
+  },
+  registerText: {
+    color: "rgba(255,255,255,0.8)",
+    fontSize: Sizes.FONT_SM,
+  },
+  registerLink: {
+    color: "#FFFFFF",
+    fontWeight: "800",
   },
 });
