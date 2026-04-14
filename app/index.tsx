@@ -23,8 +23,8 @@ import { Sizes } from "../constants/sizes";
 
 const { height: SCREEN_H } = Dimensions.get("window");
 
-// Card occupies 62 % of screen height — gradient is visible in the top 38 %
-const CARD_H = SCREEN_H * 0.62;
+// Card occupies 68 % of screen height — gradient visible in top 32 %
+const CARD_H = SCREEN_H * 0.68;
 
 // ── Apple logo (path extracted from uploaded Apple.svg) ──────────────────────
 function AppleIcon({ size = 19, color = "#FFFFFF" }: { size?: number; color?: string }) {
@@ -79,11 +79,11 @@ export default function SplashLoginScreen() {
   const logoProgress = useRef(new Animated.Value(0)).current;
   const logoTranslateY = logoProgress.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, -(SCREEN_H * 0.29)],
+    outputRange: [0, -(SCREEN_H * 0.32)],
   });
   const logoScale = logoProgress.interpolate({
     inputRange: [0, 1],
-    outputRange: [1, 0.72],
+    outputRange: [1, 0.68],
   });
 
   // ── White card slides up from below ──────────────────────────────────────
@@ -220,6 +220,7 @@ export default function SplashLoginScreen() {
           {
             alignItems: "center",
             justifyContent: "center",
+            zIndex: 2,           // logo always above card edge
             opacity: fadeAnim,
             transform: [
               { translateY: logoTranslateY },
@@ -323,7 +324,7 @@ export default function SplashLoginScreen() {
 
           {/* Google */}
           <TouchableOpacity
-            style={[styles.socialBtn, { marginTop: 12 }]}
+            style={[styles.socialBtn, { marginTop: 10 }]}
             onPress={() => Alert.alert("Coming soon", t.login_google)}
             activeOpacity={0.8}
           >
@@ -338,7 +339,7 @@ export default function SplashLoginScreen() {
           {/* Register link */}
           <TouchableOpacity
             onPress={() => router.push("/auth/register")}
-            style={{ alignItems: "center", marginTop: 24 }}
+            style={{ alignItems: "center", marginTop: 18 }}
           >
             <Text style={styles.registerText}>
               {t.login_no_account}{" "}
@@ -411,14 +412,14 @@ const styles = StyleSheet.create({
   },
   cardScroll: {
     paddingHorizontal: 28,
-    paddingTop: 28,
-    paddingBottom: 40,
+    paddingTop: 22,
+    paddingBottom: 28,
   },
   cardTitle: {
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: "700",
     color: Colors.TEXT,
-    marginBottom: 20,
+    marginBottom: 16,
   },
 
   // ── Form inputs ──────────────────────────────────────────────────────────
@@ -450,7 +451,7 @@ const styles = StyleSheet.create({
     borderRadius: Sizes.RADIUS_FULL,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 18,
+    marginTop: 14,
     shadowColor: Colors.PRIMARY,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.35,
@@ -467,7 +468,7 @@ const styles = StyleSheet.create({
   dividerRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: 18,
+    marginVertical: 14,
   },
   dividerLine: {
     flex: 1,

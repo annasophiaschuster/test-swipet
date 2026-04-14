@@ -24,7 +24,7 @@ import { Sizes } from "../../constants/sizes";
 import { useLanguage } from "../../contexts/LanguageContext";
 
 const { height: SCREEN_H } = Dimensions.get("window");
-const CARD_H = SCREEN_H * 0.68; // slightly taller on this screen (no shared logo)
+const CARD_H = SCREEN_H * 0.74; // tall enough to show all content incl. register link
 
 // ── Apple logo (path extracted from uploaded Apple.svg) ──────────────────────
 function AppleIcon({ size = 19, color = "#FFFFFF" }: { size?: number; color?: string }) {
@@ -214,7 +214,7 @@ export default function LoginScreen() {
 
           {/* Google */}
           <TouchableOpacity
-            style={[styles.socialBtn, { marginTop: 12 }]}
+            style={[styles.socialBtn, { marginTop: 10 }]}
             onPress={() => Alert.alert("Coming soon", t.login_google)}
             activeOpacity={0.8}
           >
@@ -226,7 +226,7 @@ export default function LoginScreen() {
             <Text style={styles.socialBtnText}>{t.login_google}</Text>
           </TouchableOpacity>
 
-          <View style={{ alignItems: "center", marginTop: 24, marginBottom: 8 }}>
+          <View style={{ alignItems: "center", marginTop: 18, marginBottom: 8 }}>
             <TouchableOpacity onPress={() => router.push("/auth/register")}>
               <Text style={styles.registerText}>
                 {t.login_no_account}{" "}
@@ -274,14 +274,14 @@ const styles = StyleSheet.create({
   },
   cardScroll: {
     paddingHorizontal: 28,
-    paddingTop: 28,
-    paddingBottom: 40,
+    paddingTop: 22,
+    paddingBottom: 28,
   },
   cardTitle: {
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: "700",
     color: Colors.TEXT,
-    marginBottom: 20,
+    marginBottom: 16,
   },
 
   // ── Inputs ───────────────────────────────────────────────────────────────
@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
     borderRadius: Sizes.RADIUS_FULL,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 18,
+    marginTop: 14,
     shadowColor: Colors.PRIMARY,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.35,
@@ -330,7 +330,7 @@ const styles = StyleSheet.create({
   dividerRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: 18,
+    marginVertical: 14,
   },
   dividerLine: { flex: 1, height: 1, backgroundColor: Colors.BORDER },
   dividerText: { marginHorizontal: 12, color: Colors.TEXT_MUTED, fontSize: 13 },
