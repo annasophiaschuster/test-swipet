@@ -13,6 +13,7 @@ import {
   Easing,
   StyleSheet,
   Image,
+  Dimensions,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
@@ -22,7 +23,10 @@ import { Colors } from "../../constants/colors";
 import { Sizes } from "../../constants/sizes";
 import { useLanguage } from "../../contexts/LanguageContext";
 
-// ── Apple logo from uploaded SVG ─────────────────────────────────────────────
+const { height: SCREEN_H } = Dimensions.get("window");
+const CARD_H = SCREEN_H * 0.68; // slightly taller on this screen (no shared logo)
+
+// ── Apple logo (path extracted from uploaded Apple.svg) ──────────────────────
 function AppleIcon({ size = 19, color = "#FFFFFF" }: { size?: number; color?: string }) {
   return (
     <Svg width={size} height={size} viewBox="139.6875 0 1221 1500">
@@ -64,21 +68,21 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [loading, setLoading]   = useState(false);
 
-  // ── Entrance animation ────────────────────────────────────────────────────
-  const slideAnim   = useRef(new Animated.Value(36)).current;
-  const opacityAnim = useRef(new Animated.Value(0)).current;
+  // ── Entrance: card slides up on mount ────────────────────────────────────
+  const cardTranslateY = useRef(new Animated.Value(CARD_H)).current;
+  const cardOpacity    = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.parallel([
-      Animated.timing(slideAnim, {
+      Animated.timing(cardTranslateY, {
         toValue: 0,
-        duration: 420,
+        duration: 440,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
-      Animated.timing(opacityAnim, {
+      Animated.timing(cardOpacity, {
         toValue: 1,
-        duration: 350,
+        duration: 340,
         useNativeDriver: true,
       }),
     ]).start();
@@ -118,7 +122,7 @@ export default function LoginScreen() {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={{ flex: 1 }}
     >
-      {/* Full-screen gradient background */}
+      {/* Full-screen gradient */}
       <LinearGradient
         colors={["#F0956A", "#E27289"]}
         start={{ x: 0, y: 0 }}
@@ -126,28 +130,28 @@ export default function LoginScreen() {
         style={StyleSheet.absoluteFill}
       />
 
-      <ScrollView
-        contentContainerStyle={{ flexGrow: 1 }}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>🐾 SWIPET</Text>
-          <Text style={styles.headerSub}>{t.login_welcome_back}</Text>
-        </View>
+      {/* Header — visible in the gradient strip above the card */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>🐾 SWIPET</Text>
+        <Text style={styles.headerSub}>{t.login_welcome_back}</Text>
+      </View>
 
-        {/* Animated form content — floats on gradient */}
-        <Animated.View
-          style={[
-            styles.formArea,
-            {
-              opacity: opacityAnim,
-              transform: [{ translateY: slideAnim }],
-            },
-          ]}
+      {/* White card slides up from below */}
+      <Animated.View
+        style={[
+          styles.card,
+          {
+            transform: [{ translateY: cardTranslateY }],
+            opacity: cardOpacity,
+          },
+        ]}
+      >
+        <ScrollView
+          contentContainerStyle={styles.cardScroll}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.formTitle}>{t.login_title}</Text>
+          <Text style={styles.cardTitle}>{t.login_title}</Text>
 
           <View style={{ gap: 12 }}>
             <View>
@@ -155,7 +159,7 @@ export default function LoginScreen() {
               <TextInput
                 style={styles.inputField}
                 placeholder={t.login_email_placeholder}
-                placeholderTextColor="rgba(0,0,0,0.35)"
+                placeholderTextColor={Colors.TEXT_MUTED}
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
@@ -163,13 +167,12 @@ export default function LoginScreen() {
                 autoCorrect={false}
               />
             </View>
-
             <View>
               <Text style={styles.inputLabel}>{t.login_password}</Text>
               <TextInput
                 style={styles.inputField}
                 placeholder="••••••••"
-                placeholderTextColor="rgba(0,0,0,0.35)"
+                placeholderTextColor={Colors.TEXT_MUTED}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
@@ -183,20 +186,16 @@ export default function LoginScreen() {
             <Text style={styles.forgotText}>{t.login_forgot_password}</Text>
           </TouchableOpacity>
 
-          {/* Login button */}
           <TouchableOpacity
             onPress={handleLogin}
             disabled={loading}
             style={[styles.primaryBtn, loading && { opacity: 0.7 }]}
           >
-            {loading ? (
-              <ActivityIndicator color={Colors.PRIMARY} />
-            ) : (
-              <Text style={styles.primaryBtnText}>{t.login_btn}</Text>
-            )}
+            {loading
+              ? <ActivityIndicator color={Colors.WHITE} />
+              : <Text style={styles.primaryBtnText}>{t.login_btn}</Text>}
           </TouchableOpacity>
 
-          {/* Divider */}
           <View style={styles.dividerRow}>
             <View style={styles.dividerLine} />
             <Text style={styles.dividerText}>{t.login_or}</Text>
@@ -227,8 +226,7 @@ export default function LoginScreen() {
             <Text style={styles.socialBtnText}>{t.login_google}</Text>
           </TouchableOpacity>
 
-          {/* Register link */}
-          <View style={{ alignItems: "center", marginTop: 28, marginBottom: 16 }}>
+          <View style={{ alignItems: "center", marginTop: 24, marginBottom: 8 }}>
             <TouchableOpacity onPress={() => router.push("/auth/register")}>
               <Text style={styles.registerText}>
                 {t.login_no_account}{" "}
@@ -236,91 +234,108 @@ export default function LoginScreen() {
               </Text>
             </TouchableOpacity>
           </View>
-        </Animated.View>
-      </ScrollView>
+        </ScrollView>
+      </Animated.View>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   header: {
-    paddingTop: 80,
-    paddingBottom: 36,
+    flex: 1,
     alignItems: "center",
+    justifyContent: "center",
+    paddingBottom: 24,
   },
   headerTitle: {
-    fontSize: 34,
+    fontSize: 36,
     fontWeight: "800",
     color: "#FFFFFF",
     letterSpacing: 4,
-    marginBottom: 6,
+    marginBottom: 8,
   },
   headerSub: {
     color: "rgba(255,255,255,0.85)",
     fontSize: 15,
+    fontStyle: "italic",
   },
-  formArea: {
+
+  // ── White card ────────────────────────────────────────────────────────────
+  card: {
+    height: CARD_H,
+    backgroundColor: Colors.WHITE,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 16,
+  },
+  cardScroll: {
     paddingHorizontal: 28,
-    paddingBottom: 48,
+    paddingTop: 28,
+    paddingBottom: 40,
   },
-  formTitle: {
-    fontSize: 28,
-    fontWeight: "800",
-    color: "#FFFFFF",
+  cardTitle: {
+    fontSize: 26,
+    fontWeight: "700",
+    color: Colors.TEXT,
     marginBottom: 20,
-    letterSpacing: 0.3,
   },
+
+  // ── Inputs ───────────────────────────────────────────────────────────────
   inputLabel: {
-    color: "rgba(255,255,255,0.9)",
+    color: Colors.TEXT_MUTED,
     fontSize: Sizes.FONT_SM,
+    fontWeight: "500",
     marginBottom: 6,
-    fontWeight: "600",
   },
   inputField: {
     height: Sizes.INPUT_HEIGHT,
+    borderWidth: 1.5,
+    borderColor: Colors.BORDER,
     borderRadius: Sizes.RADIUS_LG,
     paddingHorizontal: Sizes.SPACING_MD,
     fontSize: Sizes.FONT_MD,
-    color: "#1A1A1A",
-    backgroundColor: "rgba(255,255,255,0.95)",
+    color: Colors.TEXT,
+    backgroundColor: Colors.SURFACE,
   },
   forgotText: {
-    color: "rgba(255,255,255,0.75)",
+    color: Colors.TEXT_MUTED,
     fontSize: 13,
   },
+
+  // ── Primary button ────────────────────────────────────────────────────────
   primaryBtn: {
     height: Sizes.BUTTON_HEIGHT,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: Colors.PRIMARY,
     borderRadius: Sizes.RADIUS_FULL,
     alignItems: "center",
     justifyContent: "center",
     marginTop: 18,
-    shadowColor: "rgba(0,0,0,0.2)",
+    shadowColor: Colors.PRIMARY,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 1,
-    shadowRadius: 10,
-    elevation: 6,
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 4,
   },
   primaryBtnText: {
-    color: Colors.PRIMARY,
+    color: Colors.WHITE,
     fontSize: Sizes.FONT_MD,
     fontWeight: "700",
   },
+
+  // ── Divider ──────────────────────────────────────────────────────────────
   dividerRow: {
     flexDirection: "row",
     alignItems: "center",
     marginVertical: 18,
   },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: "rgba(255,255,255,0.35)",
-  },
-  dividerText: {
-    marginHorizontal: 12,
-    color: "rgba(255,255,255,0.7)",
-    fontSize: 13,
-  },
+  dividerLine: { flex: 1, height: 1, backgroundColor: Colors.BORDER },
+  dividerText: { marginHorizontal: 12, color: Colors.TEXT_MUTED, fontSize: 13 },
+
+  // ── Social buttons ────────────────────────────────────────────────────────
   socialBtn: {
     height: Sizes.BUTTON_HEIGHT,
     borderRadius: Sizes.RADIUS_FULL,
@@ -335,12 +350,8 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#FFFFFF",
   },
-  registerText: {
-    color: "rgba(255,255,255,0.8)",
-    fontSize: Sizes.FONT_SM,
-  },
-  registerLink: {
-    color: "#FFFFFF",
-    fontWeight: "800",
-  },
+
+  // ── Register link ─────────────────────────────────────────────────────────
+  registerText: { color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM },
+  registerLink:  { color: Colors.PRIMARY, fontWeight: "700" },
 });

@@ -23,8 +23,11 @@ import { Sizes } from "../constants/sizes";
 
 const { height: SCREEN_H } = Dimensions.get("window");
 
-// ── Apple logo from uploaded SVG (viewBox clips to the apple shape) ─────────
-function AppleIcon({ size = 20, color = "#FFFFFF" }: { size?: number; color?: string }) {
+// Card occupies 62 % of screen height — gradient is visible in the top 38 %
+const CARD_H = SCREEN_H * 0.62;
+
+// ── Apple logo (path extracted from uploaded Apple.svg) ──────────────────────
+function AppleIcon({ size = 19, color = "#FFFFFF" }: { size?: number; color?: string }) {
   return (
     <Svg width={size} height={size} viewBox="139.6875 0 1221 1500">
       <Path
@@ -66,27 +69,26 @@ export default function SplashLoginScreen() {
   const [password, setPassword]         = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
 
-  // ── Phase 1: splash entrance ──────────────────────────────────────────────
+  // ── Splash entrance ───────────────────────────────────────────────────────
   const fadeAnim   = useRef(new Animated.Value(0)).current;
   const scaleAnim  = useRef(new Animated.Value(0.82)).current;
   const sloganAnim = useRef(new Animated.Value(0)).current;
 
-  // ── Phase 2: logo floats up ────────────────────────────────────────────────
-  const logoUpProgress = useRef(new Animated.Value(0)).current;
-
-  // Logo interpolations – move up 20 % of screen height, shrink to 72 %
-  const logoTranslateY = logoUpProgress.interpolate({
+  // ── Logo rises to upper third during transition ───────────────────────────
+  // At progress=1: center of logo sits at ~21 % from top of screen
+  const logoProgress = useRef(new Animated.Value(0)).current;
+  const logoTranslateY = logoProgress.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, -(SCREEN_H * 0.20)],
+    outputRange: [0, -(SCREEN_H * 0.29)],
   });
-  const logoScale = logoUpProgress.interpolate({
+  const logoScale = logoProgress.interpolate({
     inputRange: [0, 1],
     outputRange: [1, 0.72],
   });
 
-  // ── Phase 2: form slides up from below ────────────────────────────────────
-  const formTranslateY = useRef(new Animated.Value(SCREEN_H)).current;
-  const formOpacity    = useRef(new Animated.Value(0)).current;
+  // ── White card slides up from below ──────────────────────────────────────
+  const cardTranslateY = useRef(new Animated.Value(CARD_H)).current;
+  const cardOpacity    = useRef(new Animated.Value(0)).current;
 
   // ── Boot sequence ─────────────────────────────────────────────────────────
   useEffect(() => {
@@ -121,24 +123,24 @@ export default function SplashLoginScreen() {
 
   const startTransition = () => {
     Animated.parallel([
-      // Logo drifts up and shrinks
-      Animated.timing(logoUpProgress, {
+      // Logo drifts up to the upper third
+      Animated.timing(logoProgress, {
         toValue: 1,
         duration: 580,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
-      // Form slides up (160 ms delay creates a "chase" feel)
+      // White card chases the logo from below (160 ms delay)
       Animated.sequence([
         Animated.delay(160),
         Animated.parallel([
-          Animated.timing(formTranslateY, {
+          Animated.timing(cardTranslateY, {
             toValue: 0,
             duration: 520,
             easing: Easing.out(Easing.cubic),
             useNativeDriver: true,
           }),
-          Animated.timing(formOpacity, {
+          Animated.timing(cardOpacity, {
             toValue: 1,
             duration: 380,
             useNativeDriver: true,
@@ -148,7 +150,7 @@ export default function SplashLoginScreen() {
     ]).start();
   };
 
-  // ── Login logic ───────────────────────────────────────────────────────────
+  // ── Login ─────────────────────────────────────────────────────────────────
   const handleLogin = async () => {
     if (!email.trim() || !password) {
       Alert.alert(t.login_err_missing, t.login_err_missing_msg);
@@ -182,7 +184,7 @@ export default function SplashLoginScreen() {
   return (
     <View style={{ flex: 1 }}>
 
-      {/* ── Full-screen gradient (always visible, also behind form) ── */}
+      {/* ── Full-screen gradient (visible above the card) ── */}
       <LinearGradient
         colors={["#F0956A", "#E27289"]}
         start={{ x: 0, y: 0 }}
@@ -210,7 +212,7 @@ export default function SplashLoginScreen() {
         ))}
       </View>
 
-      {/* ── Logo — centered in splash, floats up on transition ── */}
+      {/* ── Logo — centered in splash, rises to upper third on transition ── */}
       <Animated.View
         pointerEvents="none"
         style={[
@@ -239,22 +241,23 @@ export default function SplashLoginScreen() {
         </Animated.Text>
       </Animated.View>
 
-      {/* ── Form — slides up from below, floats on gradient (no white card) ── */}
+      {/* ── White login card — slides up from below ── */}
       <Animated.View
         style={[
-          styles.formContainer,
+          styles.card,
           {
-            transform: [{ translateY: formTranslateY }],
-            opacity: formOpacity,
+            transform: [{ translateY: cardTranslateY }],
+            opacity: cardOpacity,
           },
         ]}
       >
         <ScrollView
-          contentContainerStyle={styles.formScroll}
+          contentContainerStyle={styles.cardScroll}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.formTitle}>{t.login_title}</Text>
+          {/* Title */}
+          <Text style={styles.cardTitle}>{t.login_title}</Text>
 
           {/* ── Fields ── */}
           <View style={{ gap: 12 }}>
@@ -263,7 +266,7 @@ export default function SplashLoginScreen() {
               <TextInput
                 style={styles.inputField}
                 placeholder={t.login_email_placeholder}
-                placeholderTextColor="rgba(0,0,0,0.35)"
+                placeholderTextColor={Colors.TEXT_MUTED}
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
@@ -271,13 +274,12 @@ export default function SplashLoginScreen() {
                 autoCorrect={false}
               />
             </View>
-
             <View>
               <Text style={styles.inputLabel}>{t.login_password}</Text>
               <TextInput
                 style={styles.inputField}
                 placeholder="••••••••"
-                placeholderTextColor="rgba(0,0,0,0.35)"
+                placeholderTextColor={Colors.TEXT_MUTED}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
@@ -287,25 +289,22 @@ export default function SplashLoginScreen() {
             </View>
           </View>
 
-          {/* Forgot password */}
           <TouchableOpacity style={{ alignSelf: "flex-end", marginTop: 10 }}>
             <Text style={styles.forgotText}>{t.login_forgot_password}</Text>
           </TouchableOpacity>
 
-          {/* Login button */}
+          {/* Primary login button */}
           <TouchableOpacity
             onPress={handleLogin}
             disabled={loginLoading}
             style={[styles.primaryBtn, loginLoading && { opacity: 0.7 }]}
           >
-            {loginLoading ? (
-              <ActivityIndicator color={Colors.PRIMARY} />
-            ) : (
-              <Text style={styles.primaryBtnText}>{t.login_btn}</Text>
-            )}
+            {loginLoading
+              ? <ActivityIndicator color={Colors.WHITE} />
+              : <Text style={styles.primaryBtnText}>{t.login_btn}</Text>}
           </TouchableOpacity>
 
-          {/* ── Divider ── */}
+          {/* Divider */}
           <View style={styles.dividerRow}>
             <View style={styles.dividerLine} />
             <Text style={styles.dividerText}>{t.login_or}</Text>
@@ -339,7 +338,7 @@ export default function SplashLoginScreen() {
           {/* Register link */}
           <TouchableOpacity
             onPress={() => router.push("/auth/register")}
-            style={{ alignItems: "center", marginTop: 28 }}
+            style={{ alignItems: "center", marginTop: 24 }}
           >
             <Text style={styles.registerText}>
               {t.login_no_account}{" "}
@@ -354,6 +353,7 @@ export default function SplashLoginScreen() {
 
 // ─────────────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
+
   // ── Language toggle ──────────────────────────────────────────────────────
   langToggleContainer: {
     position: "absolute",
@@ -392,65 +392,73 @@ const styles = StyleSheet.create({
     fontWeight: "300", letterSpacing: 1.5, fontStyle: "italic",
   },
 
-  // ── Form container (no card background — gradient shows through) ──────────
-  formContainer: {
+  // ── White card ────────────────────────────────────────────────────────────
+  card: {
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    // Fixed height so it never grows and covers the logo above
-    height: SCREEN_H * 0.58,
+    height: CARD_H,
+    backgroundColor: Colors.WHITE,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    // Subtle upward shadow so the card "lifts" from the gradient
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 16,
   },
-  formScroll: {
+  cardScroll: {
     paddingHorizontal: 28,
-    paddingTop: 8,
-    paddingBottom: 44,
+    paddingTop: 28,
+    paddingBottom: 40,
   },
-  formTitle: {
-    fontSize: 28,
-    fontWeight: "800",
-    color: "#FFFFFF",
+  cardTitle: {
+    fontSize: 26,
+    fontWeight: "700",
+    color: Colors.TEXT,
     marginBottom: 20,
-    letterSpacing: 0.3,
   },
 
-  // ── Inputs ───────────────────────────────────────────────────────────────
+  // ── Form inputs ──────────────────────────────────────────────────────────
   inputLabel: {
-    color: "rgba(255,255,255,0.9)",
+    color: Colors.TEXT_MUTED,
     fontSize: Sizes.FONT_SM,
+    fontWeight: "500",
     marginBottom: 6,
-    fontWeight: "600",
   },
   inputField: {
     height: Sizes.INPUT_HEIGHT,
-    borderWidth: 0,
+    borderWidth: 1.5,
+    borderColor: Colors.BORDER,
     borderRadius: Sizes.RADIUS_LG,
     paddingHorizontal: Sizes.SPACING_MD,
     fontSize: Sizes.FONT_MD,
-    color: "#1A1A1A",
-    backgroundColor: "rgba(255,255,255,0.95)",
+    color: Colors.TEXT,
+    backgroundColor: Colors.SURFACE,
   },
   forgotText: {
-    color: "rgba(255,255,255,0.75)",
+    color: Colors.TEXT_MUTED,
     fontSize: 13,
   },
 
-  // ── Login button (white pill with gradient text color) ───────────────────
+  // ── Primary button ────────────────────────────────────────────────────────
   primaryBtn: {
     height: Sizes.BUTTON_HEIGHT,
-    backgroundColor: "rgba(255,255,255,1)",
+    backgroundColor: Colors.PRIMARY,
     borderRadius: Sizes.RADIUS_FULL,
     alignItems: "center",
     justifyContent: "center",
     marginTop: 18,
-    shadowColor: "rgba(0,0,0,0.2)",
+    shadowColor: Colors.PRIMARY,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 1,
-    shadowRadius: 10,
-    elevation: 6,
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 4,
   },
   primaryBtnText: {
-    color: Colors.PRIMARY,
+    color: Colors.WHITE,
     fontSize: Sizes.FONT_MD,
     fontWeight: "700",
   },
@@ -464,15 +472,15 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: "rgba(255,255,255,0.35)",
+    backgroundColor: Colors.BORDER,
   },
   dividerText: {
     marginHorizontal: 12,
-    color: "rgba(255,255,255,0.7)",
+    color: Colors.TEXT_MUTED,
     fontSize: 13,
   },
 
-  // ── Social buttons (black — both Apple and Google) ───────────────────────
+  // ── Social buttons (black pill) ───────────────────────────────────────────
   socialBtn: {
     height: Sizes.BUTTON_HEIGHT,
     borderRadius: Sizes.RADIUS_FULL,
@@ -490,11 +498,11 @@ const styles = StyleSheet.create({
 
   // ── Register link ─────────────────────────────────────────────────────────
   registerText: {
-    color: "rgba(255,255,255,0.8)",
+    color: Colors.TEXT_MUTED,
     fontSize: Sizes.FONT_SM,
   },
   registerLink: {
-    color: "#FFFFFF",
-    fontWeight: "800",
+    color: Colors.PRIMARY,
+    fontWeight: "700",
   },
 });
