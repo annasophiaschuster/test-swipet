@@ -9,7 +9,9 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  Image,
 } from "react-native";
+import Svg, { Path } from "react-native-svg";
 import { LinearGradient } from "expo-linear-gradient";
 import { Link, router } from "expo-router";
 import { supabase } from "../../lib/supabase";
@@ -18,6 +20,71 @@ import { Sizes } from "../../constants/sizes";
 import { useLanguage } from "../../contexts/LanguageContext";
 
 type Role = "adoptant" | "tierhalter" | "tierheim";
+
+// ── Role Icons ────────────────────────────────────────────────────────────────
+
+function HeartIcon({ size = 36, color = Colors.PRIMARY }: { size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 187.5 187.499992">
+      <Path
+        fill={color}
+        d={
+          "M 93.578125 182.566406 C 86.359375 179.109375 79.707031 175.324219 73.59375 171.28125 " +
+          "C 5.46875 119.207031 0.0117188 50.28125 23.691406 34.460938 " +
+          "C 65.183594 6.742188 90.996094 55.433594 90.996094 55.433594 " +
+          "C 90.996094 55.433594 112.628906 4.382812 157.011719 32.273438 " +
+          "C 186.691406 50.910156 175.246094 143.457031 93.578125 182.566406 Z"
+        }
+      />
+    </Svg>
+  );
+}
+
+function PawsIcon({ size = 36 }: { size?: number }) {
+  return (
+    <Image
+      source={require("../../assets/icon-paws.png")}
+      style={{ width: size, height: size }}
+      resizeMode="contain"
+    />
+  );
+}
+
+function HouseIcon({ size = 36, color = Colors.PRIMARY }: { size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 187.5 187.499992">
+      <Path
+        fill={color}
+        d={
+          "M 94.875 16.589844 C 92.644531 16.589844 90.511719 17.421875 88.96875 18.898438 " +
+          "L 51.3125 54.882812 L 51.273438 51.128906 C 51.230469 47.027344 47.578125 43.726562 43.101562 43.726562 " +
+          "C 43.074219 43.726562 43.046875 43.726562 43.023438 43.730469 " +
+          "C 38.507812 43.765625 34.882812 47.144531 34.925781 51.269531 " +
+          "L 35.121094 70.355469 L 12.210938 92.25 " +
+          "C 9.089844 95.234375 9.203125 99.960938 12.464844 102.816406 " +
+          "C 13.683594 103.878906 15.171875 104.53125 16.714844 104.777344 " +
+          "C 17.296875 103.566406 18.09375 102.457031 19.085938 101.511719 " +
+          "L 87.269531 36.441406 C 89.4375 34.371094 92.222656 33.34375 95.003906 33.34375 " +
+          "C 97.902344 33.34375 100.792969 34.457031 102.984375 36.679688 " +
+          "L 171.316406 105.972656 C 172.472656 105.667969 173.578125 105.121094 174.53125 104.332031 " +
+          "C 177.875 101.558594 178.128906 96.832031 175.09375 93.777344 " +
+          "L 100.929688 19.042969 C 99.40625 17.507812 97.253906 16.617188 94.984375 16.589844 " +
+          "C 94.949219 16.589844 94.910156 16.589844 94.875 16.589844 Z " +
+          "M 95.007812 40.792969 L 26.820312 105.863281 L 26.820312 172.414062 " +
+          "L 76.15625 172.414062 L 76.15625 120.40625 L 114.742188 120.40625 " +
+          "L 114.742188 172.414062 L 164.078125 172.414062 L 164.078125 110.839844 Z"
+        }
+      />
+    </Svg>
+  );
+}
+
+function RoleIcon({ roleKey, size, active }: { roleKey: Role; size: number; active: boolean }) {
+  const color = active ? Colors.PRIMARY : Colors.TEXT_MUTED;
+  if (roleKey === "adoptant")   return <HeartIcon size={size} color={color} />;
+  if (roleKey === "tierhalter") return <PawsIcon size={size} />;
+  return <HouseIcon size={size} color={color} />;
+}
 
 export default function RegisterScreen() {
   const { t } = useLanguage();
@@ -29,9 +96,9 @@ export default function RegisterScreen() {
   const [loading, setLoading] = useState(false);
 
   const ROLES = [
-    { key: "adoptant" as Role,    label: t.register_role_adoptant_label,   icon: "❤️", description: t.register_role_adoptant_desc },
-    { key: "tierhalter" as Role,  label: t.register_role_tierhalter_label, icon: "🐾", description: t.register_role_tierhalter_desc },
-    { key: "tierheim" as Role,    label: t.register_role_tierheim_label,   icon: "🏠", description: t.register_role_tierheim_desc },
+    { key: "adoptant" as Role,    label: t.register_role_adoptant_label,   description: t.register_role_adoptant_desc },
+    { key: "tierhalter" as Role,  label: t.register_role_tierhalter_label, description: t.register_role_tierhalter_desc },
+    { key: "tierheim" as Role,    label: t.register_role_tierheim_label,   description: t.register_role_tierheim_desc },
   ];
 
   const handleRegister = async () => {
@@ -125,12 +192,14 @@ export default function RegisterScreen() {
                   >
                     <View
                       style={{
-                        width: 52, height: 52, borderRadius: 26,
-                        backgroundColor: role === r.key ? Colors.PRIMARY : Colors.BORDER,
+                        width: 58, height: 58, borderRadius: 14,
+                        backgroundColor: "#FFFFFF",
+                        borderWidth: 2,
+                        borderColor: role === r.key ? Colors.PRIMARY : Colors.BORDER,
                         alignItems: "center", justifyContent: "center",
                       }}
                     >
-                      <Text style={{ fontSize: 24 }}>{r.icon}</Text>
+                      <RoleIcon roleKey={r.key} size={34} active={role === r.key} />
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={{ fontSize: Sizes.FONT_MD, fontWeight: "700", color: Colors.TEXT }}>
@@ -234,9 +303,7 @@ export default function RegisterScreen() {
                   gap: 8,
                 }}
               >
-                <Text style={{ fontSize: 20 }}>
-                  {ROLES.find((r) => r.key === role)?.icon}
-                </Text>
+                {role && <RoleIcon roleKey={role} size={22} active={true} />}
                 <Text style={{ color: Colors.PRIMARY, fontWeight: "600", flex: 1 }}>
                   {ROLES.find((r) => r.key === role)?.label}
                 </Text>
