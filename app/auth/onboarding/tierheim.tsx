@@ -69,14 +69,14 @@ export default function TierheimOnboarding() {
     const loop = Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, {
-          toValue: 1.05,
-          duration: 900,
+          toValue: 1.02,
+          duration: 1100,
           useNativeDriver: true,
           easing: Easing.inOut(Easing.ease),
         }),
         Animated.timing(pulseAnim, {
           toValue: 1,
-          duration: 900,
+          duration: 1100,
           useNativeDriver: true,
           easing: Easing.inOut(Easing.ease),
         }),
