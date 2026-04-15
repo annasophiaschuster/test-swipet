@@ -1,12 +1,20 @@
 import { Tabs } from "expo-router";
 import { Colors } from "../../constants/colors";
 import { Sizes } from "../../constants/sizes";
-import { Text, View } from "react-native";
+import { Image, View } from "react-native";
 
-function TabIcon({ emoji, focused }: { emoji: string; focused: boolean }) {
+function TabIcon({ source, focused }: { source: any; focused: boolean }) {
   return (
     <View style={{ alignItems: "center", justifyContent: "center", paddingTop: 4 }}>
-      <Text style={{ fontSize: focused ? 26 : 23 }}>{emoji}</Text>
+      <Image
+        source={source}
+        style={{
+          width: 32,
+          height: 32,
+          resizeMode: "contain",
+          tintColor: focused ? Colors.SECONDARY : Colors.PRIMARY,
+        }}
+      />
     </View>
   );
 }
@@ -36,19 +44,19 @@ export default function TierheimLayout() {
     >
       <Tabs.Screen
         name="dashboard"
-        options={{ tabBarIcon: ({ focused }) => <TabIcon emoji="🏠" focused={focused} /> }}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon source={require("../../assets/tab-haus.png")} focused={focused} /> }}
       />
       <Tabs.Screen
         name="hunde"
-        options={{ tabBarIcon: ({ focused }) => <TabIcon emoji="🐕" focused={focused} /> }}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon source={require("../../assets/tab-pfote.png")} focused={focused} /> }}
       />
       <Tabs.Screen
         name="anfragen"
-        options={{ tabBarIcon: ({ focused }) => <TabIcon emoji="💬" focused={focused} /> }}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon source={require("../../assets/tab-chat.png")} focused={focused} /> }}
       />
       <Tabs.Screen
         name="profil"
-        options={{ tabBarIcon: ({ focused }) => <TabIcon emoji="👤" focused={focused} /> }}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon source={require("../../assets/tab-profil.png")} focused={focused} /> }}
       />
 
       {/* Hidden routes */}
