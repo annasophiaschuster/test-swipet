@@ -2,32 +2,10 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "Expo (Metro Bundler)",
-      "runtimeExecutable": "/opt/homebrew/bin/node",
-      "runtimeArgs": ["node_modules/.bin/expo", "start", "--clear"],
-      "port": 8081,
-      "autoPort": false
-    },
-    {
       "name": "Expo iOS",
-      "runtimeExecutable": "/opt/homebrew/bin/node",
-      "runtimeArgs": ["node_modules/.bin/expo", "start", "--ios", "--localhost", "--clear"],
-      "port": 8081,
-      "autoPort": false
-    },
-    {
-      "name": "Expo Android",
-      "runtimeExecutable": "/opt/homebrew/bin/node",
-      "runtimeArgs": ["node_modules/.bin/expo", "start", "--android"],
-      "port": 8081,
-      "autoPort": false
-    },
-    {
-      "name": "Expo Web",
-      "runtimeExecutable": "/opt/homebrew/bin/node",
-      "runtimeArgs": ["node_modules/.bin/expo", "start", "--web"],
-      "port": 8081,
-      "autoPort": false
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["expo", "start", "--port", "8082"],
+      "port": 8082
     }
   ]
 }
