@@ -10,6 +10,7 @@ import {
   Alert,
 } from "react-native";
 import { router, useFocusEffect } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
 import { supabase } from "../../lib/supabase";
 import { Colors } from "../../constants/colors";
 import { Sizes } from "../../constants/sizes";
@@ -26,6 +27,8 @@ interface Pet {
   status: string;
   created_at: string;
   pet_photos: { url: string; position: number }[];
+  interessenten: number;
+  neue_anfragen: number;
 }
 
 function formatAlter(jahre?: number | null, monate?: number | null, puppy?: string, year?: string, years?: string, months?: string): string {
@@ -54,6 +57,23 @@ export default function TierheimHundeScreen() {
     }, [])
   );
 
+  const enrichWithStats = async (rawPets: any[]): Promise<Pet[]> => {
+    return Promise.all(
+      rawPets.map(async (pet) => {
+        const { count: totalCount } = await supabase
+          .from("adoption_matches")
+          .select("id", { count: "exact", head: true })
+          .eq("pet_id", pet.id);
+        const { count: pendingCount } = await supabase
+          .from("adoption_matches")
+          .select("id", { count: "exact", head: true })
+          .eq("pet_id", pet.id)
+          .eq("status", "pending");
+        return { ...pet, interessenten: totalCount ?? 0, neue_anfragen: pendingCount ?? 0 };
+      })
+    );
+  };
+
   const loadPets = async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
     else setLoading(true);
@@ -68,7 +88,8 @@ export default function TierheimHundeScreen() {
           .from("pets")
           .select("*, pet_photos(url, position)")
           .order("created_at", { ascending: false });
-        setPets(data ?? []);
+        const enriched = await enrichWithStats(data ?? []);
+        setPets(enriched);
         return;
       }
 
@@ -81,7 +102,8 @@ export default function TierheimHundeScreen() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setPets(data ?? []);
+      const enriched = await enrichWithStats(data ?? []);
+      setPets(enriched);
     } catch (e) {
       console.error("TierheimHundeScreen.loadPets", e);
     } finally {
@@ -212,13 +234,17 @@ export default function TierheimHundeScreen() {
             const coverPhoto = sortedPhotos[0]?.url ?? null;
 
             return (
-              <View style={{
-                backgroundColor: Colors.WHITE, borderRadius: Sizes.RADIUS_LG,
-                borderWidth: 1, borderColor: Colors.BORDER,
-                shadowColor: "#000", shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: 0.04, shadowRadius: 4, elevation: 1,
-                overflow: "hidden",
-              }}>
+              <TouchableOpacity
+                activeOpacity={0.85}
+                onPress={() => router.push({ pathname: "/tierheim/hund/[id]", params: { id: item.id, name: item.name } })}
+                style={{
+                  backgroundColor: Colors.WHITE, borderRadius: Sizes.RADIUS_LG,
+                  borderWidth: 1, borderColor: Colors.BORDER,
+                  shadowColor: "#000", shadowOffset: { width: 0, height: 1 },
+                  shadowOpacity: 0.04, shadowRadius: 4, elevation: 1,
+                  overflow: "hidden",
+                }}
+              >
                 <View style={{ flexDirection: "row", padding: 14, alignItems: "flex-start" }}>
                   {coverPhoto ? (
                     <Image
@@ -255,6 +281,29 @@ export default function TierheimHundeScreen() {
                     <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM }}>
                       {[item.rasse, formatAlter(item.alter_jahre, item.alter_monate, t.tierheim_dogs_puppy, t.tierheim_dogs_year, t.tierheim_dogs_years, t.tierheim_dogs_months)].filter(Boolean).join(" · ")}
                     </Text>
+                    {/* Stats badges */}
+                    <View style={{ flexDirection: "row", gap: 6, marginTop: 6 }}>
+                      <View style={{
+                        paddingHorizontal: 8, paddingVertical: 3,
+                        borderRadius: Sizes.RADIUS_FULL,
+                        backgroundColor: Colors.PRIMARY + "18",
+                      }}>
+                        <Text style={{ fontSize: 11, fontWeight: "600", color: Colors.PRIMARY }}>
+                          {item.interessenten} {t.tierheim_dogs_interessenten}
+                        </Text>
+                      </View>
+                      {item.neue_anfragen > 0 && (
+                        <View style={{
+                          paddingHorizontal: 8, paddingVertical: 3,
+                          borderRadius: Sizes.RADIUS_FULL,
+                          backgroundColor: "#FFF3CD",
+                        }}>
+                          <Text style={{ fontSize: 11, fontWeight: "600", color: "#856404" }}>
+                            {item.neue_anfragen} {t.tierheim_dogs_neue_anfragen}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
                   </View>
                 </View>
 
@@ -286,7 +335,7 @@ export default function TierheimHundeScreen() {
                     </TouchableOpacity>
                   )}
                 </View>
-              </View>
+              </TouchableOpacity>
             );
           }}
         />
