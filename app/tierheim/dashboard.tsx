@@ -8,6 +8,7 @@ import {
   RefreshControl,
   Image,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { Colors } from "../../constants/colors";
@@ -33,6 +34,15 @@ interface PetItem {
   photo: string | null;
 }
 
+interface PendingMatch {
+  id: string;
+  pet_id: string;
+  created_at: string;
+  pet_name: string;
+  adoptant_name: string | null;
+  adoptant_city: string | null;
+}
+
 const STATUS_COLOR: Record<string, string> = {
   verfuegbar: Colors.SUCCESS,
   reserviert: Colors.WARNING,
@@ -46,16 +56,26 @@ export default function TierheimDashboard() {
     reserviert: t.tierheim_status_reserved,
     vermittelt: t.tierheim_status_placed,
   };
+  const formatTimeAgo = (iso: string): string => {
+    const d = new Date(iso);
+    const now = new Date();
+    const diffDays = Math.floor((now.getTime() - d.getTime()) / 86400000);
+    if (diffDays === 0) return d.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+    if (diffDays === 1) return "Gestern";
+    return d.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" });
+  };
+
   const formatAlter = (jahre?: number | null, monate?: number | null): string => {
     if (jahre && jahre >= 1) return jahre === 1 ? `1 ${t.tierheim_age_year}` : `${jahre} ${t.tierheim_age_years}`;
     if (monate) return `${monate} ${t.tierheim_age_months}`;
     return t.tierheim_age_puppy;
   };
-  const [stats, setStats]       = useState<DashboardStats | null>(null);
-  const [pets, setPets]         = useState<PetItem[]>([]);
-  const [loading, setLoading]   = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [isGuest, setIsGuest]   = useState(false);
+  const [stats, setStats]             = useState<DashboardStats | null>(null);
+  const [pets, setPets]               = useState<PetItem[]>([]);
+  const [pendingMatches, setPendingMatches] = useState<PendingMatch[]>([]);
+  const [loading, setLoading]         = useState(true);
+  const [refreshing, setRefreshing]   = useState(false);
+  const [isGuest, setIsGuest]         = useState(false);
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
 
   useFocusEffect(
@@ -102,11 +122,29 @@ export default function TierheimDashboard() {
           totalMatches: 12,
           unreadMessages: 3,
         });
+        setPendingMatches([
+          {
+            id: "demo-match-1",
+            pet_id: petList[0]?.id ?? "demo",
+            created_at: new Date(Date.now() - 3600000).toISOString(),
+            pet_name: petList[0]?.name ?? "Buddy",
+            adoptant_name: "Anna Müller",
+            adoptant_city: "München",
+          },
+          {
+            id: "demo-match-2",
+            pet_id: petList[1]?.id ?? "demo",
+            created_at: new Date(Date.now() - 7200000).toISOString(),
+            pet_name: petList[1]?.name ?? "Max",
+            adoptant_name: "Jonas Weber",
+            adoptant_city: "Berlin",
+          },
+        ]);
         return;
       }
 
       // Logged in shelter
-      const [shelterRes, petsRes, matchesRes] = await Promise.all([
+      const [shelterRes, petsRes, matchesRes, pendingRes] = await Promise.all([
         supabase.from("shelter_profiles").select("org_name").eq("id", user.id).single(),
         supabase
           .from("pets")
@@ -114,6 +152,13 @@ export default function TierheimDashboard() {
           .eq("shelter_id", user.id)
           .order("created_at", { ascending: false }),
         supabase.from("adoption_matches").select("id").eq("shelter_id", user.id),
+        supabase
+          .from("adoption_matches")
+          .select("id, pet_id, created_at, pet:pets(name), adoptant:profiles!adoptant_id(name, city)")
+          .eq("shelter_id", user.id)
+          .eq("status", "pending")
+          .order("created_at", { ascending: false })
+          .limit(5),
       ]);
 
       const petList: PetItem[] = (petsRes.data ?? []).map((p: any) => {
@@ -141,7 +186,17 @@ export default function TierheimDashboard() {
         unread = count ?? 0;
       }
 
+      const pendingList: PendingMatch[] = (pendingRes.data ?? []).map((m: any) => ({
+        id: m.id,
+        pet_id: m.pet_id ?? "",
+        created_at: m.created_at,
+        pet_name: m.pet?.name ?? "Unbekannt",
+        adoptant_name: m.adoptant?.name ?? null,
+        adoptant_city: m.adoptant?.city ?? null,
+      }));
+
       setPets(petList);
+      setPendingMatches(pendingList);
       setStats({
         orgName: shelterRes.data?.org_name ?? "Meine Organisation",
         verfuegbar: petList.filter((p) => p.status === "verfuegbar").length,
@@ -182,10 +237,12 @@ export default function TierheimDashboard() {
       }
     >
       {/* Header with stats */}
-      <View style={{
-        paddingTop: 60, paddingHorizontal: Sizes.SPACING_LG, paddingBottom: 24,
-        backgroundColor: Colors.PRIMARY,
-      }}>
+      <LinearGradient
+        colors={[Colors.SECONDARY, Colors.PRIMARY]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={{ paddingTop: 60, paddingHorizontal: Sizes.SPACING_LG, paddingBottom: 24 }}
+      >
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
           <View>
             <TouchableOpacity
@@ -219,7 +276,7 @@ export default function TierheimDashboard() {
           <StatCard value={stats?.reserviert ?? 0} label={t.tierheim_status_reserved} />
           <StatCard value={stats?.vermittelt ?? 0} label={t.tierheim_status_placed} />
         </View>
-      </View>
+      </LinearGradient>
 
       {/* Quick Actions */}
       <View style={{ padding: Sizes.SPACING_LG, paddingBottom: 8 }}>
@@ -247,6 +304,67 @@ export default function TierheimDashboard() {
             onPress={() => router.push("/tierheim/anfragen")}
           />
         </View>
+      </View>
+
+      {/* Pending Requests */}
+      <View style={{ paddingHorizontal: Sizes.SPACING_LG, paddingTop: 8, paddingBottom: 4 }}>
+        <Text style={{
+          fontSize: 11, fontWeight: "700", color: Colors.PRIMARY,
+          textTransform: "uppercase", letterSpacing: 1, marginBottom: 10,
+        }}>
+          {t.tierheim_dashboard_pending_requests}
+        </Text>
+        {pendingMatches.length === 0 ? (
+          <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED, textAlign: "center", paddingVertical: 8 }}>
+            {t.tierheim_dashboard_no_pending}
+          </Text>
+        ) : (
+          <View style={{ gap: 8 }}>
+            {pendingMatches.map((match) => (
+              <View
+                key={match.id}
+                style={{
+                  flexDirection: "row", alignItems: "center",
+                  backgroundColor: Colors.WHITE, borderRadius: Sizes.RADIUS_LG,
+                  padding: 14, borderWidth: 1, borderColor: Colors.BORDER,
+                  shadowColor: "#000", shadowOffset: { width: 0, height: 1 },
+                  shadowOpacity: 0.04, shadowRadius: 4, elevation: 1,
+                }}
+              >
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 15, fontWeight: "700", color: Colors.TEXT }}>{match.pet_name}</Text>
+                  <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, marginTop: 2 }}>
+                    {match.adoptant_name ?? "Unbekannt"}
+                    {match.adoptant_city ? ` · ${match.adoptant_city}` : ""}
+                  </Text>
+                  <Text style={{ fontSize: 11, color: Colors.TEXT_MUTED, marginTop: 2 }}>
+                    {formatTimeAgo(match.created_at)}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  onPress={() => router.push({
+                    pathname: "/tierheim/chat/[matchId]",
+                    params: {
+                      matchId: match.id,
+                      petName: match.pet_name,
+                      petPhoto: "",
+                      adoptantName: match.adoptant_name ?? "",
+                      petId: match.pet_id,
+                      adoptantId: "",
+                    },
+                  })}
+                  style={{
+                    paddingHorizontal: 14, paddingVertical: 7,
+                    borderRadius: Sizes.RADIUS_FULL,
+                    backgroundColor: Colors.PRIMARY,
+                  }}
+                >
+                  <Text style={{ fontSize: 13, fontWeight: "700", color: Colors.WHITE }}>Ansehen →</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
+        )}
       </View>
 
       {/* All Pets */}
