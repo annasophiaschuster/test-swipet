@@ -109,7 +109,6 @@ export default function TierheimProfilScreen() {
   const { t } = useLanguage();
 
   const [profile, setProfile]     = useState<ShelterProfile | null>(null);
-  const [hundeCount, setHundeCount] = useState<number>(0);
   const [loading, setLoading]     = useState(true);
   const [isGuest, setIsGuest]     = useState(false);
   const [editMode, setEditMode]   = useState(false);
@@ -141,7 +140,6 @@ export default function TierheimProfilScreen() {
       if (!user) {
         setIsGuest(true);
         setProfile({ ...DEMO_PROFILE, org_name: t.tierheim_demo_name, beschreibung: t.tierheim_demo_desc });
-        setHundeCount(5);
         return;
       }
 
@@ -162,14 +160,6 @@ export default function TierheimProfilScreen() {
         offnungszeiten: null, instagram: null, richtlinien: null,
       };
       setProfile(p);
-
-      // Count available dogs
-      const { count } = await supabase
-        .from("pets")
-        .select("id", { count: "exact", head: true })
-        .eq("shelter_id", user.id)
-        .eq("status", "verfuegbar");
-      setHundeCount(count ?? 0);
     } catch (e) {
       console.error("TierheimProfil.loadProfile", e);
     } finally {
@@ -391,20 +381,6 @@ export default function TierheimProfilScreen() {
           <View style={{ marginTop: 8, paddingHorizontal: 14, paddingVertical: 4, backgroundColor: "#FFF0F3", borderRadius: Sizes.RADIUS_FULL }}>
             <Text style={{ color: Colors.PRIMARY, fontWeight: "600", fontSize: Sizes.FONT_SM }}>{t.tierheim_profil_role}</Text>
           </View>
-        </View>
-
-        {/* Stats Row */}
-        <View style={{ flexDirection: "row", gap: 12, marginBottom: 20 }}>
-          <View style={{ flex: 1, backgroundColor: Colors.SURFACE, borderRadius: 16, padding: 16, alignItems: "center" }}>
-            <Text style={{ fontSize: 28, fontWeight: "800", color: Colors.PRIMARY }}>{hundeCount}</Text>
-            <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, marginTop: 2, textAlign: "center" }}>{t.tierheim_profil_dogs_available}</Text>
-          </View>
-          {profile?.gegruendet_seit && (
-            <View style={{ flex: 1, backgroundColor: Colors.SURFACE, borderRadius: 16, padding: 16, alignItems: "center" }}>
-              <Text style={{ fontSize: 28, fontWeight: "800", color: Colors.PRIMARY }}>{profile.gegruendet_seit}</Text>
-              <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, marginTop: 2, textAlign: "center" }}>{t.tierheim_profil_founded}</Text>
-            </View>
-          )}
         </View>
 
         {/* Description */}
