@@ -89,20 +89,6 @@ export default function TierheimOnboarding() {
   // ── Navigation ──────────────────────────────────────────────────────────────
 
   const next = () => {
-    if (step === 2) {
-      if (!orgTyp)                  { Alert.alert(t.err_generic, t.onb_th_err_orgtyp);       return; }
-      if (!orgName.trim())          { Alert.alert(t.err_generic, t.onb_th_err_orgname);      return; }
-      if (!ansprechpartner.trim())  { Alert.alert(t.err_generic, t.onb_th_err_contact);      return; }
-      if (!kontaktEmail.trim())     { Alert.alert(t.err_generic, t.onb_th_err_kontaktemail); return; }
-      if (!telefon.trim())          { Alert.alert(t.err_generic, t.onb_th_err_phone);        return; }
-      if (!adresse.trim())          { Alert.alert(t.err_generic, t.onb_th_err_address);      return; }
-      if (!plz.trim())              { Alert.alert(t.err_generic, t.onb_th_err_plz);          return; }
-      if (!stadt.trim())            { Alert.alert(t.err_generic, t.onb_th_err_city);         return; }
-    }
-    if (step === 3 && !verifyUri) {
-      Alert.alert(t.err_generic, t.onb_th_new_step5_required);
-      return;
-    }
     setStep((s) => Math.min(s + 1, TOTAL_STEPS));
   };
 

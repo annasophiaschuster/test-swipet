@@ -58,30 +58,9 @@ export default function TierhalterOnboarding() {
   const goNext = () => setStep((s) => Math.min(s + 1, TOTAL_STEPS));
   const goBack = () => setStep((s) => Math.max(s - 1, 1));
 
-  const validateStep3 = () => {
-    if (!datenschutz) { Alert.alert("Datenschutz", t.onb_hs_privacy_required); return false; }
-    return true;
-  };
-
-  const validateStep4 = () => {
-    if (!vorname.trim() || !geburtsdatum.trim() || !plz.trim()) {
-      Alert.alert("Pflichtfeld", t.onb_hs_info_required); return false;
-    }
-    const parts = geburtsdatum.split(".");
-    if (parts.length === 3) {
-      const dob = new Date(+parts[2], +parts[1] - 1, +parts[0]);
-      const age = new Date().getFullYear() - dob.getFullYear();
-      if (age < 18) { Alert.alert("Alter", t.onb_hs_info_age_error); return false; }
-    }
-    return true;
-  };
-
-  const validateStep6 = () => {
-    if (!dogName.trim() || dogPhotoUris.length === 0) {
-      Alert.alert("Pflichtfeld", t.onb_hb_dog_required); return false;
-    }
-    return true;
-  };
+  const validateStep3 = () => true;
+  const validateStep4 = () => true;
+  const validateStep6 = () => true;
 
   const toggleTag = (tag: string) => {
     if (dogTags.includes(tag)) {

@@ -60,23 +60,7 @@ export default function AdoptantOnboarding() {
   const goBack = () => setStep((s) => Math.max(s - 1, 1));
 
   // ── Step 2: Validate personal info ──
-  const validateStep2 = () => {
-    if (!vorname.trim() || !geburtsdatum.trim() || !plz.trim()) {
-      Alert.alert("Pflichtfeld", t.onb_hs_info_required);
-      return false;
-    }
-    const parts = geburtsdatum.split(".");
-    if (parts.length === 3) {
-      const dob = new Date(+parts[2], +parts[1] - 1, +parts[0]);
-      const today = new Date();
-      const age = today.getFullYear() - dob.getFullYear();
-      if (age < 18) {
-        Alert.alert("Alter", t.onb_hs_info_age_error);
-        return false;
-      }
-    }
-    return true;
-  };
+  const validateStep2 = () => true;
 
   // ── Pick avatar ──
   const pickAvatar = async () => {
