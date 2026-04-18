@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   Alert,
+  ScrollView,
 } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import { supabase } from "../../lib/supabase";
@@ -31,6 +32,11 @@ interface AnfrageItem {
   last_message_at: string | null;
   last_message_is_mine: boolean;
   unread_count: number;
+}
+
+interface DogFilter {
+  id: string;
+  name: string;
 }
 
 function formatTime(iso: string | null, yesterday: string, lang: string): string {
@@ -61,6 +67,8 @@ export default function TierheimAnfragenScreen() {
       last_message_at: new Date(Date.now() - 3600000).toISOString(),
       last_message_is_mine: false,
       unread_count: 2,
+      pet_id: "demo-pet-1",
+      adoptant_id: "demo-adoptant-1",
     },
     {
       id: "demo-2",
@@ -75,6 +83,8 @@ export default function TierheimAnfragenScreen() {
       last_message_at: new Date(Date.now() - 86400000).toISOString(),
       last_message_is_mine: false,
       unread_count: 0,
+      pet_id: "demo-pet-2",
+      adoptant_id: "demo-adoptant-2",
     },
     {
       id: "demo-3",
@@ -89,7 +99,14 @@ export default function TierheimAnfragenScreen() {
       last_message_at: null,
       last_message_is_mine: false,
       unread_count: 0,
+      pet_id: "demo-pet-1",
+      adoptant_id: "demo-adoptant-3",
     },
+  ];
+
+  const DEMO_DOGS: DogFilter[] = [
+    { id: "demo-pet-1", name: "Buddy" },
+    { id: "demo-pet-2", name: "Luna" },
   ];
 
   const STATUS_STYLE: Record<string, { bg: string; color: string; label: string }> = {
@@ -98,11 +115,14 @@ export default function TierheimAnfragenScreen() {
     rejected: { bg: Colors.ERROR   + "22",   color: Colors.ERROR,   label: t.tierheim_req_rejected },
   };
 
-  const [anfragen, setAnfragen]   = useState<AnfrageItem[]>([]);
-  const [loading, setLoading]     = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [isGuest, setIsGuest]     = useState(false);
-  const [totalUnread, setTotalUnread] = useState(0);
+  const [anfragen, setAnfragen]         = useState<AnfrageItem[]>([]);
+  const [dogs, setDogs]                 = useState<DogFilter[]>([]);
+  const [loading, setLoading]           = useState(true);
+  const [refreshing, setRefreshing]     = useState(false);
+  const [isGuest, setIsGuest]           = useState(false);
+  const [totalUnread, setTotalUnread]   = useState(0);
+  const [selectedDogId, setSelectedDogId] = useState<string | null>(null);
+  const [showUnreadOnly, setShowUnreadOnly] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -120,11 +140,20 @@ export default function TierheimAnfragenScreen() {
       if (!user) {
         setIsGuest(true);
         setAnfragen(DEMO_ANFRAGEN);
+        setDogs(DEMO_DOGS);
         setTotalUnread(2);
         return;
       }
 
       setIsGuest(false);
+
+      // Load shelter's dogs for filter chips
+      const { data: dogData } = await supabase
+        .from("pets")
+        .select("id, name")
+        .eq("shelter_id", user.id)
+        .order("name", { ascending: true });
+      setDogs((dogData ?? []).map((d: any) => ({ id: d.id, name: d.name })));
 
       const { data, error } = await supabase
         .from("adoption_matches")
@@ -230,6 +259,13 @@ export default function TierheimAnfragenScreen() {
     );
   };
 
+  // Apply filters
+  const filteredAnfragen = anfragen.filter((item) => {
+    if (selectedDogId !== null && item.pet_id !== selectedDogId) return false;
+    if (showUnreadOnly && item.unread_count === 0) return false;
+    return true;
+  });
+
   if (loading) {
     return (
       <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND, alignItems: "center", justifyContent: "center" }}>
@@ -242,7 +278,6 @@ export default function TierheimAnfragenScreen() {
     <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
       <GradientHeader
         title="Anfragen"
-        subtitle={`${anfragen.length} ${anfragen.length !== 1 ? t.tierheim_req_subtitle_plural : t.tierheim_req_subtitle_singular}`}
         showBack
         backLabel={t.comp_switch_modes}
         onBack={() => router.replace("/")}
@@ -257,20 +292,97 @@ export default function TierheimAnfragenScreen() {
         ) : undefined}
       />
 
+      {/* Dog filter chips */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: Sizes.SPACING_LG, paddingVertical: 10, gap: 8 }}
+        style={{ maxHeight: 56, borderBottomWidth: 1, borderBottomColor: Colors.BORDER }}
+      >
+        {/* All dogs chip */}
+        <TouchableOpacity
+          onPress={() => setSelectedDogId(null)}
+          style={{
+            paddingHorizontal: 14, paddingVertical: 6,
+            borderRadius: Sizes.RADIUS_FULL, borderWidth: 1.5,
+            borderColor: selectedDogId === null ? Colors.PRIMARY : Colors.BORDER,
+            backgroundColor: selectedDogId === null ? Colors.PRIMARY : Colors.WHITE,
+          }}
+        >
+          <Text style={{
+            fontSize: 13, fontWeight: "600",
+            color: selectedDogId === null ? Colors.WHITE : Colors.TEXT_MUTED,
+          }}>
+            {t.tierheim_chats_filter_all_dogs}
+          </Text>
+        </TouchableOpacity>
 
-      {anfragen.length === 0 ? (
+        {dogs.map((dog) => {
+          const active = selectedDogId === dog.id;
+          return (
+            <TouchableOpacity
+              key={dog.id}
+              onPress={() => setSelectedDogId(active ? null : dog.id)}
+              style={{
+                paddingHorizontal: 14, paddingVertical: 6,
+                borderRadius: Sizes.RADIUS_FULL, borderWidth: 1.5,
+                borderColor: active ? Colors.PRIMARY : Colors.BORDER,
+                backgroundColor: active ? Colors.PRIMARY : Colors.WHITE,
+              }}
+            >
+              <Text style={{
+                fontSize: 13, fontWeight: "600",
+                color: active ? Colors.WHITE : Colors.TEXT_MUTED,
+              }}>
+                {dog.name}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
+
+      {/* Unread toggle chip */}
+      <View style={{ paddingHorizontal: Sizes.SPACING_LG, paddingVertical: 8 }}>
+        <TouchableOpacity
+          onPress={() => setShowUnreadOnly(!showUnreadOnly)}
+          style={{
+            alignSelf: "flex-start",
+            paddingHorizontal: 14, paddingVertical: 6,
+            borderRadius: Sizes.RADIUS_FULL, borderWidth: 1.5,
+            borderColor: showUnreadOnly ? Colors.SECONDARY : Colors.BORDER,
+            backgroundColor: showUnreadOnly ? Colors.SECONDARY : Colors.WHITE,
+          }}
+        >
+          <Text style={{
+            fontSize: 13, fontWeight: "600",
+            color: showUnreadOnly ? Colors.WHITE : Colors.TEXT_MUTED,
+          }}>
+            {t.tierheim_chats_filter_unread}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {filteredAnfragen.length === 0 ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32 }}>
-          <Image source={require("../../assets/icon-brief.png")} style={{ width: 64, height: 64, resizeMode: "contain", tintColor: Colors.PRIMARY, marginBottom: 16 }} />
-          <Text style={{ fontSize: Sizes.FONT_XL, fontWeight: "700", color: Colors.TEXT, textAlign: "center", marginBottom: 8 }}>
-            {t.tierheim_req_empty_title}
-          </Text>
-          <Text style={{ color: Colors.TEXT_MUTED, textAlign: "center", lineHeight: 22 }}>
-            {t.tierheim_req_empty_sub}
-          </Text>
+          {anfragen.length === 0 ? (
+            <>
+              <Image source={require("../../assets/icon-brief.png")} style={{ width: 64, height: 64, resizeMode: "contain", tintColor: Colors.PRIMARY, marginBottom: 16 }} />
+              <Text style={{ fontSize: Sizes.FONT_XL, fontWeight: "700", color: Colors.TEXT, textAlign: "center", marginBottom: 8 }}>
+                {t.tierheim_req_empty_title}
+              </Text>
+              <Text style={{ color: Colors.TEXT_MUTED, textAlign: "center", lineHeight: 22 }}>
+                {t.tierheim_req_empty_sub}
+              </Text>
+            </>
+          ) : (
+            <Text style={{ fontSize: 15, color: Colors.TEXT_MUTED, textAlign: "center" }}>
+              {t.tierheim_chats_no_chats}
+            </Text>
+          )}
         </View>
       ) : (
         <FlatList
-          data={anfragen}
+          data={filteredAnfragen}
           keyExtractor={(item) => item.id}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={() => loadAnfragen(true)} tintColor={Colors.PRIMARY} />
