@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   View,
   Text,
@@ -368,7 +369,28 @@ export default function AdoptionFeed() {
   const matchScale   = useRef(new Animated.Value(0)).current;
   const matchOpacity = useRef(new Animated.Value(0)).current;
 
+  const [newsletterVisible, setNewsletterVisible] = useState(false);
+
   useEffect(() => { loadUserInfo(); }, []);
+
+  useEffect(() => {
+    AsyncStorage.getItem("show_newsletter_popup").then((val) => {
+      if (val === "true") {
+        setNewsletterVisible(true);
+        AsyncStorage.removeItem("show_newsletter_popup");
+      }
+    });
+  }, []);
+
+  const handleNewsletterResponse = async (subscribe: boolean) => {
+    setNewsletterVisible(false);
+    if (subscribe) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.from("profiles").update({ newsletter: true }).eq("id", user.id);
+      }
+    }
+  };
 
   useEffect(() => {
     setPetIndex(0);
@@ -658,6 +680,30 @@ export default function AdoptionFeed() {
             </TouchableOpacity>
           </Animated.View>
         </Animated.View>
+      </Modal>
+
+      {/* Newsletter Popup */}
+      <Modal transparent visible={newsletterVisible} animationType="fade">
+        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", alignItems: "center", justifyContent: "center" }}>
+          <View style={{ backgroundColor: Colors.WHITE, borderRadius: 24, padding: 28, width: "85%", alignItems: "center" }}>
+            <Text style={{ fontSize: 36, marginBottom: 12 }}>🐾</Text>
+            <Text style={{ fontSize: 20, fontWeight: "800", color: Colors.TEXT, textAlign: "center", marginBottom: 8 }}>
+              Bleib auf dem Laufenden!
+            </Text>
+            <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED, textAlign: "center", lineHeight: 20, marginBottom: 24 }}>
+              Erhalte Neuigkeiten über neue Hunde in deiner Nähe und hilfreiche Tipps zur Adoption.
+            </Text>
+            <TouchableOpacity
+              onPress={() => handleNewsletterResponse(true)}
+              style={{ width: "100%", paddingVertical: 14, borderRadius: 12, backgroundColor: Colors.PRIMARY, alignItems: "center", marginBottom: 10 }}
+            >
+              <Text style={{ color: "#FFF", fontWeight: "700", fontSize: 15 }}>Ja, ich möchte den Newsletter</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => handleNewsletterResponse(false)} style={{ paddingVertical: 10 }}>
+              <Text style={{ color: Colors.TEXT_MUTED, fontSize: 14 }}>Nein danke</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </Modal>
     </View>
   );

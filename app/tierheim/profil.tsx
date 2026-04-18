@@ -27,9 +27,12 @@ import { useLanguage } from "../../contexts/LanguageContext";
 type ShelterProfile = {
   id: string;
   org_name: string | null;
+  org_typ: string | null;
+  ansprechpartner: string | null;
   beschreibung: string | null;
   website: string | null;
   adresse: string | null;
+  plz: string | null;
   city: string | null;
   telefon: string | null;
   email: string | null;
@@ -37,14 +40,19 @@ type ShelterProfile = {
   gegruendet_seit: number | null;
   zertifizierungen: string | null;
   offnungszeiten: string | null;
+  instagram: string | null;
+  richtlinien: string | null;
 };
 
 const DEMO_PROFILE: ShelterProfile = {
   id: "demo",
   org_name: "Demo-Tierheim",
+  org_typ: "tierheim",
+  ansprechpartner: "Maria Muster",
   beschreibung: null,
   website: "www.demo-tierheim.de",
-  adresse: "Musterstr. 1, 40213 Düsseldorf",
+  adresse: "Musterstr. 1",
+  plz: "40213",
   city: "Düsseldorf",
   telefon: "+49 89 123456",
   email: "info@demo-tierheim.de",
@@ -52,6 +60,8 @@ const DEMO_PROFILE: ShelterProfile = {
   gegruendet_seit: 2005,
   zertifizierungen: null,
   offnungszeiten: "Mo-Fr 9-18, Sa 10-15",
+  instagram: null,
+  richtlinien: null,
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -106,16 +116,21 @@ export default function TierheimProfilScreen() {
   const [saving, setSaving]       = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   // Edit state
-  const [editOrgName, setEditOrgName]       = useState("");
-  const [editBeschreibung, setEditBeschreibung] = useState("");
-  const [editWebsite, setEditWebsite]       = useState("");
-  const [editAdresse, setEditAdresse]       = useState("");
-  const [editCity, setEditCity]             = useState("");
-  const [editTelefon, setEditTelefon]       = useState("");
-  const [editEmail, setEditEmail]           = useState("");
-  const [editHours, setEditHours]           = useState("");
-  const [editGegruendet, setEditGegruendet] = useState("");
-  const [editZertif, setEditZertif]         = useState("");
+  const [editOrgName, setEditOrgName]             = useState("");
+  const [editOrgTyp, setEditOrgTyp]               = useState("");
+  const [editAnsprechpartner, setEditAnsprechpartner] = useState("");
+  const [editTelefon, setEditTelefon]             = useState("");
+  const [editEmail, setEditEmail]                 = useState("");
+  const [editAdresse, setEditAdresse]             = useState("");
+  const [editPlz, setEditPlz]                     = useState("");
+  const [editCity, setEditCity]                   = useState("");
+  const [editWebsite, setEditWebsite]             = useState("");
+  const [editInstagram, setEditInstagram]         = useState("");
+  const [editHours, setEditHours]                 = useState("");
+  const [editRichtlinien, setEditRichtlinien]     = useState("");
+  const [editBeschreibung, setEditBeschreibung]   = useState("");
+  const [editGegruendet, setEditGegruendet]       = useState("");
+  const [editZertif, setEditZertif]               = useState("");
 
   useEffect(() => { loadProfile(); }, []);
 
@@ -134,15 +149,17 @@ export default function TierheimProfilScreen() {
 
       const { data } = await supabase
         .from("shelter_profiles")
-        .select("id, org_name, beschreibung, website, adresse, city, telefon, email, logo_url, gegruendet_seit, zertifizierungen, offnungszeiten")
+        .select("id, org_name, org_typ, ansprechpartner, beschreibung, website, adresse, plz, city, telefon, email, logo_url, gegruendet_seit, zertifizierungen, offnungszeiten, instagram, richtlinien")
         .eq("id", user.id)
         .maybeSingle();
 
       const p: ShelterProfile = data ?? {
         id: user.id,
-        org_name: null, beschreibung: null, website: null,
-        adresse: null, city: null, telefon: null, email: null,
-        logo_url: null, gegruendet_seit: null, zertifizierungen: null, offnungszeiten: null,
+        org_name: null, org_typ: null, ansprechpartner: null,
+        beschreibung: null, website: null,
+        adresse: null, plz: null, city: null, telefon: null, email: null,
+        logo_url: null, gegruendet_seit: null, zertifizierungen: null,
+        offnungszeiten: null, instagram: null, richtlinien: null,
       };
       setProfile(p);
 
@@ -163,13 +180,18 @@ export default function TierheimProfilScreen() {
   const startEdit = () => {
     if (!profile) return;
     setEditOrgName(profile.org_name ?? "");
-    setEditBeschreibung(profile.beschreibung ?? "");
-    setEditWebsite(profile.website ?? "");
-    setEditAdresse(profile.adresse ?? "");
-    setEditCity(profile.city ?? "");
+    setEditOrgTyp(profile.org_typ ?? "");
+    setEditAnsprechpartner(profile.ansprechpartner ?? "");
     setEditTelefon(profile.telefon ?? "");
     setEditEmail(profile.email ?? "");
+    setEditAdresse(profile.adresse ?? "");
+    setEditPlz(profile.plz ?? "");
+    setEditCity(profile.city ?? "");
+    setEditWebsite(profile.website ?? "");
+    setEditInstagram(profile.instagram ?? "");
     setEditHours(profile.offnungszeiten ?? "");
+    setEditRichtlinien(profile.richtlinien ?? "");
+    setEditBeschreibung(profile.beschreibung ?? "");
     setEditGegruendet(profile.gegruendet_seit ? String(profile.gegruendet_seit) : "");
     setEditZertif(profile.zertifizierungen ?? "");
     setEditMode(true);
@@ -182,13 +204,18 @@ export default function TierheimProfilScreen() {
       const updates: Partial<ShelterProfile> & { id: string } = {
         id: profile.id,
         org_name:         editOrgName.trim() || null,
-        beschreibung:     editBeschreibung.trim() || null,
-        website:          editWebsite.trim() || null,
-        adresse:          editAdresse.trim() || null,
-        city:             editCity.trim() || null,
+        org_typ:          editOrgTyp || null,
+        ansprechpartner:  editAnsprechpartner.trim() || null,
         telefon:          editTelefon.trim() || null,
         email:            editEmail.trim() || null,
+        adresse:          editAdresse.trim() || null,
+        plz:              editPlz.trim() || null,
+        city:             editCity.trim() || null,
+        website:          editWebsite.trim() || null,
+        instagram:        editInstagram.trim() || null,
         offnungszeiten:   editHours.trim() || null,
+        richtlinien:      editRichtlinien.trim() || null,
+        beschreibung:     editBeschreibung.trim() || null,
         gegruendet_seit:  editGegruendet ? parseInt(editGegruendet) : null,
         zertifizierungen: editZertif.trim() || null,
       };
@@ -265,39 +292,50 @@ export default function TierheimProfilScreen() {
         </View>
 
         <ScrollView contentContainerStyle={{ padding: Sizes.SPACING_LG, paddingBottom: 60 }}>
-          {[
-            { key: "name", label: t.tierheim_profil_label_name, value: editOrgName, setter: setEditOrgName, placeholder: t.tierheim_profil_placeholder_name, numeric: false },
-            { key: "city", label: t.tierheim_profil_label_city, value: editCity, setter: setEditCity, placeholder: t.tierheim_profil_placeholder_city, numeric: false },
-            { key: "address", label: t.tierheim_profil_label_address, value: editAdresse, setter: setEditAdresse, placeholder: t.tierheim_profil_placeholder_address, numeric: false },
-            { key: "phone", label: t.tierheim_profil_label_phone, value: editTelefon, setter: setEditTelefon, placeholder: t.tierheim_profil_placeholder_phone, numeric: false },
-            { key: "email", label: t.tierheim_profil_label_email, value: editEmail, setter: setEditEmail, placeholder: t.tierheim_profil_placeholder_email, numeric: false },
-            { key: "website", label: t.tierheim_profil_label_website, value: editWebsite, setter: setEditWebsite, placeholder: t.tierheim_profil_placeholder_website, numeric: false },
-            { key: "hours", label: t.tierheim_profil_label_hours, value: editHours, setter: setEditHours, placeholder: t.tierheim_profil_placeholder_hours, numeric: false },
-            { key: "founded", label: t.tierheim_profil_label_founded, value: editGegruendet, setter: setEditGegruendet, placeholder: t.tierheim_profil_placeholder_founded, numeric: true },
-            { key: "cert", label: t.tierheim_profil_label_cert, value: editZertif, setter: setEditZertif, placeholder: t.tierheim_profil_placeholder_cert, numeric: false },
-          ].map(({ key, label, value, setter, placeholder, numeric }) => (
-            <View key={key} style={{ marginBottom: 4 }}>
-              <Text style={fieldLabel}>{label}</Text>
-              <TextInput
-                value={value}
-                onChangeText={setter}
-                placeholder={placeholder}
-                placeholderTextColor={Colors.TEXT_MUTED}
-                keyboardType={numeric ? "numeric" : "default"}
-                style={inputStyle}
-              />
-            </View>
-          ))}
 
-          <Text style={fieldLabel}>{t.tierheim_profil_label_desc}</Text>
-          <TextInput
-            value={editBeschreibung}
-            onChangeText={setEditBeschreibung}
-            placeholder={t.tierheim_profil_placeholder_desc}
-            placeholderTextColor={Colors.TEXT_MUTED}
-            multiline numberOfLines={4}
-            style={[inputStyle, { height: 100, textAlignVertical: "top" }]}
-          />
+          {/* 1. Ansprechpartner */}
+          <EditField label="Ansprechpartner" value={editAnsprechpartner} setter={setEditAnsprechpartner} placeholder="Vor- und Nachname" />
+
+          {/* 3. Telefon */}
+          <EditField label={t.tierheim_profil_label_phone} value={editTelefon} setter={setEditTelefon} placeholder="+49 89 123456" keyboard="phone-pad" />
+
+          {/* 4. E-Mail */}
+          <EditField label={t.tierheim_profil_label_email} value={editEmail} setter={setEditEmail} placeholder="info@tierheim.de" keyboard="email-address" />
+
+          {/* 5. Adresse + PLZ + Stadt */}
+          <EditField label={t.tierheim_profil_label_address} value={editAdresse} setter={setEditAdresse} placeholder="Straße und Hausnummer" />
+          <View style={{ flexDirection: "row", gap: 10 }}>
+            <View style={{ flex: 1 }}>
+              <EditField label="PLZ" value={editPlz} setter={setEditPlz} placeholder="12345" keyboard="numeric" />
+            </View>
+            <View style={{ flex: 2 }}>
+              <EditField label={t.tierheim_profil_label_city} value={editCity} setter={setEditCity} placeholder="Stadt" />
+            </View>
+          </View>
+
+          {/* 6. Website */}
+          <EditField label={t.tierheim_profil_label_website} value={editWebsite} setter={setEditWebsite} placeholder="www.mein-tierheim.de" keyboard="url" />
+
+          {/* 7. Instagram */}
+          <EditField label="Instagram" value={editInstagram} setter={setEditInstagram} placeholder="@mein_tierheim" />
+
+          {/* 8. Öffnungszeiten */}
+          <EditField label={t.tierheim_profil_label_hours} value={editHours} setter={setEditHours} placeholder="Mo–Fr 9–18 Uhr, Sa 10–15 Uhr" />
+
+          {/* 9. Adoptionsrichtlinien */}
+          <View style={{ marginBottom: 18 }}>
+            <Text style={fieldLabel}>Adoptionsrichtlinien</Text>
+            <TextInput
+              value={editRichtlinien}
+              onChangeText={setEditRichtlinien}
+              placeholder="z.B. Schutzvertrag erforderlich, Hausbesuch, …"
+              placeholderTextColor={Colors.TEXT_MUTED}
+              multiline
+              numberOfLines={3}
+              style={[inputStyle, { height: 90, textAlignVertical: "top" }]}
+            />
+          </View>
+
         </ScrollView>
       </KeyboardAvoidingView>
     );
@@ -308,7 +346,7 @@ export default function TierheimProfilScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
       <GradientHeader
-        title="👤 Profil"
+        title="Profil"
         showBack backLabel={t.comp_switch_modes} onBack={() => router.replace("/")}
         rightElement={!isGuest ? (
           <TouchableOpacity
@@ -329,7 +367,7 @@ export default function TierheimProfilScreen() {
               <Image source={{ uri: profile.logo_url }} style={{ width: 100, height: 100, borderRadius: 50, borderWidth: 3, borderColor: Colors.PRIMARY }} />
             ) : (
               <View style={{ width: 100, height: 100, borderRadius: 50, backgroundColor: Colors.SURFACE, alignItems: "center", justifyContent: "center", borderWidth: 2, borderColor: Colors.BORDER }}>
-                <Text style={{ fontSize: 42 }}>🏠</Text>
+                <Image source={require("../../assets/tab-haus.png")} style={{ width: 48, height: 48, resizeMode: "contain", tintColor: Colors.PRIMARY }} />
               </View>
             )}
             {!isGuest && (
@@ -387,50 +425,77 @@ export default function TierheimProfilScreen() {
         {/* Contact Info */}
         <View style={{ borderRadius: 16, overflow: "hidden", borderWidth: 1, borderColor: Colors.BORDER, marginBottom: 20 }}>
           <View style={{ padding: 14, backgroundColor: Colors.SURFACE }}>
-            <Text style={{ fontSize: 13, fontWeight: "700", color: Colors.TEXT_MUTED, textTransform: "uppercase", letterSpacing: 1 }}>{t.tierheim_profil_contact_section}</Text>
+            <Text style={{ fontSize: 13, fontWeight: "700", color: Colors.TEXT_MUTED, textTransform: "uppercase", letterSpacing: 1 }}>
+              {t.tierheim_profil_contact_section}
+            </Text>
           </View>
 
-          {profile?.telefon && (
-            <InfoRow label={t.tierheim_profil_phone_label} value={profile.telefon}
-              onPress={() => Linking.openURL(`tel:${profile.telefon}`)} />
-          )}
-          {profile?.email && (
-            <InfoRow label={t.tierheim_profil_email_label} value={profile.email}
-              onPress={() => Linking.openURL(`mailto:${profile.email}`)} />
-          )}
-          {profile?.website && (
-            <InfoRow label={t.tierheim_profil_website_label} value={profile.website}
-              onPress={() => {
-                const url = (profile.website ?? "").startsWith("http") ? profile.website! : `https://${profile.website}`;
-                Linking.openURL(url);
-              }} />
-          )}
-          {profile?.adresse && (
-            <InfoRow label={t.tierheim_profil_address_label} value={profile.adresse}
-              onPress={() => Linking.openURL(`maps:?q=${encodeURIComponent(profile.adresse!)}`)} />
-          )}
-          {profile?.offnungszeiten && (
-            <InfoRow label={t.tierheim_profil_hours_label} value={profile.offnungszeiten} />
-          )}
-
-          {!isGuest && !profile?.telefon && !profile?.email && !profile?.website && (
-            <TouchableOpacity
-              onPress={startEdit}
-              style={{ flexDirection: "row", alignItems: "center", padding: 16, borderTopWidth: 1, borderTopColor: Colors.BORDER, gap: 10 }}
-            >
-              <Text style={{ fontSize: 18 }}>✏️</Text>
-              <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED }}>{t.tierheim_profil_add_contact}</Text>
-            </TouchableOpacity>
-          )}
+          <InfoRow
+            label="Organisationstyp"
+            value={
+              profile?.org_typ === "tierheim" ? "Tierheim" :
+              profile?.org_typ === "tierschutzorganisation" ? "Tierschutzorganisation" :
+              profile?.org_typ === "tierschutzverein" ? "Tierschutzverein" :
+              profile?.org_typ === "auffangstation" ? "Auffangstation" :
+              profile?.org_typ ?? "–"
+            }
+          />
+          <InfoRow
+            label="Ansprechpartner"
+            value={profile?.ansprechpartner ?? "–"}
+          />
+          <InfoRow
+            label={t.tierheim_profil_phone_label}
+            value={profile?.telefon ?? "–"}
+            onPress={profile?.telefon ? () => Linking.openURL(`tel:${profile.telefon}`) : undefined}
+          />
+          <InfoRow
+            label={t.tierheim_profil_email_label}
+            value={profile?.email ?? "–"}
+            onPress={profile?.email ? () => Linking.openURL(`mailto:${profile.email}`) : undefined}
+          />
+          <InfoRow
+            label={t.tierheim_profil_address_label}
+            value={
+              profile?.adresse
+                ? [profile.adresse, [profile.plz, profile.city].filter(Boolean).join(" ")].filter(Boolean).join(", ")
+                : "–"
+            }
+            onPress={profile?.adresse ? () => Linking.openURL(`maps:?q=${encodeURIComponent([profile!.adresse, profile!.city].filter(Boolean).join(", "))}`) : undefined}
+          />
+          <InfoRow
+            label={t.tierheim_profil_website_label}
+            value={profile?.website ?? "–"}
+            onPress={profile?.website ? () => {
+              const url = profile.website!.startsWith("http") ? profile.website! : `https://${profile.website}`;
+              Linking.openURL(url);
+            } : undefined}
+          />
+          <InfoRow
+            label="Instagram"
+            value={profile?.instagram ?? "–"}
+            onPress={profile?.instagram ? () => {
+              const handle = profile.instagram!.replace("@", "");
+              Linking.openURL(`https://instagram.com/${handle}`);
+            } : undefined}
+          />
+          <InfoRow
+            label={t.tierheim_profil_hours_label}
+            value={profile?.offnungszeiten ?? "–"}
+          />
+          <InfoRow
+            label="Adoptionsrichtlinien"
+            value={profile?.richtlinien ?? "–"}
+          />
         </View>
 
         {/* Logout / Login */}
         {!isGuest ? (
           <TouchableOpacity
             onPress={handleLogout}
-            style={{ height: Sizes.BUTTON_HEIGHT, borderWidth: 1.5, borderColor: Colors.ERROR, borderRadius: Sizes.RADIUS_FULL, alignItems: "center", justifyContent: "center" }}
+            style={{ height: Sizes.BUTTON_HEIGHT, borderWidth: 1.5, borderColor: Colors.PRIMARY, borderRadius: Sizes.RADIUS_FULL, alignItems: "center", justifyContent: "center" }}
           >
-            <Text style={{ color: Colors.ERROR, fontSize: Sizes.FONT_MD, fontWeight: "600" }}>{t.profil_sign_out}</Text>
+            <Text style={{ color: Colors.PRIMARY, fontSize: Sizes.FONT_MD, fontWeight: "600" }}>{t.profil_sign_out}</Text>
           </TouchableOpacity>
         ) : (
           <TouchableOpacity
@@ -441,6 +506,26 @@ export default function TierheimProfilScreen() {
           </TouchableOpacity>
         )}
       </ScrollView>
+    </View>
+  );
+}
+
+function EditField({ label, value, setter, placeholder, keyboard }: {
+  label: string; value: string; setter: (v: string) => void;
+  placeholder?: string; keyboard?: any;
+}) {
+  return (
+    <View style={{ marginBottom: 18 }}>
+      <Text style={fieldLabel}>{label}</Text>
+      <TextInput
+        value={value}
+        onChangeText={setter}
+        placeholder={placeholder}
+        placeholderTextColor={Colors.TEXT_MUTED}
+        keyboardType={keyboard ?? "default"}
+        autoCapitalize="none"
+        style={inputStyle}
+      />
     </View>
   );
 }

@@ -208,7 +208,7 @@ export default function TierheimOnboarding() {
             <Text style={styles.stepSub}>{t.onb_th_new_step4_sub}</Text>
 
             {/* Org Type Pills */}
-            <Text style={styles.fieldLabel}>{t.onb_th_new_org_type} *</Text>
+            <Text style={styles.fieldLabel}>{t.onb_th_new_org_type}</Text>
             <View style={styles.pillRow}>
               {ORG_TYPES.map(({ key, labelKey }) => (
                 <TouchableOpacity
@@ -240,10 +240,10 @@ export default function TierheimOnboarding() {
 
             {/* Remaining mandatory fields */}
             {[
-              { label: `${t.onb_th_new_ansprechpartner} *`, value: ansprechpartner, setter: setAnsprechpartner, placeholder: t.onb_th_new_ansprechpartner_ph },
-              { label: `${t.onb_th_new_kontakt_email} *`,   value: kontaktEmail,    setter: setKontaktEmail,    placeholder: "info@organisation.de", keyboard: "email-address" as const },
-              { label: `${t.onb_shelter_phone} *`,          value: telefon,         setter: setTelefon,         placeholder: t.onb_shelter_phone_placeholder, keyboard: "phone-pad" as const },
-              { label: `${t.onb_shelter_address} *`,        value: adresse,         setter: setAdresse,         placeholder: t.onb_shelter_address_placeholder },
+              { label: t.onb_th_new_ansprechpartner, value: ansprechpartner, setter: setAnsprechpartner, placeholder: t.onb_th_new_ansprechpartner_ph },
+              { label: t.onb_th_new_kontakt_email,   value: kontaktEmail,    setter: setKontaktEmail,    placeholder: "info@organisation.de", keyboard: "email-address" as const },
+              { label: t.onb_shelter_phone,          value: telefon,         setter: setTelefon,         placeholder: t.onb_shelter_phone_placeholder, keyboard: "phone-pad" as const },
+              { label: t.onb_shelter_address,        value: adresse,         setter: setAdresse,         placeholder: t.onb_shelter_address_placeholder },
             ].map((f) => (
               <View key={f.label} style={styles.fieldGroup}>
                 <Text style={styles.fieldLabel}>{f.label}</Text>
@@ -262,7 +262,7 @@ export default function TierheimOnboarding() {
             {/* PLZ + Stadt row */}
             <View style={styles.rowFields}>
               <View style={[styles.fieldGroup, { flex: 1, marginRight: 8 }]}>
-                <Text style={styles.fieldLabel}>{t.onb_th_new_plz} *</Text>
+                <Text style={styles.fieldLabel}>{t.onb_th_new_plz}</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="12345"
@@ -273,7 +273,7 @@ export default function TierheimOnboarding() {
                 />
               </View>
               <View style={[styles.fieldGroup, { flex: 2 }]}>
-                <Text style={styles.fieldLabel}>{t.onb_th_new_stadt} *</Text>
+                <Text style={styles.fieldLabel}>{t.onb_th_new_stadt}</Text>
                 <TextInput
                   style={styles.input}
                   placeholder={t.onb_th_new_stadt_ph}

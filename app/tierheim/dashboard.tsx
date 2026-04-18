@@ -143,7 +143,7 @@ export default function TierheimDashboard() {
 
       setPets(petList);
       setStats({
-        orgName: shelterRes.data?.org_name ?? "Mein Tierheim",
+        orgName: shelterRes.data?.org_name ?? "Meine Organisation",
         verfuegbar: petList.filter((p) => p.status === "verfuegbar").length,
         reserviert: petList.filter((p) => p.status === "reserviert").length,
         vermittelt: petList.filter((p) => p.status === "vermittelt").length,
@@ -195,9 +195,6 @@ export default function TierheimDashboard() {
               <Text style={{ fontSize: 16, color: "rgba(255,255,255,0.7)" }}>‹</Text>
               <Text style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", fontWeight: "500" }}>{t.comp_switch_modes}</Text>
             </TouchableOpacity>
-            <Text style={{ color: "rgba(255,255,255,0.8)", fontSize: 13, fontWeight: "500" }}>
-              {t.tierheim_dashboard_title}
-            </Text>
             <Text style={{ color: Colors.WHITE, fontSize: 22, fontWeight: "800", marginTop: 4 }}>
               {stats?.orgName ?? t.tierheim_dashboard_your_shelter}
             </Text>
@@ -218,9 +215,9 @@ export default function TierheimDashboard() {
 
         {/* Stats: Verfügbar / Reserviert / Vermittelt */}
         <View style={{ flexDirection: "row", gap: 10 }}>
-          <StatCard value={stats?.verfuegbar ?? 0} label={t.tierheim_status_available} emoji="✅" />
-          <StatCard value={stats?.reserviert ?? 0} label={t.tierheim_status_reserved} emoji="⏳" />
-          <StatCard value={stats?.vermittelt ?? 0} label={t.tierheim_status_placed} emoji="🏡" />
+          <StatCard value={stats?.verfuegbar ?? 0} label={t.tierheim_status_available} />
+          <StatCard value={stats?.reserviert ?? 0} label={t.tierheim_status_reserved} />
+          <StatCard value={stats?.vermittelt ?? 0} label={t.tierheim_status_placed} />
         </View>
       </View>
 
@@ -238,14 +235,14 @@ export default function TierheimDashboard() {
             onPress={() => router.push("/tierheim/hunde")}
           />
           <ActionCard
-            emoji="🔔"
+            imageSource={require("../../assets/tab-chat.png")}
             title={t.tierheim_dashboard_requests}
             subtitle={
               stats?.unreadMessages
                 ? t.tierheim_dashboard_new_messages(stats.unreadMessages)
                 : t.tierheim_dashboard_interested(stats?.totalMatches ?? 0)
             }
-            color="#8A9F79"
+            color={Colors.PRIMARY}
             badge={stats?.unreadMessages}
             onPress={() => router.push("/tierheim/anfragen")}
           />
@@ -266,7 +263,6 @@ export default function TierheimDashboard() {
             const label = s === null
               ? t.tierheim_dashboard_filter_all
               : STATUS_LABEL[s] ?? s;
-            const color = s ? (STATUS_COLOR[s] ?? Colors.TEXT_MUTED) : Colors.PRIMARY;
             return (
               <TouchableOpacity
                 key={s ?? "all"}
@@ -274,11 +270,11 @@ export default function TierheimDashboard() {
                 style={{
                   paddingHorizontal: 12, paddingVertical: 5,
                   borderRadius: 99, borderWidth: 1,
-                  borderColor: active ? color : Colors.BORDER,
-                  backgroundColor: active ? color + "18" : Colors.WHITE,
+                  borderColor: active ? Colors.SECONDARY : Colors.PRIMARY,
+                  backgroundColor: active ? Colors.SECONDARY : Colors.WHITE,
                 }}
               >
-                <Text style={{ fontSize: 12, fontWeight: active ? "700" : "500", color: active ? color : Colors.TEXT_MUTED }}>
+                <Text style={{ fontSize: 12, fontWeight: active ? "700" : "500", color: active ? Colors.WHITE : Colors.PRIMARY }}>
                   {label}
                 </Text>
               </TouchableOpacity>
@@ -335,96 +331,18 @@ export default function TierheimDashboard() {
         </View>
       </View>
 
-      {/* Tip */}
-      <View style={{ marginHorizontal: Sizes.SPACING_LG, marginTop: 20 }}>
-        <View style={{
-          backgroundColor: Colors.SURFACE, borderRadius: Sizes.RADIUS_LG,
-          padding: 16, borderLeftWidth: 3, borderLeftColor: Colors.PRIMARY,
-        }}>
-          <Text style={{ fontWeight: "700", color: Colors.TEXT, marginBottom: 4 }}>{t.tip_title}</Text>
-          <Text style={{ color: Colors.TEXT_MUTED, fontSize: 13, lineHeight: 20 }}>
-            {t.tierheim_tip_body}
-          </Text>
-        </View>
-      </View>
-
-      {/* News Teaser */}
-      <View style={{ marginHorizontal: Sizes.SPACING_LG, marginTop: 24 }}>
-        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-          <Text style={{ fontSize: 16, fontWeight: "700", color: Colors.TEXT }}>📰 {t.news_title}</Text>
-        </View>
-
-        {/* Event Card */}
-        <View style={{
-          backgroundColor: Colors.WHITE, borderRadius: Sizes.RADIUS_LG,
-          borderWidth: 1, borderColor: Colors.BORDER,
-          borderLeftWidth: 4, borderLeftColor: Colors.PRIMARY,
-          padding: 14, marginBottom: 10,
-          shadowColor: "#000", shadowOffset: { width: 0, height: 1 },
-          shadowOpacity: 0.05, shadowRadius: 4, elevation: 1,
-        }}>
-          <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 10 }}>
-            <Text style={{ fontSize: 28 }}>🐕</Text>
-            <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 14, fontWeight: "700", color: Colors.TEXT }}>{t.news_event_title}</Text>
-              <Text style={{ fontSize: 12, color: Colors.PRIMARY, marginTop: 2 }}>📅 {t.news_event_date}</Text>
-              <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED }}>{t.news_event_location}</Text>
-            </View>
-          </View>
-          <Text style={{ fontSize: 13, color: Colors.TEXT, lineHeight: 18, marginTop: 8 }} numberOfLines={2}>
-            {t.news_event_desc}
-          </Text>
-        </View>
-
-        {/* Blog Article Cards */}
-        {([
-          { emoji: "💉", catKey: "news_cat_health" as const, titleKey: "news_article1_title" as const },
-          { emoji: "🎓", catKey: "news_cat_training" as const, titleKey: "news_article2_title" as const },
-        ] as const).map(({ emoji, catKey, titleKey }, i) => (
-          <View
-            key={i}
-            style={{
-              backgroundColor: Colors.WHITE, borderRadius: Sizes.RADIUS_LG,
-              borderWidth: 1, borderColor: Colors.BORDER,
-              padding: 14, marginBottom: 10,
-              shadowColor: "#000", shadowOffset: { width: 0, height: 1 },
-              shadowOpacity: 0.04, shadowRadius: 4, elevation: 1,
-              flexDirection: "row", alignItems: "center", gap: 12,
-            }}
-          >
-            <View style={{
-              width: 44, height: 44, borderRadius: 10,
-              backgroundColor: Colors.PRIMARY + "18",
-              alignItems: "center", justifyContent: "center",
-            }}>
-              <Text style={{ fontSize: 20 }}>{emoji}</Text>
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 11, fontWeight: "700", color: Colors.PRIMARY, textTransform: "uppercase", letterSpacing: 0.4, marginBottom: 2 }}>
-                {String(t[catKey])}
-              </Text>
-              <Text style={{ fontSize: 13, fontWeight: "600", color: Colors.TEXT }} numberOfLines={2}>
-                {String(t[titleKey])}
-              </Text>
-            </View>
-            <Text style={{ color: Colors.TEXT_MUTED }}>›</Text>
-          </View>
-        ))}
-      </View>
-
       <View style={{ height: 20 }} />
     </ScrollView>
   );
 }
 
-function StatCard({ value, label, emoji }: { value: number; label: string; emoji: string }) {
+function StatCard({ value, label }: { value: number; label: string }) {
   return (
     <View style={{
       flex: 1, backgroundColor: "rgba(255,255,255,0.15)",
       borderRadius: Sizes.RADIUS_MD, padding: 12, alignItems: "center",
     }}>
-      <Text style={{ fontSize: 20 }}>{emoji}</Text>
-      <Text style={{ color: Colors.WHITE, fontSize: 24, fontWeight: "800", marginTop: 4 }}>{value}</Text>
+      <Text style={{ color: Colors.WHITE, fontSize: 24, fontWeight: "800" }}>{value}</Text>
       <Text style={{ color: "rgba(255,255,255,0.8)", fontSize: 11, textAlign: "center", marginTop: 2 }}>
         {label}
       </Text>
@@ -433,9 +351,9 @@ function StatCard({ value, label, emoji }: { value: number; label: string; emoji
 }
 
 function ActionCard({
-  emoji, title, subtitle, color, badge, onPress,
+  emoji, imageSource, title, subtitle, color, badge, onPress,
 }: {
-  emoji: string; title: string; subtitle: string; color: string; badge?: number; onPress: () => void;
+  emoji?: string; imageSource?: any; title: string; subtitle: string; color: string; badge?: number; onPress: () => void;
 }) {
   return (
     <TouchableOpacity
@@ -455,7 +373,10 @@ function ActionCard({
         backgroundColor: color + "20",
         alignItems: "center", justifyContent: "center", marginRight: 14,
       }}>
-        <Text style={{ fontSize: 22 }}>{emoji}</Text>
+        {imageSource
+          ? <Image source={imageSource} style={{ width: 26, height: 26, resizeMode: "contain", tintColor: color }} />
+          : <Text style={{ fontSize: 22 }}>{emoji}</Text>
+        }
       </View>
       <View style={{ flex: 1 }}>
         <Text style={{ fontSize: Sizes.FONT_MD, fontWeight: "700", color: Colors.TEXT }}>{title}</Text>

@@ -605,7 +605,7 @@ export const translations = {
 
     // ── Tierheim Dashboard ──
     tierheim_dashboard_title: "🏠 Tierheim Dashboard",
-    tierheim_dashboard_your_shelter: "Dein Tierheim",
+    tierheim_dashboard_your_shelter: "Meine Organisation",
     tierheim_dashboard_login: "Anmelden 🔑",
     tierheim_dashboard_quick_access: "Schnellzugriff",
     tierheim_dashboard_add_animal: "Tier hinzufügen",
@@ -698,10 +698,10 @@ export const translations = {
     tierheim_profil_address_label: "Adresse",
     tierheim_profil_hours_label: "Öffnungszeiten",
     tierheim_profil_add_contact: "Kontaktdaten hinzufügen…",
-    tierheim_profil_role: "🏠 Tierheim",
+    tierheim_profil_role: "Tierheim",
     tierheim_profil_fallback_name: "Mein Tierheim",
     tierheim_profil_login_btn: "Jetzt anmelden 🔑",
-    tierheim_profil_edit_profile_btn: "✏️ Bearbeiten",
+    tierheim_profil_edit_profile_btn: "Bearbeiten",
 
     // ── Tierheim Anfragen ──
     tierheim_req_pending: "Ausstehend",
@@ -861,9 +861,9 @@ export const translations = {
     gassi_faq_a4: "Ja, Swipet ist für Hundebesitzer vollständig kostenlos.",
 
     // ── Onboarding Hundesucher (7 Schritte) ──
-    onb_hs_welcome_title: "Finde deinen Traumhund 🐾",
-    onb_hs_welcome_sub: "Finde deinen Traumhund bei lokalen Tierheimen",
-    onb_hs_welcome_btn: "Jetzt starten",
+    onb_hs_welcome_title: "Finde dein perfektes Match!",
+    onb_hs_welcome_sub: "Swipe dich zu deinem Traumhund aus lokalen Tierheimen.",
+    onb_hs_welcome_btn: "Jetzt Hunde entdecken",
     onb_hs_privacy_title: "Datenschutz",
     onb_hs_privacy_sub: "Bevor es losgeht, benötigen wir deine Zustimmung",
     onb_hs_privacy_accept: "Datenschutzerklärung akzeptieren *",
@@ -1880,7 +1880,7 @@ export const translations = {
     tierheim_profil_address_label: "Address",
     tierheim_profil_hours_label: "Opening hours",
     tierheim_profil_add_contact: "Add contact details…",
-    tierheim_profil_role: "🏠 Animal Shelter",
+    tierheim_profil_role: "Animal Shelter",
     tierheim_profil_fallback_name: "My Shelter",
     tierheim_profil_login_btn: "Sign in now 🔑",
     tierheim_profil_edit_profile_btn: "✏️ Edit",

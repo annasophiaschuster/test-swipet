@@ -1,76 +1,104 @@
 import { useState } from "react";
 import {
-  View, Text, ScrollView, TextInput, TouchableOpacity,
-  ActivityIndicator, Alert, Switch, Image, FlatList,
+  View,
+  Text,
+  ScrollView,
+  TextInput,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
+  Switch,
+  Image,
+  Platform,
 } from "react-native";
 import { router } from "expo-router";
 import { supabase } from "../../../lib/supabase";
 import { Colors } from "../../../constants/colors";
 import { Sizes } from "../../../constants/sizes";
 import { pickMultipleImages, uploadImageToStorage } from "../../../lib/storage";
-import { useLanguage } from "../../../contexts/LanguageContext";
 
-const MAX_PHOTOS = 5;
+// ─────────────────────────────────────────────
+// Constants
+// ─────────────────────────────────────────────
+const BRAND   = Colors.PRIMARY;   // #E27289
+const GREEN   = "#3B6D11";        // for Erfahrung active state
+const MAX_PHOTOS = 10;
 
+const CHARAKTER_TAGS = [
+  "verspielt", "verschmust", "ruhig", "treu", "neugierig",
+  "energetisch", "lernfreudig", "familienfreundlich",
+  "anhänglich", "selbstständig", "ängstlich", "dominant",
+  "vorsichtig mit Fremden",
+];
+
+const GROESSEN      = ["Klein", "Mittel", "Groß", "Riese"];
+const GROESSEN_VAL  = ["klein", "mittel", "gross", "riese"];
+
+const HERKUNFT      = ["Abgabetier", "Fundtier", "Auslandsrettung", "Beschlagnahmt"];
+const HERKUNFT_VAL  = ["abgabetier", "fundtier", "auslandsrettung", "beschlagnahmt"];
+
+const KINDERFREUNDLICH     = ["Ja", "Nein", "Ab Schulalter", "Ab Teenager"];
+const KINDERFREUNDLICH_VAL = ["ja", "nein", "ab_schulalter", "ab_teenager"];
+
+const AKTIVITAET     = ["Gemütlich", "Mittel", "Sehr aktiv"];
+const AKTIVITAET_VAL = ["ruhig", "mittel", "sportlich"];
+
+const ERFAHRUNG     = ["Anfänger", "Fortgeschrittene", "Nur Profis"];
+const ERFAHRUNG_VAL = ["anfaenger", "fortgeschritten", "profi"];
+
+const ALLEINE     = ["Nicht möglich", "bis 2 Std.", "bis 4 Std.", "bis 6 Std."];
+const ALLEINE_VAL = ["nicht_moeglich", "bis_2h", "bis_4h", "bis_6h"];
+
+// ─────────────────────────────────────────────
+// Main Screen
+// ─────────────────────────────────────────────
 export default function AddPetScreen() {
-  const { t } = useLanguage();
-
-  const GROESSEN = [
-    { value: "klein", label: t.shelter_size_small },
-    { value: "mittel", label: t.shelter_size_medium },
-    { value: "gross", label: t.shelter_size_large },
-    { value: "riese", label: t.shelter_size_giant },
-  ];
-  const GESCHLECHTER = [
-    { value: "maennlich", label: t.shelter_gender_male },
-    { value: "weiblich", label: t.shelter_gender_female },
-  ];
-  const ERFAHRUNG = [
-    { value: "anfaenger", label: t.shelter_exp_beginner },
-    { value: "fortgeschritten", label: t.shelter_exp_intermediate },
-    { value: "profi", label: t.shelter_exp_pro },
-  ];
-  const AKTIVITAET = [
-    { value: "sportlich", label: t.shelter_activity_very },
-    { value: "mittel", label: t.shelter_activity_medium },
-    { value: "ruhig", label: t.shelter_activity_calm },
-  ];
-  const KINDERFREUNDLICH = [
-    { value: "ja", label: t.shelter_children_yes },
-    { value: "nein", label: t.shelter_children_no },
-    { value: "ab_schulalter", label: t.shelter_children_school },
-    { value: "ab_teenager", label: t.shelter_children_teen },
-  ];
-  const CHARAKTER_OPTIONS = [
-    t.shelter_traits_playful, t.shelter_traits_cuddly, t.shelter_traits_calm,
-    t.shelter_traits_loyal, t.shelter_traits_curious, t.shelter_traits_energetic,
-    t.shelter_traits_family, t.shelter_traits_eager,
-  ];
-
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading]               = useState(false);
   const [uploadingPhotos, setUploadingPhotos] = useState(false);
 
   // Photos
-  const [selectedPhotoUris, setSelectedPhotoUris] = useState<string[]>([]);
+  const [photoUris, setPhotoUris] = useState<string[]>([]);
 
-  // Basic info
-  const [name, setName]               = useState("");
-  const [rasse, setRasse]             = useState("");
-  const [groesse, setGroesse]         = useState("mittel");
-  const [alterJahre, setAlterJahre]   = useState("");
-  const [alterMonate, setAlterMonate] = useState("");
-  const [geschlecht, setGeschlecht]   = useState("maennlich");
-  const [beschreibung, setBeschreibung] = useState("");
+  // Basisdaten
+  const [name, setName]             = useState("");
+  const [geschlecht, setGeschlecht] = useState("maennlich");
+  const [alterWert, setAlterWert]   = useState("");
+  const [alterEinheit, setAlterEinheit] = useState<"jahre" | "monate">("jahre");
+  const [rasse, setRasse]           = useState("");
+  const [gewicht, setGewicht]       = useState("");
+  const [groesse, setGroesse]       = useState("mittel");
+  const [herkunft, setHerkunft]     = useState("");
+  const [fellFarbe, setFellFarbe]   = useState("");
 
-  // Eigenschaften
-  const [kastriert, setKastriert]         = useState(false);
-  const [brauchtGarten, setBrauchtGarten] = useState(false);
-  const [vertraeglich, setVertraeglich]   = useState(true);
+  // Charakter
+  const [charakterTags, setCharakterTags]   = useState<string[]>([]);
   const [kinderfreundlich, setKinderfreundlich] = useState("ja");
-  const [erfahrung, setErfahrung]         = useState("anfaenger");
-  const [aktivitaet, setAktivitaet]       = useState("mittel");
-  const [charakterTags, setCharakterTags] = useState<string[]>([]);
+  const [aktivitaet, setAktivitaet]         = useState("mittel");
+  const [erfahrung, setErfahrung]           = useState("anfaenger");
 
+  // Verträglichkeit & Haltung
+  const [hundVertraeglich, setHundVertraeglich]   = useState(false);
+  const [katzeVertraeglich, setKatzeVertraeglich] = useState(false);
+  const [kleintierVertraeglich, setKleintierVertraeglich] = useState(false);
+  const [stubenrein, setStubenrein]         = useState(false);
+  const [leinenführig, setLeinenführig]     = useState(false);
+  const [maulkorbpflicht, setMaulkorbpflicht] = useState(false);
+  const [brauchtGarten, setBrauchtGarten]   = useState(false);
+  const [alleineBleibt, setAlleineBleibt]   = useState("bis_4h");
+
+  // Gesundheit
+  const [geimpft, setGeimpft]     = useState(false);
+  const [gechipt, setGechipt]     = useState(false);
+  const [kastriert, setKastriert] = useState(false);
+  const [entwurmt, setEntwurmt]   = useState(false);
+  const [hatErkrankungen, setHatErkrankungen] = useState(false);
+  const [erkrankungenText, setErkrankungenText] = useState("");
+
+  // Beschreibung
+  const [beschreibung, setBeschreibung]         = useState("");
+  const [interneNotizen, setInterneNotizen]     = useState("");
+
+  // ── helpers ──────────────────────────────
   const toggleTag = (tag: string) =>
     setCharakterTags((prev) =>
       prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
@@ -78,26 +106,27 @@ export default function AddPetScreen() {
 
   const handlePickPhotos = async () => {
     try {
-      const remaining = MAX_PHOTOS - selectedPhotoUris.length;
+      const remaining = MAX_PHOTOS - photoUris.length;
       if (remaining <= 0) {
-        Alert.alert(t.shelter_max_photos, t.shelter_max_photos_msg(MAX_PHOTOS));
+        Alert.alert("Maximale Anzahl erreicht", `Du kannst maximal ${MAX_PHOTOS} Fotos hinzufügen.`);
         return;
       }
       const assets = await pickMultipleImages(remaining);
       if (assets.length > 0) {
-        setSelectedPhotoUris((prev) => [...prev, ...assets.map((a) => a.uri)].slice(0, MAX_PHOTOS));
+        setPhotoUris((prev) => [...prev, ...assets.map((a) => a.uri)].slice(0, MAX_PHOTOS));
       }
     } catch (e: any) {
-      Alert.alert(t.err_generic, e.message);
+      Alert.alert("Fehler", e.message);
     }
   };
 
-  const removePhoto = (index: number) =>
-    setSelectedPhotoUris((prev) => prev.filter((_, i) => i !== index));
+  const removePhoto = (idx: number) =>
+    setPhotoUris((prev) => prev.filter((_, i) => i !== idx));
 
+  // ── save ────────────────────────────────
   const handleSave = async () => {
     if (!name.trim()) {
-      Alert.alert(t.err_generic, t.shelter_add_err_name);
+      Alert.alert("Pflichtfeld fehlt", "Bitte gib einen Namen für den Hund ein.");
       return;
     }
     setLoading(true);
@@ -105,7 +134,9 @@ export default function AddPetScreen() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // 1. Pet einfügen
+      const jahre  = alterEinheit === "jahre"  ? parseInt(alterWert) || 0 : 0;
+      const monate = alterEinheit === "monate" ? parseInt(alterWert) || 0 : 0;
+
       const { data: pet, error: petErr } = await supabase
         .from("pets")
         .insert({
@@ -114,13 +145,13 @@ export default function AddPetScreen() {
           tierart: "hund",
           rasse: rasse.trim() || null,
           groesse_kategorie: groesse,
-          alter_jahre: alterJahre ? parseInt(alterJahre) : 0,
-          alter_monate: alterMonate ? parseInt(alterMonate) : 0,
+          alter_jahre: jahre,
+          alter_monate: monate,
           geschlecht,
           beschreibung: beschreibung.trim() || null,
           kastriert,
           braucht_garten: brauchtGarten,
-          vertraeglich_mit_tieren: vertraeglich,
+          vertraeglich_mit_tieren: hundVertraeglich || katzeVertraeglich || kleintierVertraeglich,
           kinderfreundlich,
           erfahrung_benoetigt: erfahrung,
           aktivitaetslevel: aktivitaet,
@@ -132,264 +163,616 @@ export default function AddPetScreen() {
 
       if (petErr) throw petErr;
 
-      // 2. Fotos hochladen
-      if (selectedPhotoUris.length > 0) {
+      if (photoUris.length > 0) {
         setUploadingPhotos(true);
-        const photoRows: { pet_id: string; url: string; position: number }[] = [];
-
-        for (let i = 0; i < selectedPhotoUris.length; i++) {
+        const rows: { pet_id: string; url: string; position: number }[] = [];
+        for (let i = 0; i < photoUris.length; i++) {
           try {
             const path = `${pet.id}/${i}.jpg`;
-            const publicUrl = await uploadImageToStorage("pet-photos", path, selectedPhotoUris[i]);
-            photoRows.push({ pet_id: pet.id, url: publicUrl, position: i });
-          } catch (uploadErr: any) {
-            console.warn(`Foto ${i + 1} Upload fehlgeschlagen:`, uploadErr.message);
+            const url  = await uploadImageToStorage("pet-photos", path, photoUris[i]);
+            rows.push({ pet_id: pet.id, url, position: i });
+          } catch (e: any) {
+            console.warn(`Foto ${i + 1} Upload fehlgeschlagen:`, e.message);
           }
         }
-
-        if (photoRows.length > 0) {
-          await supabase.from("pet_photos").insert(photoRows);
-        }
+        if (rows.length > 0) await supabase.from("pet_photos").insert(rows);
         setUploadingPhotos(false);
       }
 
-      Alert.alert(t.shelter_add_saved_title, t.shelter_add_saved_msg(name), [
+      Alert.alert("Gespeichert! 🎉", `${name} wurde erfolgreich veröffentlicht.`, [
         { text: "OK", onPress: () => router.back() },
       ]);
     } catch (e: any) {
-      Alert.alert(t.err_generic, e.message ?? t.gassi_profil_save_failed);
+      Alert.alert("Fehler", e.message ?? "Speichern fehlgeschlagen.");
     } finally {
       setLoading(false);
       setUploadingPhotos(false);
     }
   };
 
+  // ── render ──────────────────────────────
   return (
-    <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
-      {/* Header */}
-      <View style={{ paddingTop: 56, paddingHorizontal: Sizes.SPACING_LG, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: Colors.BORDER, flexDirection: "row", alignItems: "center", gap: 12 }}>
-        <TouchableOpacity onPress={() => router.back()} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-          <Text style={{ fontSize: 20, color: Colors.PRIMARY }}>‹</Text>
+    <View style={{ flex: 1, backgroundColor: "#FFFFFF" }}>
+
+      {/* ── Pink Header ── */}
+      <View style={{
+        backgroundColor: BRAND,
+        paddingTop: Platform.OS === "ios" ? 56 : 36,
+        paddingBottom: 16,
+        paddingHorizontal: 20,
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 12,
+      }}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          style={{
+            width: 34, height: 34, borderRadius: 17,
+            backgroundColor: "rgba(255,255,255,0.22)",
+            alignItems: "center", justifyContent: "center",
+          }}
+        >
+          <Text style={{ fontSize: 20, color: "#fff", marginTop: -1 }}>‹</Text>
         </TouchableOpacity>
-        <Text style={{ fontSize: 20, fontWeight: "800", color: Colors.TEXT }}>{t.shelter_add_title}</Text>
+        <Text style={{ fontSize: 19, fontWeight: "800", color: "#fff", flex: 1 }}>
+          Neues Hundeprofil
+        </Text>
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: Sizes.SPACING_LG, paddingBottom: 80, gap: 20 }} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 100 }}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
 
-        {/* ── Photos ── */}
-        <Section title={t.shelter_add_section_photos}>
-          <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, marginBottom: 10 }}>
-            {t.shelter_add_photos_count(selectedPhotoUris.length, MAX_PHOTOS)}
-          </Text>
-
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 10 }}>
-            {selectedPhotoUris.map((uri, idx) => (
-              <View key={idx} style={{ position: "relative" }}>
-                <Image
-                  source={{ uri }}
-                  style={{ width: 80, height: 80, borderRadius: Sizes.RADIUS_MD, backgroundColor: Colors.SURFACE }}
-                />
-                <TouchableOpacity
-                  onPress={() => removePhoto(idx)}
-                  style={{
-                    position: "absolute", top: -6, right: -6,
-                    width: 22, height: 22, borderRadius: 11,
-                    backgroundColor: Colors.ERROR,
+        {/* ── Photo Upload Zone ── */}
+        <TouchableOpacity
+          onPress={handlePickPhotos}
+          activeOpacity={0.75}
+          style={{
+            margin: 20, borderRadius: 16,
+            backgroundColor: "#FFF0F3",
+            borderWidth: 2, borderColor: BRAND + "44", borderStyle: "dashed",
+            paddingVertical: photoUris.length > 0 ? 16 : 36,
+            paddingHorizontal: 16,
+            alignItems: photoUris.length > 0 ? "flex-start" : "center",
+          }}
+        >
+          {photoUris.length === 0 ? (
+            <>
+              <Text style={{ fontSize: 16, fontWeight: "700", color: BRAND, marginBottom: 4 }}>
+                Fotos hinzufügen
+              </Text>
+              <Text style={{ fontSize: 13, color: BRAND + "99" }}>
+                Bis zu 10 Bilder · 1 Video
+              </Text>
+            </>
+          ) : (
+            <>
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 10 }}>
+                {photoUris.map((uri, idx) => (
+                  <View key={idx} style={{ position: "relative" }}>
+                    <Image
+                      source={{ uri }}
+                      style={{ width: 76, height: 76, borderRadius: 10, backgroundColor: "#F5E6EA" }}
+                    />
+                    <TouchableOpacity
+                      onPress={() => removePhoto(idx)}
+                      style={{
+                        position: "absolute", top: -6, right: -6,
+                        width: 20, height: 20, borderRadius: 10,
+                        backgroundColor: Colors.ERROR,
+                        alignItems: "center", justifyContent: "center",
+                      }}
+                    >
+                      <Text style={{ color: "#fff", fontSize: 11, fontWeight: "800" }}>✕</Text>
+                    </TouchableOpacity>
+                    {idx === 0 && (
+                      <View style={{
+                        position: "absolute", bottom: 4, left: 4,
+                        backgroundColor: BRAND, paddingHorizontal: 5,
+                        paddingVertical: 2, borderRadius: 4,
+                      }}>
+                        <Text style={{ color: "#fff", fontSize: 8, fontWeight: "800" }}>COVER</Text>
+                      </View>
+                    )}
+                  </View>
+                ))}
+                {photoUris.length < MAX_PHOTOS && (
+                  <View style={{
+                    width: 76, height: 76, borderRadius: 10,
+                    borderWidth: 2, borderColor: BRAND + "55", borderStyle: "dashed",
+                    backgroundColor: "#FFF5F8",
                     alignItems: "center", justifyContent: "center",
-                  }}
-                >
-                  <Text style={{ color: Colors.WHITE, fontSize: 12, fontWeight: "700" }}>✕</Text>
-                </TouchableOpacity>
-                {idx === 0 && (
-                  <View style={{ position: "absolute", bottom: 4, left: 4, backgroundColor: Colors.PRIMARY, paddingHorizontal: 5, paddingVertical: 2, borderRadius: 4 }}>
-                    <Text style={{ color: Colors.WHITE, fontSize: 9, fontWeight: "700" }}>COVER</Text>
+                  }}>
+                    <Text style={{ fontSize: 24, color: BRAND }}>＋</Text>
                   </View>
                 )}
               </View>
-            ))}
-
-            {selectedPhotoUris.length < MAX_PHOTOS && (
-              <TouchableOpacity
-                onPress={handlePickPhotos}
-                style={{
-                  width: 80, height: 80,
-                  borderRadius: Sizes.RADIUS_MD,
-                  borderWidth: 2, borderColor: Colors.BORDER,
-                  borderStyle: "dashed",
-                  alignItems: "center", justifyContent: "center",
-                  backgroundColor: Colors.SURFACE,
-                }}
-              >
-                <Text style={{ fontSize: 28, color: Colors.TEXT_MUTED }}>+</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        </Section>
-
-        {/* Basic Info */}
-        <Section title={t.shelter_add_section_basics}>
-          <InputField label={t.shelter_add_label_name} value={name} onChangeText={setName} placeholder={t.shelter_add_placeholder_name} />
-          <InputField label={t.shelter_add_label_breed} value={rasse} onChangeText={setRasse} placeholder={t.shelter_add_placeholder_breed} />
-          <View style={{ flexDirection: "row", gap: 10 }}>
-            <View style={{ flex: 1 }}>
-              <InputField label={t.shelter_add_label_age_years} value={alterJahre} onChangeText={setAlterJahre} placeholder="0" keyboardType="numeric" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <InputField label={t.shelter_add_label_age_months} value={alterMonate} onChangeText={setAlterMonate} placeholder="0" keyboardType="numeric" />
-            </View>
-          </View>
-        </Section>
-
-        {/* Gender */}
-        <Section title={t.shelter_add_section_gender}>
-          <View style={{ flexDirection: "row", gap: 10 }}>
-            {GESCHLECHTER.map((g) => (
-              <Chip key={g.value} label={g.label} selected={geschlecht === g.value} onPress={() => setGeschlecht(g.value)} />
-            ))}
-          </View>
-        </Section>
-
-        {/* Size */}
-        <Section title={t.shelter_add_section_size}>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-            {GROESSEN.map((g) => (
-              <Chip key={g.value} label={g.label} selected={groesse === g.value} onPress={() => setGroesse(g.value)} />
-            ))}
-          </View>
-        </Section>
-
-        {/* Character Tags */}
-        <Section title={t.shelter_add_section_char}>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-            {CHARAKTER_OPTIONS.map((tag) => (
-              <Chip key={tag} label={tag} selected={charakterTags.includes(tag)} onPress={() => toggleTag(tag)} />
-            ))}
-          </View>
-        </Section>
-
-        {/* Properties */}
-        <Section title={t.shelter_add_section_props}>
-          <ToggleRow label={t.shelter_neutered} value={kastriert} onToggle={setKastriert} />
-          <ToggleRow label={t.shelter_add_label_garden} value={brauchtGarten} onToggle={setBrauchtGarten} />
-          <ToggleRow label={t.shelter_add_label_animals} value={vertraeglich} onToggle={setVertraeglich} />
-        </Section>
-
-        {/* Child-friendly */}
-        <Section title={t.shelter_add_section_children}>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-            {KINDERFREUNDLICH.map((k) => (
-              <Chip key={k.value} label={k.label} selected={kinderfreundlich === k.value} onPress={() => setKinderfreundlich(k.value)} />
-            ))}
-          </View>
-        </Section>
-
-        {/* Required Experience */}
-        <Section title={t.shelter_add_section_exp}>
-          <View style={{ gap: 8 }}>
-            {ERFAHRUNG.map((e) => (
-              <Chip key={e.value} label={e.label} selected={erfahrung === e.value} onPress={() => setErfahrung(e.value)} fullWidth />
-            ))}
-          </View>
-        </Section>
-
-        {/* Activity Level */}
-        <Section title={t.shelter_add_section_activity}>
-          <View style={{ gap: 8 }}>
-            {AKTIVITAET.map((a) => (
-              <Chip key={a.value} label={a.label} selected={aktivitaet === a.value} onPress={() => setAktivitaet(a.value)} fullWidth />
-            ))}
-          </View>
-        </Section>
-
-        {/* Description */}
-        <Section title={t.shelter_add_section_desc}>
-          <TextInput
-            value={beschreibung}
-            onChangeText={setBeschreibung}
-            placeholder={t.shelter_add_placeholder_desc}
-            placeholderTextColor={Colors.TEXT_MUTED}
-            multiline
-            numberOfLines={4}
-            style={{ backgroundColor: Colors.SURFACE, borderRadius: Sizes.RADIUS_MD, padding: 12, fontSize: Sizes.FONT_MD, color: Colors.TEXT, minHeight: 100, textAlignVertical: "top", borderWidth: 1, borderColor: Colors.BORDER }}
-          />
-        </Section>
-
-        {/* Save Button */}
-        <TouchableOpacity
-          onPress={handleSave}
-          disabled={loading}
-          style={{ height: Sizes.BUTTON_HEIGHT, backgroundColor: Colors.PRIMARY, borderRadius: Sizes.RADIUS_FULL, alignItems: "center", justifyContent: "center", marginTop: 4 }}
-        >
-          {loading ? (
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-              <ActivityIndicator color={Colors.WHITE} />
-              <Text style={{ color: Colors.WHITE, fontWeight: "600" }}>
-                {uploadingPhotos ? t.shelter_add_uploading : t.shelter_add_saving}
+              <Text style={{ fontSize: 12, color: BRAND + "99" }}>
+                {photoUris.length}/{MAX_PHOTOS} Fotos · Tippe zum Hinzufügen
               </Text>
-            </View>
-          ) : (
-            <Text style={{ color: Colors.WHITE, fontWeight: "700", fontSize: Sizes.FONT_MD }}>
-              {t.shelter_add_save_btn}
-            </Text>
+            </>
           )}
         </TouchableOpacity>
+
+        {/* ══════════════════════════════════════
+            BASISDATEN
+        ══════════════════════════════════════ */}
+        <SectionDivider />
+        <SectionLabel>Basisdaten</SectionLabel>
+
+        <View style={{ paddingHorizontal: 20, gap: 18 }}>
+
+          {/* Name */}
+          <View>
+            <FieldLabel>Name</FieldLabel>
+            <TextInput
+              value={name}
+              onChangeText={setName}
+              placeholder="z.B. Luna"
+              placeholderTextColor="#C5A8B0"
+              style={inputStyle}
+            />
+          </View>
+
+          {/* Geschlecht */}
+          <View>
+            <FieldLabel>Geschlecht</FieldLabel>
+            <View style={{ flexDirection: "row", gap: 10 }}>
+              {["Männlich", "Weiblich"].map((label, i) => {
+                const val = i === 0 ? "maennlich" : "weiblich";
+                return (
+                  <PillChip
+                    key={val}
+                    label={label}
+                    selected={geschlecht === val}
+                    onPress={() => setGeschlecht(val)}
+                    flex
+                  />
+                );
+              })}
+            </View>
+          </View>
+
+          {/* Alter */}
+          <View>
+            <FieldLabel>Alter</FieldLabel>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+              <TextInput
+                value={alterWert}
+                onChangeText={setAlterWert}
+                placeholder="0"
+                placeholderTextColor="#C5A8B0"
+                keyboardType="numeric"
+                style={[inputStyle, { flex: 1 }]}
+              />
+              {(["Jahre", "Monate"] as const).map((label) => {
+                const val = label.toLowerCase() as "jahre" | "monate";
+                return (
+                  <PillChip
+                    key={val}
+                    label={label}
+                    selected={alterEinheit === val}
+                    onPress={() => setAlterEinheit(val)}
+                  />
+                );
+              })}
+            </View>
+          </View>
+
+          {/* Rasse + Gewicht */}
+          <View style={{ flexDirection: "row", gap: 12 }}>
+            <View style={{ flex: 2 }}>
+              <FieldLabel>Rasse</FieldLabel>
+              <TextInput
+                value={rasse}
+                onChangeText={setRasse}
+                placeholder="z.B. Labrador"
+                placeholderTextColor="#C5A8B0"
+                style={inputStyle}
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <FieldLabel>Gewicht (kg)</FieldLabel>
+              <TextInput
+                value={gewicht}
+                onChangeText={setGewicht}
+                placeholder="0"
+                placeholderTextColor="#C5A8B0"
+                keyboardType="decimal-pad"
+                style={inputStyle}
+              />
+            </View>
+          </View>
+
+          {/* Größe */}
+          <View>
+            <FieldLabel>Größe</FieldLabel>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+              {GROESSEN.map((label, i) => (
+                <PillChip
+                  key={GROESSEN_VAL[i]}
+                  label={label}
+                  selected={groesse === GROESSEN_VAL[i]}
+                  onPress={() => setGroesse(GROESSEN_VAL[i])}
+                />
+              ))}
+            </View>
+          </View>
+
+          {/* Herkunft */}
+          <View>
+            <FieldLabel>Herkunft</FieldLabel>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+              {HERKUNFT.map((label, i) => (
+                <PillChip
+                  key={HERKUNFT_VAL[i]}
+                  label={label}
+                  selected={herkunft === HERKUNFT_VAL[i]}
+                  onPress={() => setHerkunft(herkunft === HERKUNFT_VAL[i] ? "" : HERKUNFT_VAL[i])}
+                />
+              ))}
+            </View>
+          </View>
+
+          {/* Fell & Farbe */}
+          <View>
+            <FieldLabel>Fell & Farbe</FieldLabel>
+            <TextInput
+              value={fellFarbe}
+              onChangeText={setFellFarbe}
+              placeholder="z.B. kurz, schwarz-weiß"
+              placeholderTextColor="#C5A8B0"
+              style={inputStyle}
+            />
+          </View>
+
+        </View>
+
+        {/* ══════════════════════════════════════
+            CHARAKTER
+        ══════════════════════════════════════ */}
+        <SectionDivider />
+        <SectionLabel>Charakter</SectionLabel>
+
+        <View style={{ paddingHorizontal: 20, gap: 18 }}>
+
+          {/* Charakter Tags */}
+          <View>
+            <FieldLabel>Wesenseigenschaften</FieldLabel>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+              {CHARAKTER_TAGS.map((tag) => (
+                <PillChip
+                  key={tag}
+                  label={tag}
+                  selected={charakterTags.includes(tag)}
+                  onPress={() => toggleTag(tag)}
+                />
+              ))}
+            </View>
+          </View>
+
+          {/* Kinderfreundlich */}
+          <View>
+            <FieldLabel>Kinderfreundlich</FieldLabel>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+              {KINDERFREUNDLICH.map((label, i) => (
+                <PillChip
+                  key={KINDERFREUNDLICH_VAL[i]}
+                  label={label}
+                  selected={kinderfreundlich === KINDERFREUNDLICH_VAL[i]}
+                  onPress={() => setKinderfreundlich(KINDERFREUNDLICH_VAL[i])}
+                />
+              ))}
+            </View>
+          </View>
+
+          {/* Aktivitätsbedarf */}
+          <View>
+            <FieldLabel>Aktivitätsbedarf</FieldLabel>
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              {AKTIVITAET.map((label, i) => (
+                <PillChip
+                  key={AKTIVITAET_VAL[i]}
+                  label={label}
+                  selected={aktivitaet === AKTIVITAET_VAL[i]}
+                  onPress={() => setAktivitaet(AKTIVITAET_VAL[i])}
+                  flex
+                />
+              ))}
+            </View>
+          </View>
+
+          {/* Benötigte Erfahrung */}
+          <View>
+            <FieldLabel>Benötigte Erfahrung</FieldLabel>
+            <View style={{ gap: 8 }}>
+              {ERFAHRUNG.map((label, i) => (
+                <PillChip
+                  key={ERFAHRUNG_VAL[i]}
+                  label={label}
+                  selected={erfahrung === ERFAHRUNG_VAL[i]}
+                  onPress={() => setErfahrung(ERFAHRUNG_VAL[i])}
+                  fullWidth
+                />
+              ))}
+            </View>
+          </View>
+
+        </View>
+
+        {/* ══════════════════════════════════════
+            VERTRÄGLICHKEIT & HALTUNG
+        ══════════════════════════════════════ */}
+        <SectionDivider />
+        <SectionLabel>Verträglichkeit & Haltung</SectionLabel>
+
+        <View style={{ paddingHorizontal: 20, gap: 0 }}>
+          <ToggleRow label="Verträglich mit Hunden"     value={hundVertraeglich}    onToggle={setHundVertraeglich} />
+          <ToggleRow label="Verträglich mit Katzen"      value={katzeVertraeglich}   onToggle={setKatzeVertraeglich} />
+          <ToggleRow label="Verträglich mit Kleintieren" value={kleintierVertraeglich} onToggle={setKleintierVertraeglich} />
+          <ToggleRow label="Stubenrein"                  value={stubenrein}          onToggle={setStubenrein} />
+          <ToggleRow label="Leinenführig"                value={leinenführig}        onToggle={setLeinenführig} />
+          <ToggleRow label="Maulkorbpflicht"             value={maulkorbpflicht}     onToggle={setMaulkorbpflicht} />
+          <ToggleRow label="Braucht Garten"              value={brauchtGarten}       onToggle={setBrauchtGarten} last />
+        </View>
+
+        {/* Alleine bleiben */}
+        <View style={{ paddingHorizontal: 20, marginTop: 16 }}>
+          <FieldLabel>Alleine bleiben</FieldLabel>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+            {ALLEINE.map((label, i) => (
+              <PillChip
+                key={ALLEINE_VAL[i]}
+                label={label}
+                selected={alleineBleibt === ALLEINE_VAL[i]}
+                onPress={() => setAlleineBleibt(ALLEINE_VAL[i])}
+              />
+            ))}
+          </View>
+        </View>
+
+        {/* ══════════════════════════════════════
+            GESUNDHEIT
+        ══════════════════════════════════════ */}
+        <SectionDivider />
+        <SectionLabel>Gesundheit</SectionLabel>
+
+        <View style={{ paddingHorizontal: 20 }}>
+          <ToggleRow label="Geimpft"                    value={geimpft}    onToggle={setGeimpft} />
+          <ToggleRow label="Gechipt"                    value={gechipt}    onToggle={setGechipt} />
+          <ToggleRow label="Kastriert / sterilisiert"   value={kastriert}  onToggle={setKastriert} />
+          <ToggleRow label="Entwurmt"                   value={entwurmt}   onToggle={setEntwurmt} />
+          <ToggleRow
+            label="Bekannte Erkrankungen"
+            value={hatErkrankungen}
+            onToggle={setHatErkrankungen}
+            last={!hatErkrankungen}
+          />
+          {hatErkrankungen && (
+            <TextInput
+              value={erkrankungenText}
+              onChangeText={setErkrankungenText}
+              placeholder="Bitte Erkrankungen beschreiben…"
+              placeholderTextColor="#C5A8B0"
+              multiline
+              numberOfLines={3}
+              style={[textAreaStyle, { marginTop: 10, marginBottom: 4 }]}
+            />
+          )}
+        </View>
+
+        {/* ══════════════════════════════════════
+            GESCHICHTE & BESCHREIBUNG
+        ══════════════════════════════════════ */}
+        <SectionDivider />
+        <SectionLabel>Geschichte & Beschreibung</SectionLabel>
+
+        <View style={{ paddingHorizontal: 20, gap: 16 }}>
+
+          <View>
+            <FieldLabel>Über den Hund</FieldLabel>
+            <Text style={{ fontSize: 12, color: "#C5A8B0", marginBottom: 6 }}>
+              80–200 Wörter empfohlen · Wird im Profil angezeigt
+            </Text>
+            <TextInput
+              value={beschreibung}
+              onChangeText={setBeschreibung}
+              placeholder="Erzähle uns etwas über den Charakter, die Geschichte und was den Hund besonders macht…"
+              placeholderTextColor="#C5A8B0"
+              multiline
+              numberOfLines={6}
+              style={[textAreaStyle, { minHeight: 130 }]}
+            />
+          </View>
+
+          <View>
+            <FieldLabel>Interne Notizen</FieldLabel>
+            <Text style={{ fontSize: 12, color: "#C5A8B0", marginBottom: 6 }}>
+              Nur für Tierheim-Mitarbeiter sichtbar
+            </Text>
+            <TextInput
+              value={interneNotizen}
+              onChangeText={setInterneNotizen}
+              placeholder="z.B. Besonderheiten bei der Übergabe, Medikamente, Kontakte…"
+              placeholderTextColor="#C5A8B0"
+              multiline
+              numberOfLines={4}
+              style={[textAreaStyle, { minHeight: 100 }]}
+            />
+          </View>
+
+        </View>
+
+        {/* ══════════════════════════════════════
+            SUBMIT
+        ══════════════════════════════════════ */}
+        <View style={{ paddingHorizontal: 20, marginTop: 32 }}>
+          <TouchableOpacity
+            onPress={handleSave}
+            disabled={loading}
+            activeOpacity={0.85}
+            style={{
+              height: Sizes.BUTTON_HEIGHT,
+              backgroundColor: BRAND,
+              borderRadius: Sizes.RADIUS_FULL,
+              alignItems: "center",
+              justifyContent: "center",
+              shadowColor: BRAND,
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.35,
+              shadowRadius: 12,
+              elevation: 6,
+            }}
+          >
+            {loading ? (
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                <ActivityIndicator color="#fff" />
+                <Text style={{ color: "#fff", fontWeight: "600", fontSize: 16 }}>
+                  {uploadingPhotos ? "Fotos werden hochgeladen…" : "Wird gespeichert…"}
+                </Text>
+              </View>
+            ) : (
+              <Text style={{ color: "#fff", fontWeight: "800", fontSize: 16 }}>
+                Profil speichern & veröffentlichen
+              </Text>
+            )}
+          </TouchableOpacity>
+        </View>
+
       </ScrollView>
     </View>
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+// ─────────────────────────────────────────────
+// Shared Styles
+// ─────────────────────────────────────────────
+const inputStyle = {
+  height: 48,
+  backgroundColor: "#FFF8FA",
+  borderRadius: 12,
+  paddingHorizontal: 14,
+  fontSize: 15,
+  color: "#2C2C2A",
+  borderWidth: 1.5,
+  borderColor: "#F0E0E4",
+};
+
+const textAreaStyle = {
+  backgroundColor: "#FFF8FA",
+  borderRadius: 12,
+  paddingHorizontal: 14,
+  paddingTop: 12,
+  paddingBottom: 12,
+  fontSize: 15,
+  color: "#2C2C2A",
+  borderWidth: 1.5,
+  borderColor: "#F0E0E4",
+  textAlignVertical: "top" as const,
+};
+
+// ─────────────────────────────────────────────
+// Sub-components
+// ─────────────────────────────────────────────
+
+function SectionDivider() {
+  return <View style={{ height: 1, backgroundColor: "#F0E0E4", marginTop: 28, marginBottom: 0 }} />;
+}
+
+function SectionLabel({ children }: { children: string }) {
   return (
-    <View>
-      <Text style={{ fontSize: 14, fontWeight: "700", color: Colors.TEXT, marginBottom: 10 }}>{title}</Text>
+    <Text style={{
+      fontSize: 12,
+      fontWeight: "700",
+      color: BRAND,
+      letterSpacing: 1.1,
+      textTransform: "uppercase",
+      paddingHorizontal: 20,
+      paddingTop: 20,
+      paddingBottom: 14,
+    }}>
       {children}
-    </View>
+    </Text>
   );
 }
 
-function InputField({ label, value, onChangeText, placeholder, keyboardType }: {
-  label: string; value: string; onChangeText: (t: string) => void; placeholder?: string; keyboardType?: any;
-}) {
+function FieldLabel({ children, required }: { children: string; required?: boolean }) {
   return (
-    <View style={{ marginBottom: 10 }}>
-      <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, marginBottom: 4 }}>{label}</Text>
-      <TextInput
-        value={value}
-        onChangeText={onChangeText}
-        placeholder={placeholder}
-        placeholderTextColor={Colors.TEXT_MUTED}
-        keyboardType={keyboardType}
-        style={{ height: Sizes.INPUT_HEIGHT, backgroundColor: Colors.SURFACE, borderRadius: Sizes.RADIUS_MD, paddingHorizontal: 14, fontSize: Sizes.FONT_MD, color: Colors.TEXT, borderWidth: 1, borderColor: Colors.BORDER }}
-      />
-    </View>
+    <Text style={{ fontSize: 13, fontWeight: "600", color: "#5A4048", marginBottom: 8 }}>
+      {children}
+      {required && <Text style={{ color: BRAND }}> *</Text>}
+    </Text>
   );
 }
 
-function Chip({ label, selected, onPress, fullWidth }: { label: string; selected: boolean; onPress: () => void; fullWidth?: boolean }) {
+function PillChip({
+  label, selected, onPress, flex, fullWidth, activeColor,
+}: {
+  label: string;
+  selected: boolean;
+  onPress: () => void;
+  flex?: boolean;
+  fullWidth?: boolean;
+  activeColor?: string;
+}) {
+  const color = activeColor ?? BRAND;
   return (
     <TouchableOpacity
       onPress={onPress}
+      activeOpacity={0.7}
       style={{
-        paddingHorizontal: 14, paddingVertical: 8,
-        borderRadius: Sizes.RADIUS_FULL,
-        backgroundColor: selected ? Colors.PRIMARY : Colors.SURFACE,
+        paddingHorizontal: 16,
+        paddingVertical: 9,
+        borderRadius: 999,
         borderWidth: 1.5,
-        borderColor: selected ? Colors.PRIMARY : Colors.BORDER,
+        borderColor: selected ? color : "#F0E0E4",
+        backgroundColor: selected ? color : "#FFFFFF",
+        alignItems: "center",
+        justifyContent: "center",
+        ...(flex ? { flex: 1 } : {}),
         ...(fullWidth ? { width: "100%" } : {}),
       }}
     >
-      <Text style={{ color: selected ? Colors.WHITE : Colors.TEXT, fontWeight: selected ? "700" : "400", fontSize: 13, textAlign: fullWidth ? "center" : "left" }}>
+      <Text style={{
+        fontSize: 13,
+        fontWeight: selected ? "700" : "500",
+        color: selected ? "#FFFFFF" : "#5A4048",
+        textAlign: "center",
+      }}>
         {label}
       </Text>
     </TouchableOpacity>
   );
 }
 
-function ToggleRow({ label, value, onToggle }: { label: string; value: boolean; onToggle: (v: boolean) => void }) {
+function ToggleRow({
+  label, value, onToggle, last,
+}: {
+  label: string;
+  value: boolean;
+  onToggle: (v: boolean) => void;
+  last?: boolean;
+}) {
   return (
-    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: Colors.BORDER }}>
-      <Text style={{ fontSize: Sizes.FONT_MD, color: Colors.TEXT }}>{label}</Text>
-      <Switch value={value} onValueChange={onToggle} trackColor={{ false: Colors.BORDER, true: Colors.PRIMARY }} thumbColor={Colors.WHITE} />
+    <View style={{
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingVertical: 13,
+      borderBottomWidth: last ? 0 : 1,
+      borderBottomColor: "#F0E0E4",
+    }}>
+      <Text style={{ fontSize: 15, color: "#2C2C2A", flex: 1, marginRight: 12 }}>{label}</Text>
+      <Switch
+        value={value}
+        onValueChange={onToggle}
+        trackColor={{ false: "#E8D8DC", true: BRAND }}
+        thumbColor="#FFFFFF"
+        ios_backgroundColor="#E8D8DC"
+      />
     </View>
   );
 }

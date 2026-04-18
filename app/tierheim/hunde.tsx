@@ -155,7 +155,7 @@ export default function TierheimHundeScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
       <GradientHeader
-        title="🐕 Meine Hunde"
+        title="Meine Hunde"
         showBack
         backLabel={t.comp_switch_modes}
         onBack={() => router.replace("/")}
@@ -180,7 +180,7 @@ export default function TierheimHundeScreen() {
 
       {pets.length === 0 ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32 }}>
-          <Text style={{ fontSize: 52, marginBottom: 16 }}>🐾</Text>
+          <Image source={require("../../assets/hunde-empty.png")} style={{ width: 80, height: 73, resizeMode: "contain", tintColor: Colors.PRIMARY, marginBottom: 16 }} />
           <Text style={{ fontSize: Sizes.FONT_XL, fontWeight: "700", color: Colors.TEXT, textAlign: "center", marginBottom: 8 }}>
             {t.tierheim_dogs_empty_title}
           </Text>

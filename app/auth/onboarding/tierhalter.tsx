@@ -262,7 +262,7 @@ export default function TierhalterOnboarding() {
 
             <Text style={s.label}>{t.onb_hb_info_avatar_hint}</Text>
             <TouchableOpacity style={[s.avatarPicker, avatarUri ? { borderColor: Colors.SECONDARY } : {}]} onPress={pickAvatar}>
-              <Text style={s.avatarPickerText}>{avatarUri ? "✅ Foto ausgewählt" : "📷 Profilbild auswählen *"}</Text>
+              <Text style={s.avatarPickerText}>{avatarUri ? "✅ Foto ausgewählt" : "📷 Profilbild auswählen"}</Text>
             </TouchableOpacity>
 
             <Text style={s.label}>{t.onb_hb_info_bio}</Text>

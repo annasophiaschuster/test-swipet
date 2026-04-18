@@ -8,6 +8,7 @@ import {
   Alert,
   ActivityIndicator,
   StyleSheet,
+  Image,
 } from "react-native";
 import { router } from "expo-router";
 import { supabase } from "../../../lib/supabase";
@@ -16,8 +17,9 @@ import { Sizes } from "../../../constants/sizes";
 import { useLanguage } from "../../../contexts/LanguageContext";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const TOTAL_STEPS = 7;
+const TOTAL_STEPS = 5;
 
 type Wohnsituation = "wohnung" | "haus" | "haus_mit_garten" | "bauernhof";
 type Erfahrung = "anfaenger" | "fortgeschritten" | "profi";
@@ -32,18 +34,14 @@ export default function AdoptantOnboarding() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
 
-  // Step 3 — Datenschutz
-  const [datenschutz, setDatenschutz] = useState(false);
-  const [newsletter, setNewsletter] = useState(false);
-
-  // Step 4 — Persönliche Infos
+  // Step 2 — Persönliche Infos
   const [ansprache, setAnsprache] = useState<Ansprache | null>(null);
   const [vorname, setVorname] = useState("");
   const [geburtsdatum, setGeburtsdatum] = useState("");
   const [plz, setPlz] = useState("");
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
 
-  // Step 5 — Lebenssituation
+  // Step 3 — Lebenssituation
   const [wohnsituation, setWohnsituation] = useState<Wohnsituation | null>(null);
   const [sqm, setSqm] = useState("");
   const [mieterEigentuemer, setMieterEigentuemer] = useState<MieterEigentuemer | null>(null);
@@ -52,7 +50,7 @@ export default function AdoptantOnboarding() {
   const [andereTiere, setAndereTiere] = useState<boolean | null>(null);
   const [alleinePartner, setAlleinePartner] = useState<AlleinePartner | null>(null);
 
-  // Step 6 — Erfahrung & Lifestyle
+  // Step 4 — Erfahrung & Lifestyle
   const [erfahrung, setErfahrung] = useState<Erfahrung | null>(null);
   const [aktivitaet, setAktivitaet] = useState<Aktivitaet | null>(null);
   const [arbeitszeit, setArbeitszeit] = useState<Arbeitszeit | null>(null);
@@ -61,22 +59,12 @@ export default function AdoptantOnboarding() {
   const goNext = () => setStep((s) => Math.min(s + 1, TOTAL_STEPS));
   const goBack = () => setStep((s) => Math.max(s - 1, 1));
 
-  // ── Step 3: Validate privacy ──
-  const validateStep3 = () => {
-    if (!datenschutz) {
-      Alert.alert("Datenschutz", t.onb_hs_privacy_required);
-      return false;
-    }
-    return true;
-  };
-
-  // ── Step 4: Validate personal info ──
-  const validateStep4 = () => {
+  // ── Step 2: Validate personal info ──
+  const validateStep2 = () => {
     if (!vorname.trim() || !geburtsdatum.trim() || !plz.trim()) {
       Alert.alert("Pflichtfeld", t.onb_hs_info_required);
       return false;
     }
-    // Age check: geburtsdatum format DD.MM.YYYY
     const parts = geburtsdatum.split(".");
     if (parts.length === 3) {
       const dob = new Date(+parts[2], +parts[1] - 1, +parts[0]);
@@ -108,17 +96,13 @@ export default function AdoptantOnboarding() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error(t.onb_err_not_logged_in);
 
-      // Update profiles
       await supabase.from("profiles").update({
         ansprache,
         vorname: vorname.trim() || null,
         geburtsdatum: geburtsdatum || null,
         plz: plz.trim() || null,
-        newsletter,
-        datenschutz,
       }).eq("id", user.id);
 
-      // Upsert adoptant_profiles
       await supabase.from("adoptant_profiles").upsert({
         id: user.id,
         wohnsituation: wohnsituation ?? undefined,
@@ -133,6 +117,9 @@ export default function AdoptantOnboarding() {
         alleine_partner: alleinePartner ?? undefined,
         stunden_alleine: stundenAlleine ? parseInt(stundenAlleine) : null,
       });
+
+      // Flag so feed.tsx shows the newsletter popup
+      await AsyncStorage.setItem("show_newsletter_popup", "true");
 
       router.replace("/adoption/feed");
     } catch (e: any) {
@@ -169,13 +156,18 @@ export default function AdoptantOnboarding() {
         {/* ── Step 1: Welcome ── */}
         {step === 1 && (
           <View style={s.centerBlock}>
-            <Text style={s.welcomeEmoji}>🐾</Text>
+            <Image source={require("../../../assets/onb-welcome.png")} style={{ width: 64, height: 64, resizeMode: "contain", tintColor: Colors.PRIMARY, marginBottom: 12 }} />
             <Text style={s.welcomeTitle}>{t.onb_hs_welcome_title}</Text>
             <Text style={s.welcomeSub}>{t.onb_hs_welcome_sub}</Text>
             <View style={s.featureList}>
-              {["🏠 Lokale Tierheime entdecken", "❤️ Passende Hunde finden", "💬 Direkt mit Tierheimen chatten"].map((f) => (
-                <View key={f} style={s.featureRow}>
-                  <Text style={s.featureText}>{f}</Text>
+              {[
+                { icon: require("../../../assets/tab-haus.png"), label: "Lokale Tierheime entdecken" },
+                { icon: require("../../../assets/onb-swipen.png"), label: "Passende Hunde finden" },
+                { icon: require("../../../assets/tab-chat.png"), label: "Direkt chatten" },
+              ].map((f) => (
+                <View key={f.label} style={s.featureRow}>
+                  <Image source={f.icon} style={{ width: 24, height: 24, resizeMode: "contain", tintColor: Colors.PRIMARY, marginRight: 10 }} />
+                  <Text style={s.featureText}>{f.label}</Text>
                 </View>
               ))}
             </View>
@@ -185,44 +177,8 @@ export default function AdoptantOnboarding() {
           </View>
         )}
 
-        {/* ── Step 2: Email confirmation hint ── */}
+        {/* ── Step 2: Persönliche Infos ── */}
         {step === 2 && (
-          <View style={s.centerBlock}>
-            <Text style={s.stepEmoji}>📧</Text>
-            <Text style={s.stepTitle}>Konto erstellt!</Text>
-            <Text style={s.stepSub}>
-              Wir haben dir eine Bestätigungs-E-Mail gesendet. Du kannst trotzdem direkt loslegen — bitte bestätige deine E-Mail sobald du kannst.
-            </Text>
-            <TouchableOpacity style={[s.primaryBtn, { backgroundColor: Colors.PRIMARY }]} onPress={goNext}>
-              <Text style={s.primaryBtnText}>{t.onb_next}</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {/* ── Step 3: Datenschutz ── */}
-        {step === 3 && (
-          <View>
-            <Text style={s.stepTitle}>{t.onb_hs_privacy_title}</Text>
-            <Text style={s.stepSub}>{t.onb_hs_privacy_sub}</Text>
-
-            <TouchableOpacity style={s.checkRow} onPress={() => setDatenschutz(!datenschutz)}>
-              <View style={[s.checkbox, datenschutz && { backgroundColor: Colors.PRIMARY, borderColor: Colors.PRIMARY }]}>
-                {datenschutz && <Text style={s.checkMark}>✓</Text>}
-              </View>
-              <Text style={s.checkLabel}>{t.onb_hs_privacy_accept}</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={s.checkRow} onPress={() => setNewsletter(!newsletter)}>
-              <View style={[s.checkbox, newsletter && { backgroundColor: Colors.PRIMARY, borderColor: Colors.PRIMARY }]}>
-                {newsletter && <Text style={s.checkMark}>✓</Text>}
-              </View>
-              <Text style={s.checkLabel}>{t.onb_hs_privacy_newsletter}</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {/* ── Step 4: Persönliche Infos ── */}
-        {step === 4 && (
           <View>
             <Text style={s.stepTitle}>{t.onb_hs_info_title}</Text>
 
@@ -261,8 +217,8 @@ export default function AdoptantOnboarding() {
           </View>
         )}
 
-        {/* ── Step 5: Lebenssituation ── */}
-        {step === 5 && (
+        {/* ── Step 3: Lebenssituation ── */}
+        {step === 3 && (
           <View>
             <Text style={s.stepTitle}>{t.onb_hs_living_title}</Text>
             <Text style={s.stepSub}>{t.onb_hs_living_sub}</Text>
@@ -329,8 +285,8 @@ export default function AdoptantOnboarding() {
           </View>
         )}
 
-        {/* ── Step 6: Erfahrung & Lifestyle ── */}
-        {step === 6 && (
+        {/* ── Step 4: Erfahrung & Lifestyle ── */}
+        {step === 4 && (
           <View>
             <Text style={s.stepTitle}>{t.onb_hs_lifestyle_title}</Text>
             <Text style={s.stepSub}>{t.onb_hs_lifestyle_sub}</Text>
@@ -383,8 +339,8 @@ export default function AdoptantOnboarding() {
           </View>
         )}
 
-        {/* ── Step 7: Fertig ── */}
-        {step === 7 && (
+        {/* ── Step 5: Fertig ── */}
+        {step === 5 && (
           <View style={s.centerBlock}>
             <Text style={s.welcomeEmoji}>🐾</Text>
             <Text style={s.welcomeTitle}>{t.onb_hs_done_title}</Text>
@@ -409,8 +365,7 @@ export default function AdoptantOnboarding() {
           <TouchableOpacity
             style={[s.nextBtn, { backgroundColor: Colors.PRIMARY }]}
             onPress={() => {
-              if (step === 3 && !validateStep3()) return;
-              if (step === 4 && !validateStep4()) return;
+              if (step === 2 && !validateStep2()) return;
               goNext();
             }}
           >
@@ -438,7 +393,7 @@ const s = StyleSheet.create({
   welcomeTitle: { fontSize: 26, fontWeight: "700", color: Colors.TEXT, textAlign: "center", marginBottom: 12 },
   welcomeSub: { fontSize: 16, color: Colors.TEXT_MUTED, textAlign: "center", lineHeight: 24, marginBottom: 24 },
   featureList: { width: "100%", marginBottom: 32 },
-  featureRow: { paddingVertical: 10, paddingHorizontal: 16, backgroundColor: Colors.SURFACE, borderRadius: 12, marginBottom: 8 },
+  featureRow: { flexDirection: "row", alignItems: "center", paddingVertical: 10, paddingHorizontal: 16, backgroundColor: Colors.SURFACE, borderRadius: 12, marginBottom: 8 },
   featureText: { fontSize: 15, color: Colors.TEXT },
 
   stepEmoji: { fontSize: 48, textAlign: "center", marginBottom: 12 },

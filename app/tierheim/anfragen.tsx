@@ -241,7 +241,7 @@ export default function TierheimAnfragenScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
       <GradientHeader
-        title="🔔 Anfragen"
+        title="Anfragen"
         subtitle={`${anfragen.length} ${anfragen.length !== 1 ? t.tierheim_req_subtitle_plural : t.tierheim_req_subtitle_singular}`}
         showBack
         backLabel={t.comp_switch_modes}
@@ -260,7 +260,7 @@ export default function TierheimAnfragenScreen() {
 
       {anfragen.length === 0 ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32 }}>
-          <Text style={{ fontSize: 52, marginBottom: 16 }}>💌</Text>
+          <Image source={require("../../assets/icon-brief.png")} style={{ width: 64, height: 64, resizeMode: "contain", tintColor: Colors.PRIMARY, marginBottom: 16 }} />
           <Text style={{ fontSize: Sizes.FONT_XL, fontWeight: "700", color: Colors.TEXT, textAlign: "center", marginBottom: 8 }}>
             {t.tierheim_req_empty_title}
           </Text>
