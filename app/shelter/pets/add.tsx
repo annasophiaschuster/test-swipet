@@ -157,7 +157,23 @@ export default function AddPetScreen() {
           aktivitaetslevel: aktivitaet,
           charakter_tags: charakterTags,
           status: "verfuegbar",
-        })
+          // extended fields
+          herkunft: herkunft || null,
+          gewicht: gewicht.trim() || null,
+          fell_typ: null,
+          fell_farbe: fellFarbe.trim() || null,
+          hund_vertraeglich: hundVertraeglich,
+          katze_vertraeglich: katzeVertraeglich,
+          kleintier_vertraeglich: kleintierVertraeglich,
+          stubenrein,
+          leinenfuehrig: leinenführig,
+          maulkorbpflicht,
+          alleine_bleiben: alleineBleibt,
+          geimpft,
+          gechipt,
+          entwurmt,
+          erkrankungen: hatErkrankungen ? (erkrankungenText.trim() || "Ja") : null,
+        } as any)
         .select("id")
         .single();
 
