@@ -9,6 +9,8 @@ import {
   RefreshControl,
   ScrollView,
   StyleSheet,
+  Modal,
+  Pressable,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
@@ -76,6 +78,8 @@ export default function TierheimAnfragenScreen() {
   const [selectedDogId, setSelectedDogId] = useState<string | null>(null);
   const [loading, setLoading]             = useState(true);
   const [refreshing, setRefreshing]       = useState(false);
+  const [showFilterModal, setShowFilterModal] = useState(false);
+  const [activeFilter, setActiveFilter]   = useState<null | "unread" | "favorited">(null);
 
   // ── Data ────────────────────────────────────────────────────────────────────
 
@@ -164,9 +168,9 @@ export default function TierheimAnfragenScreen() {
 
   // ── Derived ─────────────────────────────────────────────────────────────────
 
-  const visibleChats = selectedDogId
-    ? allChats.filter((c) => c.petId === selectedDogId)
-    : allChats;
+  const visibleChats = allChats
+    .filter((c) => !selectedDogId || c.petId === selectedDogId)
+    .filter((c) => activeFilter === "unread" ? c.unreadCount > 0 : true);
 
   const totalUnread = allChats.reduce((s, c) => s + c.unreadCount, 0);
 
@@ -205,13 +209,75 @@ export default function TierheimAnfragenScreen() {
 
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Nachrichten</Text>
-        {totalUnread > 0 && (
-          <View style={styles.headerBadge}>
-            <Text style={styles.headerBadgeText}>{totalUnread}</Text>
-          </View>
-        )}
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flex: 1 }}>
+          <Text style={styles.headerTitle}>Nachrichten</Text>
+          {totalUnread > 0 && (
+            <View style={styles.headerBadge}>
+              <Text style={styles.headerBadgeText}>{totalUnread}</Text>
+            </View>
+          )}
+        </View>
+        <TouchableOpacity
+          onPress={() => setShowFilterModal(true)}
+          style={[styles.filterBtn, activeFilter !== null && styles.filterBtnActive]}
+          activeOpacity={0.7}
+        >
+          <Ionicons
+            name="options-outline"
+            size={20}
+            color={activeFilter !== null ? Colors.WHITE : Colors.TEXT}
+          />
+        </TouchableOpacity>
       </View>
+
+      {/* Filter modal */}
+      <Modal
+        visible={showFilterModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowFilterModal(false)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setShowFilterModal(false)}>
+          <Pressable style={styles.modalSheet} onPress={() => {}}>
+            <Text style={styles.modalTitle}>Filter</Text>
+
+            {([
+              { key: "unread",    label: "Ungelesene Nachrichten" },
+              { key: "favorited", label: "Favorisierte Nachrichten" },
+            ] as const).map(({ key, label }) => {
+              const active = activeFilter === key;
+              return (
+                <TouchableOpacity
+                  key={key}
+                  onPress={() => {
+                    setActiveFilter(active ? null : key);
+                    setShowFilterModal(false);
+                  }}
+                  activeOpacity={0.7}
+                  style={[styles.modalOption, active && styles.modalOptionActive]}
+                >
+                  <Text style={[styles.modalOptionText, active && styles.modalOptionTextActive]}>
+                    {label}
+                  </Text>
+                  {active && (
+                    <Ionicons name="checkmark" size={18} color={Colors.PRIMARY} />
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+
+            {activeFilter !== null && (
+              <TouchableOpacity
+                onPress={() => { setActiveFilter(null); setShowFilterModal(false); }}
+                activeOpacity={0.7}
+                style={styles.modalClear}
+              >
+                <Text style={styles.modalClearText}>Filter zurücksetzen</Text>
+              </TouchableOpacity>
+            )}
+          </Pressable>
+        </Pressable>
+      </Modal>
 
       {/* Matches strip */}
       <View style={styles.stripWrap}>
@@ -224,6 +290,25 @@ export default function TierheimAnfragenScreen() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.stripScroll}
           >
+            {/* "Alle Hunde" bubble */}
+            <TouchableOpacity
+              onPress={() => setSelectedDogId(null)}
+              activeOpacity={0.75}
+              style={styles.dogWrap}
+            >
+              <View style={[styles.dogRing, selectedDogId === null && styles.dogRingActive]}>
+                <View style={[styles.dogPhoto, styles.dogPhotoFallback]}>
+                  <Text style={{ fontSize: 22 }}>🐾</Text>
+                </View>
+              </View>
+              <Text
+                numberOfLines={1}
+                style={[styles.dogName, selectedDogId === null && styles.dogNameActive]}
+              >
+                Alle Hunde
+              </Text>
+            </TouchableOpacity>
+
             {matchedDogs.map((dog) => {
               const active = selectedDogId === dog.id;
               return (
@@ -365,7 +450,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 8,
     paddingBottom: 14,
-    gap: 8,
   },
   headerTitle: {
     fontSize: 28,
@@ -383,6 +467,72 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
   },
   headerBadgeText: { color: "#FFF", fontSize: 11, fontWeight: "800" },
+
+  // Filter button
+  filterBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.SURFACE,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  filterBtnActive: {
+    backgroundColor: Colors.PRIMARY,
+  },
+
+  // Filter modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.35)",
+    justifyContent: "flex-end",
+  },
+  modalSheet: {
+    backgroundColor: Colors.BACKGROUND,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingTop: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 36,
+    gap: 6,
+  },
+  modalTitle: {
+    fontSize: 17,
+    fontWeight: "800",
+    color: Colors.TEXT,
+    marginBottom: 10,
+  },
+  modalOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    backgroundColor: Colors.SURFACE,
+    borderWidth: 1.5,
+    borderColor: "transparent",
+  },
+  modalOptionActive: {
+    borderColor: Colors.PRIMARY,
+    backgroundColor: Colors.PRIMARY + "10",
+  },
+  modalOptionText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: Colors.TEXT,
+  },
+  modalOptionTextActive: { color: Colors.PRIMARY },
+  modalClear: {
+    marginTop: 8,
+    alignItems: "center",
+    paddingVertical: 12,
+  },
+  modalClearText: {
+    fontSize: 14,
+    color: Colors.TEXT_MUTED,
+    fontWeight: "600",
+  },
 
   // Matches strip
   stripWrap: { paddingBottom: 14 },

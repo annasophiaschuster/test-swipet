@@ -163,6 +163,16 @@ export default function HundDetailScreen() {
 
   const dogName = dog?.name ?? paramName ?? "Hund";
 
+  const handleStatusChange = async (matchId: string, newStatus: "accepted" | "rejected") => {
+    setAnfragen((prev) =>
+      prev.map((a) => (a.id === matchId ? { ...a, status: newStatus } : a))
+    );
+    await supabase
+      .from("adoption_matches")
+      .update({ status: newStatus })
+      .eq("id", matchId);
+  };
+
   if (loading) {
     return (
       <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND, alignItems: "center", justifyContent: "center" }}>
@@ -240,8 +250,26 @@ export default function HundDetailScreen() {
             </View>
           )}
 
-          {/* Name + basic info */}
-          <Text style={{ fontSize: 22, fontWeight: "800", color: Colors.TEXT, marginBottom: 6 }}>{dogName}</Text>
+          {/* Name + status badge */}
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 4 }}>
+            <Text style={{ fontSize: 22, fontWeight: "800", color: Colors.TEXT }}>{dogName}</Text>
+            {dog?.status && (
+              <View style={{
+                paddingHorizontal: 10, paddingVertical: 3, borderRadius: Sizes.RADIUS_FULL,
+                backgroundColor: dog.status === "available" ? Colors.SUCCESS + "22" : Colors.PRIMARY + "22",
+              }}>
+                <Text style={{
+                  fontSize: 11, fontWeight: "700",
+                  color: dog.status === "available" ? Colors.SUCCESS : Colors.PRIMARY,
+                  textTransform: "capitalize",
+                }}>
+                  {dog.status === "available" ? "Verfügbar" : dog.status === "reserved" ? "Reserviert" : dog.status === "adopted" ? "Vermittelt" : dog.status}
+                </Text>
+              </View>
+            )}
+          </View>
+
+          {/* Basic info line */}
           <Text style={{ fontSize: 15, color: Colors.TEXT_MUTED, marginBottom: 16 }}>
             {[dog?.rasse, dog ? formatAlter(dog.alter_jahre, dog.alter_monate) : null, dog?.groesse_kategorie, dog?.geschlecht]
               .filter(Boolean).join(" · ")}
@@ -249,7 +277,7 @@ export default function HundDetailScreen() {
 
           {/* Charakter tags */}
           {dog?.charakter_tags && dog.charakter_tags.length > 0 && (
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 20 }}>
               {dog.charakter_tags.map((tag) => (
                 <View key={tag} style={{
                   paddingHorizontal: 12, paddingVertical: 5, borderRadius: Sizes.RADIUS_FULL,
@@ -263,10 +291,66 @@ export default function HundDetailScreen() {
 
           {/* Beschreibung */}
           {dog?.beschreibung && (
-            <View style={{ backgroundColor: Colors.SURFACE, borderRadius: Sizes.RADIUS_LG, padding: 16, marginBottom: 16 }}>
+            <View style={{ backgroundColor: Colors.SURFACE, borderRadius: Sizes.RADIUS_LG, padding: 16, marginBottom: 20 }}>
               <Text style={{ fontSize: 15, color: Colors.TEXT, lineHeight: 24 }}>{dog.beschreibung}</Text>
             </View>
           )}
+
+          {/* Eigenschaften section */}
+          <Text style={{ fontSize: 13, fontWeight: "700", color: Colors.TEXT_MUTED, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>
+            Eigenschaften
+          </Text>
+          <View style={{ backgroundColor: Colors.SURFACE, borderRadius: Sizes.RADIUS_LG, marginBottom: 20, overflow: "hidden" }}>
+            {[
+              { label: "Aktivitätslevel", value: dog?.aktivitaetslevel ?? null, type: "text" as const },
+              { label: "Kastriert", value: dog?.kastriert, type: "bool" as const },
+            ].map(({ label, value, type }, i, arr) => (
+              value !== null && value !== undefined ? (
+                <View key={label} style={{
+                  flexDirection: "row", justifyContent: "space-between", alignItems: "center",
+                  paddingHorizontal: 16, paddingVertical: 13,
+                  borderBottomWidth: i < arr.length - 1 ? 1 : 0,
+                  borderBottomColor: Colors.BORDER,
+                }}>
+                  <Text style={{ fontSize: 15, color: Colors.TEXT_MUTED }}>{label}</Text>
+                  {type === "bool" ? (
+                    <Text style={{ fontSize: 15, fontWeight: "700", color: value ? Colors.SUCCESS : "#D32F2F" }}>
+                      {value ? "Ja" : "Nein"}
+                    </Text>
+                  ) : (
+                    <Text style={{ fontSize: 15, fontWeight: "600", color: Colors.TEXT }}>{value as string}</Text>
+                  )}
+                </View>
+              ) : null
+            ))}
+          </View>
+
+          {/* Verträglichkeit section */}
+          <Text style={{ fontSize: 13, fontWeight: "700", color: Colors.TEXT_MUTED, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>
+            Verträglichkeit & Anforderungen
+          </Text>
+          <View style={{ backgroundColor: Colors.SURFACE, borderRadius: Sizes.RADIUS_LG, marginBottom: 20, overflow: "hidden" }}>
+            {[
+              { label: "Verträglich mit Tieren", value: dog?.vertraeglich_mit_tieren },
+              { label: "Kinderfreundlich", value: dog?.kinderfreundlich },
+              { label: "Braucht Garten", value: dog?.braucht_garten },
+              { label: "Erfahrung benötigt", value: dog?.erfahrung_benoetigt },
+            ].map(({ label, value }, i, arr) => (
+              value !== null && value !== undefined ? (
+                <View key={label} style={{
+                  flexDirection: "row", justifyContent: "space-between", alignItems: "center",
+                  paddingHorizontal: 16, paddingVertical: 13,
+                  borderBottomWidth: i < arr.length - 1 ? 1 : 0,
+                  borderBottomColor: Colors.BORDER,
+                }}>
+                  <Text style={{ fontSize: 15, color: Colors.TEXT_MUTED }}>{label}</Text>
+                  <Text style={{ fontSize: 15, fontWeight: "700", color: value ? Colors.SUCCESS : "#D32F2F" }}>
+                    {value ? "Ja" : "Nein"}
+                  </Text>
+                </View>
+              ) : null
+            ))}
+          </View>
         </ScrollView>
       )}
 
@@ -282,49 +366,81 @@ export default function HundDetailScreen() {
             contentContainerStyle={{ paddingBottom: 20 }}
             renderItem={({ item }) => {
               const badge = STATUS_BADGE[item.status] ?? STATUS_BADGE.pending;
+              const isPending = item.status === "pending";
               return (
-                <TouchableOpacity
-                  onPress={() => router.push({
-                    pathname: "/tierheim/chat/[matchId]",
-                    params: {
-                      matchId: item.id,
-                      petName: dogName,
-                      petPhoto: item.pet_photo ?? "",
-                      adoptantName: item.adoptant_name ?? "",
-                      petId: item.pet_id ?? "",
-                      adoptantId: item.adoptant_id ?? "",
-                    },
-                  })}
-                  style={{
-                    flexDirection: "row", alignItems: "center",
-                    paddingHorizontal: Sizes.SPACING_LG, paddingVertical: 14,
-                    borderBottomWidth: 1, borderBottomColor: Colors.BORDER,
-                  }}
-                  activeOpacity={0.7}
-                >
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: Sizes.FONT_MD, fontWeight: "700", color: Colors.TEXT }}>
-                      {item.adoptant_name ?? "Unbekannt"}
-                    </Text>
-                    {item.adoptant_city && (
-                      <Text style={{ fontSize: Sizes.FONT_SM, color: Colors.TEXT_MUTED, marginTop: 2 }}>
-                        {item.adoptant_city}
+                <View style={{
+                  paddingHorizontal: Sizes.SPACING_LG, paddingVertical: 14,
+                  borderBottomWidth: 1, borderBottomColor: Colors.BORDER,
+                }}>
+                  {/* Top row: name + badge + time */}
+                  <TouchableOpacity
+                    onPress={() => router.push({
+                      pathname: "/tierheim/chat/[matchId]",
+                      params: {
+                        matchId: item.id,
+                        petName: dogName,
+                        petPhoto: item.pet_photo ?? "",
+                        adoptantName: item.adoptant_name ?? "",
+                        petId: item.pet_id ?? "",
+                        adoptantId: item.adoptant_id ?? "",
+                      },
+                    })}
+                    activeOpacity={0.7}
+                    style={{ flexDirection: "row", alignItems: "center", marginBottom: isPending ? 12 : 0 }}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: Sizes.FONT_MD, fontWeight: "700", color: Colors.TEXT }}>
+                        {item.adoptant_name ?? "Unbekannt"}
                       </Text>
-                    )}
-                  </View>
-                  <View style={{ alignItems: "flex-end", gap: 4 }}>
-                    <View style={{
-                      paddingHorizontal: 8, paddingVertical: 3,
-                      borderRadius: Sizes.RADIUS_FULL,
-                      backgroundColor: badge.bg,
-                    }}>
-                      <Text style={{ fontSize: 11, fontWeight: "700", color: badge.color }}>{badge.label}</Text>
+                      {item.adoptant_city && (
+                        <Text style={{ fontSize: Sizes.FONT_SM, color: Colors.TEXT_MUTED, marginTop: 2 }}>
+                          {item.adoptant_city}
+                        </Text>
+                      )}
                     </View>
-                    <Text style={{ fontSize: 11, color: Colors.TEXT_MUTED }}>
-                      {formatTime(item.created_at)}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
+                    <View style={{ alignItems: "flex-end", gap: 4 }}>
+                      <View style={{
+                        paddingHorizontal: 8, paddingVertical: 3,
+                        borderRadius: Sizes.RADIUS_FULL,
+                        backgroundColor: badge.bg,
+                      }}>
+                        <Text style={{ fontSize: 11, fontWeight: "700", color: badge.color }}>{badge.label}</Text>
+                      </View>
+                      <Text style={{ fontSize: 11, color: Colors.TEXT_MUTED }}>
+                        {formatTime(item.created_at)}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+
+                  {/* Accept / Reject buttons — only for pending */}
+                  {isPending && (
+                    <View style={{ flexDirection: "row", gap: 10 }}>
+                      <TouchableOpacity
+                        onPress={() => handleStatusChange(item.id, "accepted")}
+                        activeOpacity={0.75}
+                        style={{
+                          flex: 1, paddingVertical: 9, borderRadius: Sizes.RADIUS_FULL,
+                          backgroundColor: Colors.SUCCESS,
+                          alignItems: "center",
+                        }}
+                      >
+                        <Text style={{ fontSize: 13, fontWeight: "700", color: "#FFF" }}>Annehmen</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() => handleStatusChange(item.id, "rejected")}
+                        activeOpacity={0.75}
+                        style={{
+                          flex: 1, paddingVertical: 9, borderRadius: Sizes.RADIUS_FULL,
+                          backgroundColor: "#FFEBEE",
+                          alignItems: "center",
+                          borderWidth: 1, borderColor: "#D32F2F",
+                        }}
+                      >
+                        <Text style={{ fontSize: 13, fontWeight: "700", color: "#D32F2F" }}>Ablehnen</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </View>
               );
             }}
           />
