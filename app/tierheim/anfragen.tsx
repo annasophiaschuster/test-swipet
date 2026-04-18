@@ -12,7 +12,7 @@ import {
   Modal,
   Pressable,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -73,6 +73,7 @@ function InitialsAvatar({ name }: { name: string | null }) {
 
 export default function TierheimAnfragenScreen() {
   const { lang } = useLanguage();
+  const insets = useSafeAreaInsets();
 
   const [allDogs, setAllDogs]             = useState<MatchedDog[]>([]);
   const [allChats, setAllChats]           = useState<ChatItem[]>([]);
@@ -210,14 +211,14 @@ export default function TierheimAnfragenScreen() {
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <SafeAreaView edges={["top"]} style={styles.safe}>
+    <SafeAreaView edges={["bottom"]} style={styles.safe}>
 
       {/* Gradient header — title + dogs strip */}
       <LinearGradient
         colors={[Colors.SECONDARY, Colors.PRIMARY]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
-        style={styles.gradientHeader}
+        style={[styles.gradientHeader, { paddingTop: insets.top }]}
       >
         {/* Title row */}
         <View style={styles.header}>
