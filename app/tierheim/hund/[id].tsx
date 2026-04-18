@@ -364,15 +364,7 @@ export default function HundDetailScreen() {
                 </View>
               );
             })()}
-            <Text style={{ fontSize: 24, fontWeight: "800", color: Colors.TEXT, marginBottom: 4 }}>{dogName}</Text>
-            <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED }}>
-              {[dog?.rasse,
-                dog ? formatAlter(dog.alter_jahre, dog.alter_monate) : null,
-                dog?.groesse_kategorie ? ({ klein: "Klein", mittel: "Mittel", gross: "Groß", riese: "Riese" } as any)[dog.groesse_kategorie] : null,
-                dog?.geschlecht === "maennlich" ? "Männlich" : dog?.geschlecht === "weiblich" ? "Weiblich" : null,
-                dog?.gewicht ? `${dog.gewicht} kg` : null,
-              ].filter(Boolean).join(" · ")}
-            </Text>
+            <Text style={{ fontSize: 24, fontWeight: "800", color: Colors.TEXT }}>{dogName}</Text>
           </View>
 
           {/* ── BASISDATEN ───────────────────────────────────────── */}

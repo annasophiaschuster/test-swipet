@@ -299,67 +299,6 @@ export default function TierheimDashboard() {
         </View>
       </View>
 
-      {/* Pending Requests */}
-      <View style={{ paddingHorizontal: Sizes.SPACING_LG, paddingTop: 8, paddingBottom: 4 }}>
-        <Text style={{
-          fontSize: 11, fontWeight: "700", color: Colors.PRIMARY,
-          textTransform: "uppercase", letterSpacing: 1, marginBottom: 10,
-        }}>
-          {t.tierheim_dashboard_pending_requests}
-        </Text>
-        {pendingMatches.length === 0 ? (
-          <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED, textAlign: "center", paddingVertical: 8 }}>
-            {t.tierheim_dashboard_no_pending}
-          </Text>
-        ) : (
-          <View style={{ gap: 8 }}>
-            {pendingMatches.map((match) => (
-              <View
-                key={match.id}
-                style={{
-                  flexDirection: "row", alignItems: "center",
-                  backgroundColor: Colors.WHITE, borderRadius: Sizes.RADIUS_LG,
-                  padding: 14, borderWidth: 1, borderColor: Colors.BORDER,
-                  shadowColor: "#000", shadowOffset: { width: 0, height: 1 },
-                  shadowOpacity: 0.04, shadowRadius: 4, elevation: 1,
-                }}
-              >
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 15, fontWeight: "700", color: Colors.TEXT }}>{match.pet_name}</Text>
-                  <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, marginTop: 2 }}>
-                    {match.adoptant_name ?? "Unbekannt"}
-                    {match.adoptant_city ? ` · ${match.adoptant_city}` : ""}
-                  </Text>
-                  <Text style={{ fontSize: 11, color: Colors.TEXT_MUTED, marginTop: 2 }}>
-                    {formatTimeAgo(match.created_at)}
-                  </Text>
-                </View>
-                <TouchableOpacity
-                  onPress={() => router.push({
-                    pathname: "/tierheim/chat/[matchId]",
-                    params: {
-                      matchId: match.id,
-                      petName: match.pet_name,
-                      petPhoto: "",
-                      adoptantName: match.adoptant_name ?? "",
-                      petId: match.pet_id,
-                      adoptantId: "",
-                    },
-                  })}
-                  style={{
-                    paddingHorizontal: 14, paddingVertical: 7,
-                    borderRadius: Sizes.RADIUS_FULL,
-                    backgroundColor: Colors.PRIMARY,
-                  }}
-                >
-                  <Text style={{ fontSize: 13, fontWeight: "700", color: Colors.WHITE }}>Ansehen →</Text>
-                </TouchableOpacity>
-              </View>
-            ))}
-          </View>
-        )}
-      </View>
-
       {/* All Pets */}
       <View style={{ paddingHorizontal: Sizes.SPACING_LG, paddingTop: 8 }}>
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
