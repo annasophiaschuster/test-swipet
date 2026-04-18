@@ -303,7 +303,7 @@ export default function GassiProfilScreen() {
   if (isGuest) {
     return (
       <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
-        <GradientHeader title="👤 Profil" showBack backLabel={t.comp_switch_modes} onBack={() => router.replace("/")} />
+        <GradientHeader title="👤 Profil" />
         <DemoProfile />
       </View>
     );
@@ -403,7 +403,6 @@ export default function GassiProfilScreen() {
     <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
       <GradientHeader
         title="👤 Profil"
-        showBack backLabel={t.comp_switch_modes} onBack={() => router.replace("/")}
         rightElement={
           <TouchableOpacity
             onPress={startEdit}

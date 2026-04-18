@@ -384,7 +384,6 @@ export default function GassiProfilScreen() {
     <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
       <GradientHeader
         title="👤 Profil"
-        showBack backLabel={t.comp_switch_modes} onBack={() => router.replace("/")}
         rightElement={!isGuest ? (
           <TouchableOpacity
             onPress={startEdit}

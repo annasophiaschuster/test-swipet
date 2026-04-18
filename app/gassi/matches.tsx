@@ -181,9 +181,6 @@ export default function GassiMatchesScreen() {
       <GradientHeader
         title="❤️ Gassi-Matches"
         subtitle={`${matches.length} ${matches.length === 1 ? "Match" : "Matches"}`}
-        showBack
-        backLabel={t.comp_switch_modes}
-        onBack={() => router.replace("/")}
       />
 
       {matches.length === 0 ? (

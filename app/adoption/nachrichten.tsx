@@ -168,9 +168,6 @@ export default function AdoptionNachrichten() {
       <GradientHeader
         title={t.adoption_nachr_title}
         subtitle={`${chats.length} ${chats.length !== 1 ? t.gassi_nachr_conversations_plural : t.gassi_nachr_conversations_singular}`}
-        showBack
-        backLabel={t.comp_switch_modes}
-        onBack={() => router.replace("/")}
       />
 
       {chats.length === 0 ? (

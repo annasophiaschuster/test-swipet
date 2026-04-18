@@ -13,6 +13,7 @@ import {
   Pressable,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { supabase } from "../../lib/supabase";
@@ -211,28 +212,35 @@ export default function TierheimAnfragenScreen() {
   return (
     <SafeAreaView edges={["top"]} style={styles.safe}>
 
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flex: 1 }}>
-          <Text style={styles.headerTitle}>Nachrichten</Text>
-          {totalUnread > 0 && (
-            <View style={styles.headerBadge}>
-              <Text style={styles.headerBadgeText}>{totalUnread}</Text>
-            </View>
-          )}
+      {/* Gradient header — title + dogs strip */}
+      <LinearGradient
+        colors={[Colors.SECONDARY, Colors.PRIMARY]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.gradientHeader}
+      >
+        {/* Title row */}
+        <View style={styles.header}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flex: 1 }}>
+            <Text style={styles.headerTitle}>Nachrichten</Text>
+            {totalUnread > 0 && (
+              <View style={styles.headerBadge}>
+                <Text style={styles.headerBadgeText}>{totalUnread}</Text>
+              </View>
+            )}
+          </View>
+          <TouchableOpacity
+            onPress={() => setShowFilterModal(true)}
+            style={[styles.filterBtn, activeFilter !== null && styles.filterBtnActive]}
+            activeOpacity={0.7}
+          >
+            <Ionicons
+              name="options-outline"
+              size={20}
+              color={Colors.WHITE}
+            />
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity
-          onPress={() => setShowFilterModal(true)}
-          style={[styles.filterBtn, activeFilter !== null && styles.filterBtnActive]}
-          activeOpacity={0.7}
-        >
-          <Ionicons
-            name="options-outline"
-            size={20}
-            color={activeFilter !== null ? Colors.WHITE : Colors.TEXT}
-          />
-        </TouchableOpacity>
-      </View>
 
       {/* Filter modal */}
       <Modal
@@ -283,9 +291,9 @@ export default function TierheimAnfragenScreen() {
         </Pressable>
       </Modal>
 
-      {/* Dogs strip */}
-      <View style={styles.stripWrap}>
-        <Text style={styles.stripLabel}>Hunde</Text>
+        {/* Dogs strip — inside gradient */}
+        <View style={styles.stripWrap}>
+        <Text style={[styles.stripLabel, { color: "rgba(255,255,255,0.75)" }]}>Hunde</Text>
         {allDogs.length === 0 ? (
           <Text style={styles.stripEmpty}>Noch keine Hunde angelegt</Text>
         ) : (
@@ -342,7 +350,8 @@ export default function TierheimAnfragenScreen() {
             })}
           </ScrollView>
         )}
-      </View>
+        </View>
+      </LinearGradient>
 
       {/* Divider */}
       <View style={styles.divider} />
@@ -447,22 +456,28 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.BACKGROUND },
   centered: { flex: 1, backgroundColor: Colors.BACKGROUND, alignItems: "center", justifyContent: "center" },
 
-  // Header
+  // Gradient header wrapper
+  gradientHeader: {
+    paddingTop: 0,
+    paddingBottom: 14,
+  },
+
+  // Header title row
   header: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 14,
+    paddingTop: 12,
+    paddingBottom: 12,
   },
   headerTitle: {
     fontSize: 28,
     fontWeight: "800",
-    color: Colors.TEXT,
+    color: Colors.WHITE,
     letterSpacing: -0.5,
   },
   headerBadge: {
-    backgroundColor: Colors.PRIMARY,
+    backgroundColor: "rgba(255,255,255,0.35)",
     borderRadius: 99,
     minWidth: 22,
     height: 22,
@@ -477,12 +492,12 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: Colors.SURFACE,
+    backgroundColor: "rgba(255,255,255,0.25)",
     alignItems: "center",
     justifyContent: "center",
   },
   filterBtnActive: {
-    backgroundColor: Colors.PRIMARY,
+    backgroundColor: "rgba(255,255,255,0.45)",
   },
 
   // Filter modal
@@ -538,20 +553,20 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 
-  // Matches strip
-  stripWrap: { paddingBottom: 14 },
+  // Dogs strip
+  stripWrap: { paddingBottom: 6 },
   stripLabel: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: "700",
-    color: Colors.TEXT_MUTED,
-    letterSpacing: 1,
+    color: "rgba(255,255,255,0.75)",
+    letterSpacing: 1.2,
     textTransform: "uppercase",
     paddingHorizontal: 20,
     marginBottom: 10,
   },
   stripEmpty: {
     fontSize: 13,
-    color: Colors.TEXT_MUTED,
+    color: "rgba(255,255,255,0.7)",
     paddingHorizontal: 20,
     fontStyle: "italic",
   },
@@ -564,24 +579,24 @@ const styles = StyleSheet.create({
     height: 68,
     borderRadius: 34,
     borderWidth: 2.5,
-    borderColor: Colors.BORDER,
+    borderColor: "rgba(255,255,255,0.4)",
     padding: 2,
     marginBottom: 5,
   },
-  dogRingActive: { borderColor: Colors.PRIMARY },
+  dogRingActive: { borderColor: Colors.WHITE },
   dogPhoto: { width: 60, height: 60, borderRadius: 30 },
   dogPhotoFallback: {
-    backgroundColor: Colors.SURFACE,
+    backgroundColor: "rgba(255,255,255,0.2)",
     alignItems: "center",
     justifyContent: "center",
   },
   dogName: {
     fontSize: 11,
     fontWeight: "600",
-    color: Colors.TEXT_MUTED,
+    color: "rgba(255,255,255,0.75)",
     textAlign: "center",
   },
-  dogNameActive: { color: Colors.PRIMARY, fontWeight: "700" },
+  dogNameActive: { color: Colors.WHITE, fontWeight: "700" },
 
   divider: { height: 1, backgroundColor: Colors.BORDER },
 

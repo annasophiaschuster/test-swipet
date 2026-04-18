@@ -573,13 +573,7 @@ export default function AdoptionFeed() {
           flexDirection: "row", alignItems: "center", justifyContent: "space-between",
         }}
       >
-        <TouchableOpacity
-          onPress={() => router.replace("/")}
-          style={{ flexDirection: "row", alignItems: "center", gap: 2 }}
-        >
-          <Text style={{ fontSize: 18, color: "rgba(255,255,255,0.9)" }}>‹</Text>
-          <Text style={{ fontSize: 12, color: "rgba(255,255,255,0.85)", fontWeight: "500" }}> {t.comp_switch_modes}</Text>
-        </TouchableOpacity>
+        <View style={{ width: 60 }} />
         <Text style={{ fontSize: 22, fontWeight: "800", color: Colors.WHITE }}>🐾 {t.tab_discover}</Text>
         <View style={{ width: 60 }} />
       </LinearGradient>

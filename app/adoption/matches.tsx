@@ -200,9 +200,6 @@ export default function AdoptionMatchesScreen() {
       <GradientHeader
         title="❤️ Matches"
         subtitle={`${matches.length} ${matches.length === 1 ? "Match" : "Matches"}`}
-        showBack
-        backLabel={t.comp_switch_modes}
-        onBack={() => router.replace("/")}
       />
 
       {matches.length === 0 ? (

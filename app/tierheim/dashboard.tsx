@@ -245,14 +245,7 @@ export default function TierheimDashboard() {
       >
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
           <View>
-            <TouchableOpacity
-              onPress={() => router.replace("/")}
-              style={{ flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 6 }}
-            >
-              <Text style={{ fontSize: 16, color: "rgba(255,255,255,0.7)" }}>‹</Text>
-              <Text style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", fontWeight: "500" }}>{t.comp_switch_modes}</Text>
-            </TouchableOpacity>
-            <Text style={{ color: Colors.WHITE, fontSize: 22, fontWeight: "800", marginTop: 4 }}>
+            <Text style={{ color: Colors.WHITE, fontSize: 22, fontWeight: "800" }}>
               {stats?.orgName ?? t.tierheim_dashboard_your_shelter}
             </Text>
           </View>
