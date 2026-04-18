@@ -7,168 +7,110 @@ import {
   Image,
   ActivityIndicator,
   RefreshControl,
-  Alert,
   ScrollView,
+  StyleSheet,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { supabase } from "../../lib/supabase";
 import { Colors } from "../../constants/colors";
-import { Sizes } from "../../constants/sizes";
-import GradientHeader from "../../components/GradientHeader";
 import { useLanguage } from "../../contexts/LanguageContext";
 
-interface AnfrageItem {
-  id: string;
-  status: string;
-  created_at: string;
-  pet_id: string | null;
-  adoptant_id: string | null;
-  pet_name: string;
-  pet_tierart: string;
-  pet_photo: string | null;
-  adoptant_name: string | null;
-  adoptant_city: string | null;
-  last_message: string | null;
-  last_message_at: string | null;
-  last_message_is_mine: boolean;
-  unread_count: number;
-}
+// ─── Types ────────────────────────────────────────────────────────────────────
 
-interface DogFilter {
+interface MatchedDog {
   id: string;
   name: string;
+  photo: string | null;
 }
 
-function formatTime(iso: string | null, yesterday: string, lang: string): string {
+interface ChatItem {
+  matchId: string;
+  petId: string;
+  petName: string;
+  petPhoto: string | null;
+  adoptantId: string;
+  adoptantName: string | null;
+  adoptantPhoto: string | null;
+  adoptantCity: string | null;
+  lastMessage: string | null;
+  lastMessageAt: string | null;
+  lastMessageIsMine: boolean;
+  unreadCount: number;
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function timeLabel(iso: string | null, lang: string): string {
   if (!iso) return "";
   const locale = lang === "en" ? "en-US" : "de-DE";
   const d = new Date(iso);
-  const now = new Date();
-  const diffDays = Math.floor((now.getTime() - d.getTime()) / 86400000);
+  const diffDays = Math.floor((Date.now() - d.getTime()) / 86_400_000);
   if (diffDays === 0) return d.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
-  if (diffDays === 1) return yesterday;
+  if (diffDays === 1) return lang === "en" ? "Yesterday" : "Gestern";
   return d.toLocaleDateString(locale, { day: "2-digit", month: "2-digit" });
 }
 
+function InitialsAvatar({ name }: { name: string | null }) {
+  const letters = (name ?? "?")
+    .split(" ")
+    .map((w) => w[0] ?? "")
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+  return (
+    <View style={styles.initialsCircle}>
+      <Text style={styles.initialsText}>{letters}</Text>
+    </View>
+  );
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
 export default function TierheimAnfragenScreen() {
-  const { t, lang } = useLanguage();
+  const { lang } = useLanguage();
 
-  const DEMO_ANFRAGEN: AnfrageItem[] = [
-    {
-      id: "demo-1",
-      status: "pending",
-      created_at: new Date(Date.now() - 3600000).toISOString(),
-      pet_name: "Buddy",
-      pet_tierart: "hund",
-      pet_photo: null,
-      adoptant_name: t.tierheim_req_demo_name1,
-      adoptant_city: t.tierheim_req_demo_city1,
-      last_message: t.tierheim_req_demo_msg1,
-      last_message_at: new Date(Date.now() - 3600000).toISOString(),
-      last_message_is_mine: false,
-      unread_count: 2,
-      pet_id: "demo-pet-1",
-      adoptant_id: "demo-adoptant-1",
-    },
-    {
-      id: "demo-2",
-      status: "accepted",
-      created_at: new Date(Date.now() - 86400000).toISOString(),
-      pet_name: "Luna",
-      pet_tierart: "hund",
-      pet_photo: null,
-      adoptant_name: t.tierheim_req_demo_name2,
-      adoptant_city: t.tierheim_req_demo_city2,
-      last_message: t.tierheim_req_demo_msg2,
-      last_message_at: new Date(Date.now() - 86400000).toISOString(),
-      last_message_is_mine: false,
-      unread_count: 0,
-      pet_id: "demo-pet-2",
-      adoptant_id: "demo-adoptant-2",
-    },
-    {
-      id: "demo-3",
-      status: "pending",
-      created_at: new Date(Date.now() - 172800000).toISOString(),
-      pet_name: "Max",
-      pet_tierart: "hund",
-      pet_photo: null,
-      adoptant_name: t.tierheim_req_demo_name3,
-      adoptant_city: t.tierheim_req_demo_city3,
-      last_message: null,
-      last_message_at: null,
-      last_message_is_mine: false,
-      unread_count: 0,
-      pet_id: "demo-pet-1",
-      adoptant_id: "demo-adoptant-3",
-    },
-  ];
-
-  const DEMO_DOGS: DogFilter[] = [
-    { id: "demo-pet-1", name: "Buddy" },
-    { id: "demo-pet-2", name: "Luna" },
-  ];
-
-  const STATUS_STYLE: Record<string, { bg: string; color: string; label: string }> = {
-    pending:  { bg: Colors.WARNING + "22",   color: "#B8860B", label: t.tierheim_req_pending },
-    accepted: { bg: Colors.SUCCESS + "22",   color: Colors.SUCCESS, label: t.tierheim_req_accepted },
-    rejected: { bg: Colors.ERROR   + "22",   color: Colors.ERROR,   label: t.tierheim_req_rejected },
-  };
-
-  const [anfragen, setAnfragen]         = useState<AnfrageItem[]>([]);
-  const [dogs, setDogs]                 = useState<DogFilter[]>([]);
-  const [loading, setLoading]           = useState(true);
-  const [refreshing, setRefreshing]     = useState(false);
-  const [isGuest, setIsGuest]           = useState(false);
-  const [totalUnread, setTotalUnread]   = useState(0);
+  const [matchedDogs, setMatchedDogs]     = useState<MatchedDog[]>([]);
+  const [allChats, setAllChats]           = useState<ChatItem[]>([]);
   const [selectedDogId, setSelectedDogId] = useState<string | null>(null);
-  const [showUnreadOnly, setShowUnreadOnly] = useState(false);
+  const [loading, setLoading]             = useState(true);
+  const [refreshing, setRefreshing]       = useState(false);
+
+  // ── Data ────────────────────────────────────────────────────────────────────
 
   useFocusEffect(
     useCallback(() => {
-      loadAnfragen();
+      load();
     }, [])
   );
 
-  const loadAnfragen = async (isRefresh = false) => {
+  const load = async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
     else setLoading(true);
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
-
-      if (!user) {
-        setIsGuest(true);
-        setAnfragen(DEMO_ANFRAGEN);
-        setDogs(DEMO_DOGS);
-        setTotalUnread(2);
-        return;
-      }
-
-      setIsGuest(false);
-
-      // Load shelter's dogs for filter chips
-      const { data: dogData } = await supabase
-        .from("pets")
-        .select("id, name")
-        .eq("shelter_id", user.id)
-        .order("name", { ascending: true });
-      setDogs((dogData ?? []).map((d: any) => ({ id: d.id, name: d.name })));
+      if (!user) return;
 
       const { data, error } = await supabase
         .from("adoption_matches")
         .select(`
-          id, status, created_at, pet_id, adoptant_id,
-          pet:pets(name, tierart, pet_photos(url, position)),
-          adoptant:profiles!adoptant_id(name, city)
+          id, pet_id, adoptant_id,
+          pet:pets(name, pet_photos(url, position)),
+          adoptant:profiles!adoptant_id(name, city, avatar_url)
         `)
         .eq("shelter_id", user.id)
+        .eq("status", "accepted")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
 
-      const items: AnfrageItem[] = await Promise.all(
+      const chats: ChatItem[] = await Promise.all(
         (data ?? []).map(async (m: any) => {
+          const petPhotos = ((m.pet?.pet_photos ?? []) as any[])
+            .sort((a: any, b: any) => a.position - b.position);
+
           const { data: msgs } = await supabase
             .from("messages")
             .select("text, created_at, sender_id")
@@ -183,341 +125,400 @@ export default function TierheimAnfragenScreen() {
             .eq("match_id", m.id)
             .neq("sender_id", user.id);
 
-          const photos = ((m.pet?.pet_photos as any[]) ?? []).sort((a, b) => a.position - b.position);
-
           return {
-            id: m.id,
-            status: m.status ?? "pending",
-            created_at: m.created_at,
-            pet_id: m.pet_id ?? null,
-            adoptant_id: m.adoptant_id ?? null,
-            pet_name: m.pet?.name ?? "Unbekannt",
-            pet_tierart: m.pet?.tierart ?? "hund",
-            pet_photo: photos[0]?.url ?? null,
-            adoptant_name: m.adoptant?.name ?? null,
-            adoptant_city: m.adoptant?.city ?? null,
-            last_message: msgs?.[0]?.text ?? null,
-            last_message_at: msgs?.[0]?.created_at ?? null,
-            last_message_is_mine: msgs?.[0]?.sender_id === user.id,
-            unread_count: unread ?? 0,
+            matchId:           m.id,
+            petId:             m.pet_id ?? "",
+            petName:           m.pet?.name ?? "Unbekannt",
+            petPhoto:          petPhotos[0]?.url ?? null,
+            adoptantId:        m.adoptant_id ?? "",
+            adoptantName:      m.adoptant?.name ?? null,
+            adoptantPhoto:     m.adoptant?.avatar_url ?? null,
+            adoptantCity:      m.adoptant?.city ?? null,
+            lastMessage:       msgs?.[0]?.text ?? null,
+            lastMessageAt:     msgs?.[0]?.created_at ?? null,
+            lastMessageIsMine: msgs?.[0]?.sender_id === user.id,
+            unreadCount:       unread ?? 0,
           };
         })
       );
 
-      setAnfragen(items);
-      setTotalUnread(items.reduce((sum, i) => sum + i.unread_count, 0));
+      setAllChats(chats);
+
+      // Unique dogs from accepted matches (preserve order)
+      const seen = new Set<string>();
+      const dogs: MatchedDog[] = [];
+      for (const c of chats) {
+        if (!seen.has(c.petId)) {
+          seen.add(c.petId);
+          dogs.push({ id: c.petId, name: c.petName, photo: c.petPhoto });
+        }
+      }
+      setMatchedDogs(dogs);
     } catch (e) {
-      console.error("TierheimAnfragenScreen.loadAnfragen", e);
+      console.error("TierheimAnfragenScreen.load", e);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   };
 
-  const handleAccept = async (anfrage: AnfrageItem) => {
-    if (isGuest) {
-      Alert.alert(t.tierheim_req_demo_view, t.tierheim_req_demo_login_msg);
-      return;
-    }
-    try {
-      await supabase
-        .from("adoption_matches")
-        .update({ status: "accepted" })
-        .eq("id", anfrage.id);
-      loadAnfragen();
-    } catch (e) {
-      console.error("handleAccept error", e);
-    }
-  };
+  // ── Derived ─────────────────────────────────────────────────────────────────
 
-  const handleReject = async (anfrage: AnfrageItem) => {
-    if (isGuest) {
-      Alert.alert(t.tierheim_req_demo_view, t.tierheim_req_demo_login_msg);
-      return;
-    }
-    Alert.alert(
-      t.tierheim_req_reject_title,
-      `${t.tierheim_req_from} ${anfrage.adoptant_name ?? t.tierheim_req_unknown} ${t.tierheim_req_reject_title.toLowerCase()} ${anfrage.pet_name}?`,
-      [
-        {
-          text: t.tierheim_req_reject_btn.replace("✕ ", ""),
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await supabase
-                .from("adoption_matches")
-                .update({ status: "rejected" })
-                .eq("id", anfrage.id);
-              loadAnfragen();
-            } catch (e) {
-              console.error("handleReject error", e);
-            }
-          },
-        },
-        { text: t.tierheim_req_cancel, style: "cancel" },
-      ]
-    );
-  };
+  const visibleChats = selectedDogId
+    ? allChats.filter((c) => c.petId === selectedDogId)
+    : allChats;
 
-  // Apply filters
-  const filteredAnfragen = anfragen.filter((item) => {
-    if (selectedDogId !== null && item.pet_id !== selectedDogId) return false;
-    if (showUnreadOnly && item.unread_count === 0) return false;
-    return true;
-  });
+  const totalUnread = allChats.reduce((s, c) => s + c.unreadCount, 0);
+
+  // ── Handlers ────────────────────────────────────────────────────────────────
+
+  const handleDogPress = (dogId: string) =>
+    setSelectedDogId((prev) => (prev === dogId ? null : dogId));
+
+  const handleChatPress = (item: ChatItem) =>
+    router.push({
+      pathname: "/tierheim/chat/[matchId]",
+      params: {
+        matchId:      item.matchId,
+        petName:      item.petName,
+        petPhoto:     item.petPhoto ?? "",
+        adoptantName: item.adoptantName ?? "",
+        petId:        item.petId,
+        adoptantId:   item.adoptantId,
+      },
+    });
+
+  // ── Loading ─────────────────────────────────────────────────────────────────
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND, alignItems: "center", justifyContent: "center" }}>
+      <View style={styles.centered}>
         <ActivityIndicator color={Colors.PRIMARY} size="large" />
       </View>
     );
   }
 
+  // ── Render ──────────────────────────────────────────────────────────────────
+
   return (
-    <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
-      <GradientHeader
-        title="Anfragen"
-        showBack
-        backLabel={t.comp_switch_modes}
-        onBack={() => router.replace("/")}
-        rightElement={totalUnread > 0 ? (
-          <View style={{
-            backgroundColor: "rgba(255,255,255,0.3)", borderRadius: 12,
-            minWidth: 24, height: 24,
-            alignItems: "center", justifyContent: "center", paddingHorizontal: 6,
-          }}>
-            <Text style={{ color: Colors.WHITE, fontSize: 12, fontWeight: "700" }}>{totalUnread}</Text>
+    <SafeAreaView edges={["top"]} style={styles.safe}>
+
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Nachrichten</Text>
+        {totalUnread > 0 && (
+          <View style={styles.headerBadge}>
+            <Text style={styles.headerBadgeText}>{totalUnread}</Text>
           </View>
-        ) : undefined}
-      />
-
-      {/* Dog filter chips */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: Sizes.SPACING_LG, paddingVertical: 10, gap: 8 }}
-        style={{ maxHeight: 56, borderBottomWidth: 1, borderBottomColor: Colors.BORDER }}
-      >
-        {/* All dogs chip */}
-        <TouchableOpacity
-          onPress={() => setSelectedDogId(null)}
-          style={{
-            paddingHorizontal: 14, paddingVertical: 6,
-            borderRadius: Sizes.RADIUS_FULL, borderWidth: 1.5,
-            borderColor: selectedDogId === null ? Colors.PRIMARY : Colors.BORDER,
-            backgroundColor: selectedDogId === null ? Colors.PRIMARY : Colors.WHITE,
-          }}
-        >
-          <Text style={{
-            fontSize: 13, fontWeight: "600",
-            color: selectedDogId === null ? Colors.WHITE : Colors.TEXT_MUTED,
-          }}>
-            {t.tierheim_chats_filter_all_dogs}
-          </Text>
-        </TouchableOpacity>
-
-        {dogs.map((dog) => {
-          const active = selectedDogId === dog.id;
-          return (
-            <TouchableOpacity
-              key={dog.id}
-              onPress={() => setSelectedDogId(active ? null : dog.id)}
-              style={{
-                paddingHorizontal: 14, paddingVertical: 6,
-                borderRadius: Sizes.RADIUS_FULL, borderWidth: 1.5,
-                borderColor: active ? Colors.PRIMARY : Colors.BORDER,
-                backgroundColor: active ? Colors.PRIMARY : Colors.WHITE,
-              }}
-            >
-              <Text style={{
-                fontSize: 13, fontWeight: "600",
-                color: active ? Colors.WHITE : Colors.TEXT_MUTED,
-              }}>
-                {dog.name}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
-
-      {/* Unread toggle chip */}
-      <View style={{ paddingHorizontal: Sizes.SPACING_LG, paddingVertical: 8 }}>
-        <TouchableOpacity
-          onPress={() => setShowUnreadOnly(!showUnreadOnly)}
-          style={{
-            alignSelf: "flex-start",
-            paddingHorizontal: 14, paddingVertical: 6,
-            borderRadius: Sizes.RADIUS_FULL, borderWidth: 1.5,
-            borderColor: showUnreadOnly ? Colors.SECONDARY : Colors.BORDER,
-            backgroundColor: showUnreadOnly ? Colors.SECONDARY : Colors.WHITE,
-          }}
-        >
-          <Text style={{
-            fontSize: 13, fontWeight: "600",
-            color: showUnreadOnly ? Colors.WHITE : Colors.TEXT_MUTED,
-          }}>
-            {t.tierheim_chats_filter_unread}
-          </Text>
-        </TouchableOpacity>
+        )}
       </View>
 
-      {filteredAnfragen.length === 0 ? (
-        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32 }}>
-          {anfragen.length === 0 ? (
-            <>
-              <Image source={require("../../assets/icon-brief.png")} style={{ width: 64, height: 64, resizeMode: "contain", tintColor: Colors.PRIMARY, marginBottom: 16 }} />
-              <Text style={{ fontSize: Sizes.FONT_XL, fontWeight: "700", color: Colors.TEXT, textAlign: "center", marginBottom: 8 }}>
-                {t.tierheim_req_empty_title}
-              </Text>
-              <Text style={{ color: Colors.TEXT_MUTED, textAlign: "center", lineHeight: 22 }}>
-                {t.tierheim_req_empty_sub}
-              </Text>
-            </>
-          ) : (
-            <Text style={{ fontSize: 15, color: Colors.TEXT_MUTED, textAlign: "center" }}>
-              {t.tierheim_chats_no_chats}
-            </Text>
-          )}
+      {/* Matches strip */}
+      <View style={styles.stripWrap}>
+        <Text style={styles.stripLabel}>Matches</Text>
+        {matchedDogs.length === 0 ? (
+          <Text style={styles.stripEmpty}>Noch keine genehmigten Anfragen</Text>
+        ) : (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.stripScroll}
+          >
+            {matchedDogs.map((dog) => {
+              const active = selectedDogId === dog.id;
+              return (
+                <TouchableOpacity
+                  key={dog.id}
+                  onPress={() => handleDogPress(dog.id)}
+                  activeOpacity={0.75}
+                  style={styles.dogWrap}
+                >
+                  <View style={[styles.dogRing, active && styles.dogRingActive]}>
+                    {dog.photo ? (
+                      <Image source={{ uri: dog.photo }} style={styles.dogPhoto} />
+                    ) : (
+                      <View style={[styles.dogPhoto, styles.dogPhotoFallback]}>
+                        <Text style={{ fontSize: 26 }}>🐶</Text>
+                      </View>
+                    )}
+                  </View>
+                  <Text
+                    numberOfLines={1}
+                    style={[styles.dogName, active && styles.dogNameActive]}
+                  >
+                    {dog.name}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        )}
+      </View>
+
+      {/* Divider */}
+      <View style={styles.divider} />
+
+      {/* Chat list */}
+      {visibleChats.length === 0 ? (
+        <View style={styles.emptyWrap}>
+          <Ionicons name="chatbubble-ellipses-outline" size={52} color={Colors.BORDER} />
+          <Text style={styles.emptyTitle}>
+            {allChats.length === 0
+              ? "Noch keine Matches"
+              : selectedDogId
+              ? "Keine Chats für diesen Hund"
+              : "Wähle einen Hund aus"}
+          </Text>
+          <Text style={styles.emptySub}>
+            {allChats.length === 0
+              ? "Wenn eine Anfrage genehmigt wird, erscheint sie hier."
+              : selectedDogId
+              ? "Für diesen Hund gibt es noch keine aktiven Gespräche."
+              : "Tippe auf einen Hund oben, um seine Chats zu sehen."}
+          </Text>
         </View>
       ) : (
         <FlatList
-          data={filteredAnfragen}
-          keyExtractor={(item) => item.id}
+          data={visibleChats}
+          keyExtractor={(item) => item.matchId}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={() => loadAnfragen(true)} tintColor={Colors.PRIMARY} />
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={() => load(true)}
+              tintColor={Colors.PRIMARY}
+            />
           }
-          contentContainerStyle={{ paddingBottom: 20 }}
-          renderItem={({ item }) => {
-            const statusStyle = STATUS_STYLE[item.status] ?? STATUS_STYLE.pending;
-
-            return (
-              <View style={{
-                borderBottomWidth: 1, borderBottomColor: Colors.BORDER,
-                backgroundColor: item.unread_count > 0 ? "#FFF8FA" : Colors.BACKGROUND,
-              }}>
-                {/* Main row */}
-                <TouchableOpacity
-                  onPress={() => {
-                    if (isGuest) { router.push("/auth/login"); return; }
-                    router.push({
-                      pathname: "/tierheim/chat/[matchId]",
-                      params: {
-                        matchId: item.id,
-                        petName: item.pet_name,
-                        petPhoto: item.pet_photo ?? "",
-                        adoptantName: item.adoptant_name ?? t.tierheim_req_guest_nav,
-                        petId: item.pet_id ?? "",
-                        adoptantId: item.adoptant_id ?? "",
-                      },
-                    });
-                  }}
-                  style={{
-                    flexDirection: "row", alignItems: "center",
-                    paddingHorizontal: Sizes.SPACING_LG, paddingTop: 14, paddingBottom: 10,
-                  }}
-                  activeOpacity={0.7}
-                >
-                  {/* Pet avatar */}
-                  <View style={{ marginRight: 14 }}>
-                    {item.pet_photo ? (
-                      <Image
-                        source={{ uri: item.pet_photo }}
-                        style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: Colors.SURFACE }}
-                      />
-                    ) : (
-                      <View style={{
-                        width: 56, height: 56, borderRadius: 28,
-                        backgroundColor: Colors.SURFACE, alignItems: "center", justifyContent: "center",
-                      }}>
-                        <Text style={{ fontSize: 24 }}>🐶</Text>
-                      </View>
-                    )}
-                    {item.unread_count > 0 && (
-                      <View style={{
-                        position: "absolute", top: -2, right: -2,
-                        width: 18, height: 18, borderRadius: 9,
-                        backgroundColor: Colors.PRIMARY, alignItems: "center", justifyContent: "center",
-                        borderWidth: 2, borderColor: Colors.BACKGROUND,
-                      }}>
-                        <Text style={{ color: Colors.WHITE, fontSize: 9, fontWeight: "700" }}>
-                          {item.unread_count}
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-
-                  <View style={{ flex: 1 }}>
-                    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 2 }}>
-                      <Text style={{ fontSize: Sizes.FONT_MD, fontWeight: item.unread_count > 0 ? "800" : "700", color: Colors.TEXT }}>
-                        {item.pet_name}
-                      </Text>
-                      <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                        <View style={{
-                          backgroundColor: statusStyle.bg,
-                          paddingHorizontal: 7, paddingVertical: 2, borderRadius: 99,
-                        }}>
-                          <Text style={{ fontSize: 10, fontWeight: "700", color: statusStyle.color }}>
-                            {statusStyle.label}
-                          </Text>
-                        </View>
-                        <Text style={{ fontSize: 11, color: Colors.TEXT_MUTED }}>
-                          {formatTime(item.last_message_at ?? item.created_at, t.tierheim_req_yesterday, lang)}
-                        </Text>
-                      </View>
-                    </View>
-                    <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, marginBottom: 3 }}>
-                      {t.tierheim_req_from} {item.adoptant_name ?? t.tierheim_req_unknown}
-                      {item.adoptant_city ? ` · ${item.adoptant_city}` : ""}
+          contentContainerStyle={{ paddingBottom: 24 }}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              onPress={() => handleChatPress(item)}
+              activeOpacity={0.7}
+              style={[styles.chatRow, item.unreadCount > 0 && styles.chatRowUnread]}
+            >
+              {/* Adoptant avatar */}
+              <View style={styles.avatarWrap}>
+                {item.adoptantPhoto ? (
+                  <Image source={{ uri: item.adoptantPhoto }} style={styles.avatar} />
+                ) : (
+                  <InitialsAvatar name={item.adoptantName} />
+                )}
+                {item.unreadCount > 0 && (
+                  <View style={styles.unreadBadge}>
+                    <Text style={styles.unreadBadgeText}>
+                      {item.unreadCount > 9 ? "9+" : item.unreadCount}
                     </Text>
-                    <Text
-                      numberOfLines={1}
-                      style={{
-                        fontSize: Sizes.FONT_SM,
-                        color: item.last_message
-                          ? item.unread_count > 0 ? Colors.TEXT : Colors.TEXT_MUTED
-                          : Colors.TEXT_MUTED,
-                        fontStyle: item.last_message ? "normal" : "italic",
-                        fontWeight: item.unread_count > 0 ? "600" : "400",
-                      }}
-                    >
-                      {item.last_message_is_mine ? t.tierheim_req_you : ""}
-                      {item.last_message ?? t.tierheim_req_new_match}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-
-                {/* Accept / Decline buttons — only for pending */}
-                {item.status === "pending" && (
-                  <View style={{ flexDirection: "row", gap: 8, paddingHorizontal: Sizes.SPACING_LG, paddingBottom: 12 }}>
-                    <TouchableOpacity
-                      onPress={() => handleReject(item)}
-                      style={{
-                        flex: 1, height: 36, borderRadius: 99,
-                        borderWidth: 1.5, borderColor: Colors.ERROR,
-                        alignItems: "center", justifyContent: "center",
-                        backgroundColor: Colors.ERROR + "10",
-                      }}
-                    >
-                      <Text style={{ fontSize: 13, fontWeight: "600", color: Colors.ERROR }}>{t.tierheim_req_reject_btn}</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      onPress={() => handleAccept(item)}
-                      style={{
-                        flex: 1, height: 36, borderRadius: 99,
-                        backgroundColor: Colors.SUCCESS,
-                        alignItems: "center", justifyContent: "center",
-                      }}
-                    >
-                      <Text style={{ fontSize: 13, fontWeight: "700", color: Colors.WHITE }}>{t.tierheim_req_accept_btn}</Text>
-                    </TouchableOpacity>
                   </View>
                 )}
               </View>
-            );
-          }}
+
+              {/* Text content */}
+              <View style={styles.chatContent}>
+                <View style={styles.chatTopRow}>
+                  <Text style={[styles.chatName, item.unreadCount > 0 && styles.chatNameBold]}>
+                    {item.adoptantName ?? "Unbekannt"}
+                  </Text>
+                  <Text style={styles.chatTime}>
+                    {timeLabel(item.lastMessageAt, lang)}
+                  </Text>
+                </View>
+
+                {/* Dog sub-label */}
+                <Text style={styles.chatDog}>
+                  🐾 {item.petName}
+                  {item.adoptantCity ? `  ·  ${item.adoptantCity}` : ""}
+                </Text>
+
+                {/* Last message preview */}
+                <Text
+                  numberOfLines={1}
+                  style={[
+                    styles.chatPreview,
+                    item.unreadCount > 0 && styles.chatPreviewBold,
+                    !item.lastMessage && styles.chatPreviewItalic,
+                  ]}
+                >
+                  {item.lastMessageIsMine && item.lastMessage ? "Du: " : ""}
+                  {item.lastMessage ?? "Neues Match — schreibe als Erstes!"}
+                </Text>
+              </View>
+
+              {/* Unread dot */}
+              {item.unreadCount > 0 && <View style={styles.unreadDot} />}
+            </TouchableOpacity>
+          )}
         />
       )}
-    </View>
+    </SafeAreaView>
   );
 }
+
+// ─── Styles ───────────────────────────────────────────────────────────────────
+
+const styles = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: Colors.BACKGROUND },
+  centered: { flex: 1, backgroundColor: Colors.BACKGROUND, alignItems: "center", justifyContent: "center" },
+
+  // Header
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 14,
+    gap: 8,
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: "800",
+    color: Colors.TEXT,
+    letterSpacing: -0.5,
+  },
+  headerBadge: {
+    backgroundColor: Colors.PRIMARY,
+    borderRadius: 99,
+    minWidth: 22,
+    height: 22,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 6,
+  },
+  headerBadgeText: { color: "#FFF", fontSize: 11, fontWeight: "800" },
+
+  // Matches strip
+  stripWrap: { paddingBottom: 14 },
+  stripLabel: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: Colors.TEXT_MUTED,
+    letterSpacing: 1,
+    textTransform: "uppercase",
+    paddingHorizontal: 20,
+    marginBottom: 10,
+  },
+  stripEmpty: {
+    fontSize: 13,
+    color: Colors.TEXT_MUTED,
+    paddingHorizontal: 20,
+    fontStyle: "italic",
+  },
+  stripScroll: { paddingHorizontal: 16, gap: 14 },
+
+  // Dog bubble
+  dogWrap: { alignItems: "center", width: 72 },
+  dogRing: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    borderWidth: 2.5,
+    borderColor: Colors.BORDER,
+    padding: 2,
+    marginBottom: 5,
+  },
+  dogRingActive: { borderColor: Colors.PRIMARY },
+  dogPhoto: { width: 60, height: 60, borderRadius: 30 },
+  dogPhotoFallback: {
+    backgroundColor: Colors.SURFACE,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  dogName: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: Colors.TEXT_MUTED,
+    textAlign: "center",
+  },
+  dogNameActive: { color: Colors.PRIMARY, fontWeight: "700" },
+
+  divider: { height: 1, backgroundColor: Colors.BORDER },
+
+  // Empty state
+  emptyWrap: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 40,
+    gap: 10,
+  },
+  emptyTitle: {
+    fontSize: 17,
+    fontWeight: "700",
+    color: Colors.TEXT,
+    textAlign: "center",
+    marginTop: 8,
+  },
+  emptySub: {
+    fontSize: 14,
+    color: Colors.TEXT_MUTED,
+    textAlign: "center",
+    lineHeight: 21,
+  },
+
+  // Chat row
+  chatRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 13,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.BORDER,
+    backgroundColor: Colors.BACKGROUND,
+  },
+  chatRowUnread: { backgroundColor: "#FFF8FA" },
+
+  // Avatar
+  avatarWrap: { marginRight: 14, position: "relative" },
+  avatar: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: Colors.SURFACE,
+  },
+  initialsCircle: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: Colors.PRIMARY + "20",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  initialsText: { fontSize: 18, fontWeight: "700", color: Colors.PRIMARY },
+  unreadBadge: {
+    position: "absolute",
+    top: -2,
+    right: -2,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: Colors.PRIMARY,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 3,
+    borderWidth: 2,
+    borderColor: Colors.BACKGROUND,
+  },
+  unreadBadgeText: { color: "#FFF", fontSize: 9, fontWeight: "800" },
+
+  // Chat content
+  chatContent: { flex: 1, gap: 2 },
+  chatTopRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  chatName: { fontSize: 15, fontWeight: "600", color: Colors.TEXT },
+  chatNameBold: { fontWeight: "800" },
+  chatTime: { fontSize: 11, color: Colors.TEXT_MUTED },
+  chatDog: { fontSize: 12, color: Colors.TEXT_MUTED },
+  chatPreview: { fontSize: 13, color: Colors.TEXT_MUTED },
+  chatPreviewBold: { color: Colors.TEXT, fontWeight: "600" },
+  chatPreviewItalic: { fontStyle: "italic" },
+
+  // Unread dot
+  unreadDot: {
+    width: 9,
+    height: 9,
+    borderRadius: 5,
+    backgroundColor: Colors.PRIMARY,
+    marginLeft: 8,
+  },
+});
