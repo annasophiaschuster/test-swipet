@@ -73,7 +73,7 @@ function InitialsAvatar({ name }: { name: string | null }) {
 export default function TierheimAnfragenScreen() {
   const { lang } = useLanguage();
 
-  const [matchedDogs, setMatchedDogs]     = useState<MatchedDog[]>([]);
+  const [allDogs, setAllDogs]             = useState<MatchedDog[]>([]);
   const [allChats, setAllChats]           = useState<ChatItem[]>([]);
   const [selectedDogId, setSelectedDogId] = useState<string | null>(null);
   const [loading, setLoading]             = useState(true);
@@ -97,6 +97,21 @@ export default function TierheimAnfragenScreen() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Load ALL shelter dogs for the bubble strip
+      const { data: petsData } = await supabase
+        .from("pets")
+        .select("id, name, pet_photos(url, position)")
+        .eq("shelter_id", user.id)
+        .order("created_at", { ascending: true });
+
+      const dogs: MatchedDog[] = (petsData ?? []).map((p: any) => {
+        const photos = ((p.pet_photos ?? []) as any[])
+          .sort((a: any, b: any) => a.position - b.position);
+        return { id: p.id, name: p.name, photo: photos[0]?.url ?? null };
+      });
+      setAllDogs(dogs);
+
+      // Load accepted matches → chats
       const { data, error } = await supabase
         .from("adoption_matches")
         .select(`
@@ -147,17 +162,6 @@ export default function TierheimAnfragenScreen() {
       );
 
       setAllChats(chats);
-
-      // Unique dogs from accepted matches (preserve order)
-      const seen = new Set<string>();
-      const dogs: MatchedDog[] = [];
-      for (const c of chats) {
-        if (!seen.has(c.petId)) {
-          seen.add(c.petId);
-          dogs.push({ id: c.petId, name: c.petName, photo: c.petPhoto });
-        }
-      }
-      setMatchedDogs(dogs);
     } catch (e) {
       console.error("TierheimAnfragenScreen.load", e);
     } finally {
@@ -279,11 +283,11 @@ export default function TierheimAnfragenScreen() {
         </Pressable>
       </Modal>
 
-      {/* Matches strip */}
+      {/* Dogs strip */}
       <View style={styles.stripWrap}>
-        <Text style={styles.stripLabel}>Matches</Text>
-        {matchedDogs.length === 0 ? (
-          <Text style={styles.stripEmpty}>Noch keine genehmigten Anfragen</Text>
+        <Text style={styles.stripLabel}>Hunde</Text>
+        {allDogs.length === 0 ? (
+          <Text style={styles.stripEmpty}>Noch keine Hunde angelegt</Text>
         ) : (
           <ScrollView
             horizontal
@@ -309,7 +313,7 @@ export default function TierheimAnfragenScreen() {
               </Text>
             </TouchableOpacity>
 
-            {matchedDogs.map((dog) => {
+            {allDogs.map((dog) => {
               const active = selectedDogId === dog.id;
               return (
                 <TouchableOpacity
@@ -349,17 +353,17 @@ export default function TierheimAnfragenScreen() {
           <Ionicons name="chatbubble-ellipses-outline" size={52} color={Colors.BORDER} />
           <Text style={styles.emptyTitle}>
             {allChats.length === 0
-              ? "Noch keine Matches"
+              ? "Noch keine Chats"
               : selectedDogId
               ? "Keine Chats für diesen Hund"
-              : "Wähle einen Hund aus"}
+              : "Noch keine aktiven Chats"}
           </Text>
           <Text style={styles.emptySub}>
             {allChats.length === 0
-              ? "Wenn eine Anfrage genehmigt wird, erscheint sie hier."
+              ? "Sobald eine Anfrage angenommen wird, erscheint der Chat hier."
               : selectedDogId
-              ? "Für diesen Hund gibt es noch keine aktiven Gespräche."
-              : "Tippe auf einen Hund oben, um seine Chats zu sehen."}
+              ? "Für diesen Hund gibt es noch keine angenommenen Anfragen."
+              : "Sobald eine Anfrage angenommen wird, erscheint der Chat hier."}
           </Text>
         </View>
       ) : (
