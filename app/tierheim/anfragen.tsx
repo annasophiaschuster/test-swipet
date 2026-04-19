@@ -12,6 +12,7 @@ import {
   Modal,
   Pressable,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
@@ -86,14 +87,28 @@ export default function TierheimAnfragenScreen() {
   const [refreshing, setRefreshing]       = useState(false);
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [activeFilter, setActiveFilter]   = useState<null | "unread" | "favorited">(null);
+  const [favorites, setFavorites]         = useState<Set<string>>(new Set());
 
   // ── Data ────────────────────────────────────────────────────────────────────
 
   useFocusEffect(
     useCallback(() => {
       load();
+      AsyncStorage.getItem("chat_favorites").then((raw) => {
+        if (raw) setFavorites(new Set(JSON.parse(raw)));
+      });
     }, [])
   );
+
+  const toggleFavorite = async (matchId: string) => {
+    setFavorites((prev) => {
+      const next = new Set(prev);
+      if (next.has(matchId)) next.delete(matchId);
+      else next.add(matchId);
+      AsyncStorage.setItem("chat_favorites", JSON.stringify([...next]));
+      return next;
+    });
+  };
 
   const load = async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
@@ -180,7 +195,8 @@ export default function TierheimAnfragenScreen() {
 
   const visibleChats = allChats
     .filter((c) => !selectedDogId || c.petId === selectedDogId)
-    .filter((c) => activeFilter === "unread" ? c.unreadCount > 0 : true);
+    .filter((c) => activeFilter === "unread"    ? c.unreadCount > 0        : true)
+    .filter((c) => activeFilter === "favorited" ? favorites.has(c.matchId) : true);
 
   const totalUnread = allChats.reduce((s, c) => s + c.unreadCount, 0);
 
@@ -446,8 +462,28 @@ export default function TierheimAnfragenScreen() {
                 </Text>
               </View>
 
-              {/* Unread dot */}
-              {item.unreadCount > 0 && <View style={styles.unreadDot} />}
+              {/* Right column: star (top) + unread dot (bottom) */}
+              <View style={styles.rightCol}>
+                <TouchableOpacity
+                  onPress={() => toggleFavorite(item.matchId)}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  activeOpacity={0.7}
+                  style={[
+                    styles.starBtn,
+                    favorites.has(item.matchId) && styles.starBtnActive,
+                  ]}
+                >
+                  <Ionicons
+                    name={favorites.has(item.matchId) ? "star" : "star-outline"}
+                    size={12}
+                    color={favorites.has(item.matchId) ? "#F4A61E" : Colors.TEXT_MUTED}
+                  />
+                </TouchableOpacity>
+                {item.unreadCount > 0
+                  ? <View style={styles.unreadDot} />
+                  : <View style={styles.unreadDotPlaceholder} />
+                }
+              </View>
             </TouchableOpacity>
           )}
         />
@@ -688,12 +724,37 @@ const styles = StyleSheet.create({
   chatPreviewBold: { color: Colors.TEXT, fontWeight: "600" },
   chatPreviewItalic: { fontStyle: "italic" },
 
-  // Unread dot
+  // Right column (star + unread dot)
+  rightCol: {
+    width: 22,
+    marginLeft: 10,
+    alignItems: "center",
+    justifyContent: "space-between",
+    alignSelf: "stretch",
+    paddingVertical: 2,
+  },
+  starBtn: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 1.5,
+    borderColor: Colors.BORDER,
+    backgroundColor: Colors.SURFACE,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  starBtnActive: {
+    borderColor: "#F4A61E",
+    backgroundColor: "#FFF8E7",
+  },
   unreadDot: {
     width: 9,
     height: 9,
     borderRadius: 5,
     backgroundColor: Colors.PRIMARY,
-    marginLeft: 8,
+  },
+  unreadDotPlaceholder: {
+    width: 9,
+    height: 9,
   },
 });

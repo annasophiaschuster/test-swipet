@@ -310,11 +310,12 @@ export default function TierheimHundeScreen() {
                     onPress={() => router.push({ pathname: "/tierheim/hund/[id]", params: { id: item.id, name: item.name } })}
                     style={{
                       flex: 1, height: 34, borderRadius: Sizes.RADIUS_FULL,
-                      backgroundColor: Colors.PRIMARY,
+                      backgroundColor: Colors.PRIMARY + "28",
+                      borderWidth: 1, borderColor: Colors.PRIMARY + "60",
                       alignItems: "center", justifyContent: "center",
                     }}
                   >
-                    <Text style={{ fontSize: 12, color: "#fff", fontWeight: "700" }}>
+                    <Text style={{ fontSize: 12, color: Colors.PRIMARY, fontWeight: "700" }}>
                       {t.tierheim_dogs_to_profile}
                     </Text>
                   </TouchableOpacity>

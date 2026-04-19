@@ -48,7 +48,7 @@ export default function TierheimLayout() {
       />
       <Tabs.Screen
         name="hunde"
-        options={{ tabBarIcon: ({ focused }) => <TabIcon source={require("../../assets/tab-pfote.png")} focused={focused} /> }}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon source={require("../../assets/tab-pfote-new.png")} focused={focused} /> }}
       />
       <Tabs.Screen
         name="anfragen"
