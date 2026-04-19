@@ -103,7 +103,7 @@ export default function TierhalterOnboarding() {
       // Upload avatar
       let avatarUrl: string | null = null;
       if (avatarUri) {
-        avatarUrl = await uploadImageToStorage(avatarUri, "avatars", user.id + "_avatar");
+        avatarUrl = await uploadImageToStorage("avatars", user.id + "_avatar.jpg", avatarUri);
       }
 
       // Update profile
@@ -119,7 +119,7 @@ export default function TierhalterOnboarding() {
       // Upload dog photos
       const fotoUrls: string[] = [];
       for (let i = 0; i < dogPhotoUris.length; i++) {
-        const url = await uploadImageToStorage(dogPhotoUris[i], "pet-photos", `${user.id}_dog_${i}`);
+        const url = await uploadImageToStorage("pet-photos", `${user.id}_dog_${i}.jpg`, dogPhotoUris[i]);
         if (url) fotoUrls.push(url);
       }
 

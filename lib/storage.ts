@@ -1,5 +1,6 @@
 import * as ImagePicker from "expo-image-picker";
 import { supabase } from "./supabase";
+import { compressImage } from "../utils/compressImage";
 
 /** Öffnet die Fotobibliothek — fragt Berechtigung und gibt das gewählte Asset zurück */
 export async function pickSingleImage(): Promise<ImagePicker.ImagePickerAsset | null> {
@@ -44,7 +45,15 @@ export async function uploadImageToStorage(
   path: string,
   uri: string
 ): Promise<string> {
-  const response = await fetch(uri);
+  // Komprimierung: Avatare kleiner (400px), Pet-Fotos moderat (1200px)
+  const isAvatar = bucket === "avatars";
+  const compressedUri = await compressImage(
+    uri,
+    isAvatar ? 400 : 1200,
+    isAvatar ? 0.80 : 0.82
+  );
+
+  const response = await fetch(compressedUri);
   const blob = await response.blob();
 
   const { error } = await supabase.storage
