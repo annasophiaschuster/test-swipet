@@ -1,4 +1,5 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 import {
   View,
   Text,
@@ -89,14 +90,77 @@ export default function TierheimAnfragenScreen() {
   const [activeFilter, setActiveFilter]   = useState<null | "unread" | "favorited">(null);
   const [favorites, setFavorites]         = useState<Set<string>>(new Set());
 
+  const channelRef    = useRef<RealtimeChannel | null>(null);
+  const userIdRef     = useRef<string | null>(null);
+  const lastFetchTime = useRef<number>(0);
+
   // ── Data ────────────────────────────────────────────────────────────────────
 
   useFocusEffect(
     useCallback(() => {
-      load();
+      // Favorites: immer laden (AsyncStorage, kein Netzwerk)
       AsyncStorage.getItem("chat_favorites").then((raw) => {
         if (raw) setFavorites(new Set(JSON.parse(raw)));
       });
+
+      // Staleness Guard: Chat-Daten nur laden wenn > 5s alt
+      if (Date.now() - lastFetchTime.current >= 5000) {
+        load();
+        lastFetchTime.current = Date.now();
+      }
+
+      // Realtime: neue Nachrichten (lokaler Update) + Match-Änderungen (Re-Fetch)
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        const uid = session?.user?.id;
+        if (!uid) return;
+
+        channelRef.current = supabase
+          .channel(`tierheim-anfragen-${uid}`)
+          .on(
+            "postgres_changes",
+            { event: "INSERT", schema: "public", table: "messages" },
+            (payload) => {
+              const msg = payload.new as {
+                match_id: string; text: string;
+                created_at: string; sender_id: string; match_type: string;
+              };
+              if (msg.match_type !== "adoption") return;
+              setAllChats((prev) =>
+                prev.map((chat) => {
+                  if (chat.matchId !== msg.match_id) return chat;
+                  return {
+                    ...chat,
+                    lastMessage:       msg.text,
+                    lastMessageAt:     msg.created_at,
+                    lastMessageIsMine: msg.sender_id === userIdRef.current,
+                    unreadCount:
+                      msg.sender_id !== userIdRef.current
+                        ? chat.unreadCount + 1
+                        : chat.unreadCount,
+                  };
+                })
+              );
+            }
+          )
+          .on(
+            "postgres_changes",
+            {
+              event: "*",
+              schema: "public",
+              table: "adoption_matches",
+              filter: `shelter_id=eq.${uid}`,
+            },
+            () => load()
+          )
+          .subscribe();
+      });
+
+      return () => {
+        if (channelRef.current) {
+          supabase.removeChannel(channelRef.current);
+          channelRef.current = null;
+        }
+      };
     }, [])
   );
 
@@ -115,8 +179,10 @@ export default function TierheimAnfragenScreen() {
     else setLoading(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user ?? null;
       if (!user) return;
+      userIdRef.current = user.id;
 
       // Load ALL shelter dogs for the bubble strip
       const { data: petsData } = await supabase
@@ -146,41 +212,60 @@ export default function TierheimAnfragenScreen() {
 
       if (error) throw error;
 
-      const chats: ChatItem[] = await Promise.all(
-        (data ?? []).map(async (m: any) => {
-          const petPhotos = ((m.pet?.pet_photos ?? []) as any[])
-            .sort((a: any, b: any) => a.position - b.position);
+      const matchIds = (data ?? []).map((m: any) => m.id);
 
-          const { data: msgs } = await supabase
+      // Bulk-fetch 1: all messages for these matches (to derive last message)
+      const { data: allMsgs } = matchIds.length > 0
+        ? await supabase
             .from("messages")
-            .select("text, created_at, sender_id")
-            .eq("match_id", m.id)
+            .select("match_id, text, created_at, sender_id")
+            .in("match_id", matchIds)
             .eq("match_type", "adoption")
             .order("created_at", { ascending: false })
-            .limit(1);
+        : { data: [] };
 
-          const { count: unread } = await supabase
+      // Bulk-fetch 2: all unread messages for these matches
+      const { data: allUnread } = matchIds.length > 0
+        ? await supabase
             .from("messages")
-            .select("id", { count: "exact", head: true })
-            .eq("match_id", m.id)
-            .neq("sender_id", user.id);
+            .select("match_id, sender_id")
+            .in("match_id", matchIds)
+            .neq("sender_id", user.id)
+        : { data: [] };
 
-          return {
-            matchId:           m.id,
-            petId:             m.pet_id ?? "",
-            petName:           m.pet?.name ?? "Unbekannt",
-            petPhoto:          petPhotos[0]?.url ?? null,
-            adoptantId:        m.adoptant_id ?? "",
-            adoptantName:      m.adoptant?.name ?? null,
-            adoptantPhoto:     m.adoptant?.avatar_url ?? null,
-            adoptantCity:      m.adoptant?.city ?? null,
-            lastMessage:       msgs?.[0]?.text ?? null,
-            lastMessageAt:     msgs?.[0]?.created_at ?? null,
-            lastMessageIsMine: msgs?.[0]?.sender_id === user.id,
-            unreadCount:       unread ?? 0,
-          };
-        })
-      );
+      // Group in JS: last message per match_id (already ordered desc, so first = last)
+      const lastMsgMap: Record<string, { match_id: string; text: string; created_at: string; sender_id: string }> = {};
+      for (const msg of allMsgs ?? []) {
+        if (!lastMsgMap[msg.match_id]) lastMsgMap[msg.match_id] = msg;
+      }
+
+      // Group in JS: unread count per match_id
+      const unreadMap: Record<string, number> = {};
+      for (const msg of allUnread ?? []) {
+        unreadMap[msg.match_id] = (unreadMap[msg.match_id] ?? 0) + 1;
+      }
+
+      console.log(`[anfragen] enriched ${matchIds.length} chats with 2 bulk queries`);
+
+      const chats: ChatItem[] = (data ?? []).map((m: any) => {
+        const petPhotos = ((m.pet?.pet_photos ?? []) as any[])
+          .sort((a: any, b: any) => a.position - b.position);
+        const lastMsg = lastMsgMap[m.id] ?? null;
+        return {
+          matchId:           m.id,
+          petId:             m.pet_id ?? "",
+          petName:           m.pet?.name ?? "Unbekannt",
+          petPhoto:          petPhotos[0]?.url ?? null,
+          adoptantId:        m.adoptant_id ?? "",
+          adoptantName:      m.adoptant?.name ?? null,
+          adoptantPhoto:     m.adoptant?.avatar_url ?? null,
+          adoptantCity:      m.adoptant?.city ?? null,
+          lastMessage:       lastMsg?.text ?? null,
+          lastMessageAt:     lastMsg?.created_at ?? null,
+          lastMessageIsMine: lastMsg?.sender_id === user.id,
+          unreadCount:       unreadMap[m.id] ?? 0,
+        };
+      });
 
       setAllChats(chats);
     } catch (e) {

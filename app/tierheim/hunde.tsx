@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -51,27 +51,41 @@ export default function TierheimHundeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [isGuest, setIsGuest]   = useState(false);
 
+  const lastFetchTime = useRef<number>(0);
+
   useFocusEffect(
     useCallback(() => {
+      if (Date.now() - lastFetchTime.current < 5000) return;
       loadPets();
+      lastFetchTime.current = Date.now();
     }, [])
   );
 
+  // Bulk-fetch: 1 Query statt 2×N (ein Query pro Hund)
   const enrichWithStats = async (rawPets: any[]): Promise<Pet[]> => {
-    return Promise.all(
-      rawPets.map(async (pet) => {
-        const { count: totalCount } = await supabase
-          .from("adoption_matches")
-          .select("id", { count: "exact", head: true })
-          .eq("pet_id", pet.id);
-        const { count: pendingCount } = await supabase
-          .from("adoption_matches")
-          .select("id", { count: "exact", head: true })
-          .eq("pet_id", pet.id)
-          .eq("status", "pending");
-        return { ...pet, interessenten: totalCount ?? 0, neue_anfragen: pendingCount ?? 0 };
-      })
-    );
+    if (rawPets.length === 0) return [];
+    const petIds = rawPets.map((p) => p.id);
+
+    const { data: matches } = await supabase
+      .from("adoption_matches")
+      .select("pet_id, status")
+      .in("pet_id", petIds);
+
+    const totals: Record<string, number> = {};
+    const pending: Record<string, number> = {};
+    for (const m of matches ?? []) {
+      totals[m.pet_id] = (totals[m.pet_id] ?? 0) + 1;
+      if (m.status === "pending") {
+        pending[m.pet_id] = (pending[m.pet_id] ?? 0) + 1;
+      }
+    }
+
+    console.log(`[hunde] enrichWithStats: 1 bulk query für ${petIds.length} Hunde`);
+    return rawPets.map((pet) => ({
+      ...pet,
+      interessenten: totals[pet.id] ?? 0,
+      neue_anfragen: pending[pet.id] ?? 0,
+    }));
   };
 
   const loadPets = async (isRefresh = false) => {
@@ -79,7 +93,8 @@ export default function TierheimHundeScreen() {
     else setLoading(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user ?? null;
 
       if (!user) {
         setIsGuest(true);

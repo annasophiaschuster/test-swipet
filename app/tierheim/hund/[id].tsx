@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 import {
   View,
   Text,
@@ -200,8 +201,32 @@ export default function HundDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [isGuest, setIsGuest] = useState(false);
 
+  const channelRef = useRef<RealtimeChannel | null>(null);
+
   useEffect(() => {
     loadData();
+
+    // Realtime: neue Anfragen + Statusänderungen für diesen Hund
+    channelRef.current = supabase
+      .channel(`tierheim-hund-${id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "adoption_matches",
+          filter: `pet_id=eq.${id}`,
+        },
+        () => loadData()
+      )
+      .subscribe();
+
+    return () => {
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
+    };
   }, [id]);
 
   const handleDelete = () => {
@@ -228,7 +253,8 @@ export default function HundDetailScreen() {
 
   const loadData = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user ?? null;
       setIsGuest(!user);
 
       // Load dog details
@@ -256,34 +282,44 @@ export default function HundDetailScreen() {
         .eq("pet_id", id)
         .order("created_at", { ascending: false });
 
-      const rows: AnfrageRow[] = await Promise.all(
-        (matchData ?? []).map(async (m: any) => {
-          const { data: msgs } = await supabase
+      const matchIds = (matchData ?? []).map((m: any) => m.id);
+
+      // Bulk-fetch last messages for all matches in one query
+      const { data: bulkMsgs } = matchIds.length > 0
+        ? await supabase
             .from("messages")
-            .select("text, created_at, sender_id")
-            .eq("match_id", m.id)
+            .select("match_id, text, created_at, sender_id")
+            .in("match_id", matchIds)
             .eq("match_type", "adoption")
             .order("created_at", { ascending: false })
-            .limit(1);
+        : { data: [] };
 
-          const photos = ((m.pet?.pet_photos as any[]) ?? []).sort(
-            (a: any, b: any) => a.position - b.position
-          );
+      // Group in JS: first entry per match_id = latest message (already ordered desc)
+      const lastMsgMap: Record<string, { text: string; created_at: string }> = {};
+      for (const msg of bulkMsgs ?? []) {
+        if (!lastMsgMap[msg.match_id]) lastMsgMap[msg.match_id] = msg;
+      }
 
-          return {
-            id: m.id,
-            status: m.status ?? "pending",
-            created_at: m.created_at,
-            pet_id: m.pet_id ?? null,
-            adoptant_id: m.adoptant_id ?? null,
-            adoptant_name: m.adoptant?.name ?? null,
-            adoptant_city: m.adoptant?.city ?? null,
-            pet_photo: photos[0]?.url ?? null,
-            last_message: msgs?.[0]?.text ?? null,
-            last_message_at: msgs?.[0]?.created_at ?? null,
-          };
-        })
-      );
+      console.log(`[hund/${id}] enriched ${matchIds.length} anfragen with 1 bulk query`);
+
+      const rows: AnfrageRow[] = (matchData ?? []).map((m: any) => {
+        const photos = ((m.pet?.pet_photos as any[]) ?? []).sort(
+          (a: any, b: any) => a.position - b.position
+        );
+        const lastMsg = lastMsgMap[m.id] ?? null;
+        return {
+          id: m.id,
+          status: m.status ?? "pending",
+          created_at: m.created_at,
+          pet_id: m.pet_id ?? null,
+          adoptant_id: m.adoptant_id ?? null,
+          adoptant_name: m.adoptant?.name ?? null,
+          adoptant_city: m.adoptant?.city ?? null,
+          pet_photo: photos[0]?.url ?? null,
+          last_message: lastMsg?.text ?? null,
+          last_message_at: lastMsg?.created_at ?? null,
+        };
+      });
 
       setAnfragen(rows);
     } catch (e) {

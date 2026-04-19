@@ -1,4 +1,5 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 import {
   View,
   Text,
@@ -78,9 +79,42 @@ export default function TierheimDashboard() {
   const [isGuest, setIsGuest]         = useState(false);
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
 
+  const channelRef    = useRef<RealtimeChannel | null>(null);
+  const lastFetchTime = useRef<number>(0);
+
   useFocusEffect(
     useCallback(() => {
-      loadDashboard();
+      if (Date.now() - lastFetchTime.current >= 5000) {
+        loadDashboard();
+        lastFetchTime.current = Date.now();
+      }
+
+      // Realtime: Neue oder geänderte Anfragen → Stats-Badge aktualisieren
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        const uid = session?.user?.id;
+        if (!uid) return;
+
+        channelRef.current = supabase
+          .channel(`tierheim-dashboard-${uid}`)
+          .on(
+            "postgres_changes",
+            {
+              event: "*",
+              schema: "public",
+              table: "adoption_matches",
+              filter: `shelter_id=eq.${uid}`,
+            },
+            () => loadDashboard()
+          )
+          .subscribe();
+      });
+
+      return () => {
+        if (channelRef.current) {
+          supabase.removeChannel(channelRef.current);
+          channelRef.current = null;
+        }
+      };
     }, [])
   );
 
@@ -89,7 +123,8 @@ export default function TierheimDashboard() {
     else setLoading(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user ?? null;
       const guest = !user;
       setIsGuest(guest);
 
@@ -216,8 +251,6 @@ export default function TierheimDashboard() {
   };
 
   const handleLogout = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { router.push("/auth/login"); return; }
     await supabase.auth.signOut();
     router.replace("/auth/login");
   };
