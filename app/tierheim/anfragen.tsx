@@ -52,6 +52,8 @@ function timeLabel(iso: string | null, lang: string): string {
   return d.toLocaleDateString(locale, { day: "2-digit", month: "2-digit" });
 }
 
+const AVATAR_COLORS = ["#E27289", "#5BBF8A", "#5A9EE0", "#F4A261", "#9B72CF", "#E2A27A"];
+
 function InitialsAvatar({ name }: { name: string | null }) {
   const letters = (name ?? "?")
     .split(" ")
@@ -59,9 +61,11 @@ function InitialsAvatar({ name }: { name: string | null }) {
     .join("")
     .toUpperCase()
     .slice(0, 2);
+  const colorIdx = (name ?? "?").charCodeAt(0) % AVATAR_COLORS.length;
+  const color = AVATAR_COLORS[colorIdx];
   return (
-    <View style={styles.initialsCircle}>
-      <Text style={styles.initialsText}>{letters}</Text>
+    <View style={[styles.initialsCircle, { backgroundColor: color + "28" }]}>
+      <Text style={[styles.initialsText, { color }]}>{letters}</Text>
     </View>
   );
 }
@@ -179,12 +183,13 @@ export default function TierheimAnfragenScreen() {
     router.push({
       pathname: "/tierheim/chat/[matchId]",
       params: {
-        matchId:      item.matchId,
-        petName:      item.petName,
-        petPhoto:     item.petPhoto ?? "",
-        adoptantName: item.adoptantName ?? "",
-        petId:        item.petId,
-        adoptantId:   item.adoptantId,
+        matchId:       item.matchId,
+        petName:       item.petName,
+        petPhoto:      item.petPhoto ?? "",
+        adoptantName:  item.adoptantName ?? "",
+        adoptantPhoto: item.adoptantPhoto ?? "",
+        petId:         item.petId,
+        adoptantId:    item.adoptantId,
       },
     });
 
