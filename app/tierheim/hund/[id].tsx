@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   Image,
   FlatList,
+  Alert,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
@@ -14,6 +15,30 @@ import { supabase } from "../../../lib/supabase";
 import { Colors } from "../../../constants/colors";
 import { Sizes } from "../../../constants/sizes";
 import { useLanguage } from "../../../contexts/LanguageContext";
+
+// ─── Avatar helpers ───────────────────────────────────────────────────────────
+
+const AVATAR_COLORS = ["#E27289", "#5BBF8A", "#5A9EE0", "#F4A261", "#9B72CF", "#E2A27A"];
+
+function InitialsAvatar({ name, size = 44 }: { name: string | null; size?: number }) {
+  const letters = (name ?? "?")
+    .split(" ")
+    .map((w) => w[0] ?? "")
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+  const colorIdx = (name ?? "?").charCodeAt(0) % AVATAR_COLORS.length;
+  const color = AVATAR_COLORS[colorIdx];
+  return (
+    <View style={{
+      width: size, height: size, borderRadius: size / 2,
+      backgroundColor: color + "28",
+      alignItems: "center", justifyContent: "center",
+    }}>
+      <Text style={{ fontSize: size * 0.38, fontWeight: "700", color }}>{letters}</Text>
+    </View>
+  );
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -90,14 +115,38 @@ export default function HundDetailScreen() {
   const [dog, setDog] = useState<DogDetail | null>(null);
   const [anfragen, setAnfragen] = useState<AnfrageRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isGuest, setIsGuest] = useState(false);
 
   useEffect(() => {
     loadData();
   }, [id]);
 
+  const handleDelete = () => {
+    Alert.alert(
+      `${dogName} ${t.tierheim_dogs_delete_title}`,
+      t.tierheim_dogs_delete_msg,
+      [
+        {
+          text: t.tierheim_dogs_delete_btn,
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await supabase.from("pets").delete().eq("id", id);
+              router.back();
+            } catch (e) {
+              console.error("handleDelete error", e);
+            }
+          },
+        },
+        { text: t.tierheim_dogs_cancel, style: "cancel" },
+      ]
+    );
+  };
+
   const loadData = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
+      setIsGuest(!user);
 
       // Load dog details
       const { data: petData } = await supabase
@@ -267,6 +316,23 @@ export default function HundDetailScreen() {
               <Text style={{ fontSize: 15, color: Colors.TEXT, lineHeight: 24 }}>{dog.beschreibung}</Text>
             </View>
           )}
+
+          {/* Delete button – only for logged-in shelter staff */}
+          {!isGuest && (
+            <TouchableOpacity
+              onPress={handleDelete}
+              style={{
+                marginTop: 8, height: 46, borderRadius: Sizes.RADIUS_FULL,
+                borderWidth: 1.5, borderColor: "#FFCDD2",
+                backgroundColor: "#FFF5F5",
+                alignItems: "center", justifyContent: "center",
+              }}
+            >
+              <Text style={{ fontSize: 14, color: "#D32F2F", fontWeight: "600" }}>
+                {t.tierheim_dogs_delete_full}
+              </Text>
+            </TouchableOpacity>
+          )}
         </ScrollView>
       )}
 
@@ -291,6 +357,7 @@ export default function HundDetailScreen() {
                       petName: dogName,
                       petPhoto: item.pet_photo ?? "",
                       adoptantName: item.adoptant_name ?? "",
+                      adoptantPhoto: "",
                       petId: item.pet_id ?? "",
                       adoptantId: item.adoptant_id ?? "",
                     },
@@ -302,6 +369,9 @@ export default function HundDetailScreen() {
                   }}
                   activeOpacity={0.7}
                 >
+                  <View style={{ marginRight: 12 }}>
+                    <InitialsAvatar name={item.adoptant_name} size={44} />
+                  </View>
                   <View style={{ flex: 1 }}>
                     <Text style={{ fontSize: Sizes.FONT_MD, fontWeight: "700", color: Colors.TEXT }}>
                       {item.adoptant_name ?? "Unbekannt"}
@@ -352,6 +422,7 @@ export default function HundDetailScreen() {
                       petName: dogName,
                       petPhoto: item.pet_photo ?? "",
                       adoptantName: item.adoptant_name ?? "",
+                      adoptantPhoto: "",
                       petId: item.pet_id ?? "",
                       adoptantId: item.adoptant_id ?? "",
                     },
@@ -363,6 +434,9 @@ export default function HundDetailScreen() {
                   }}
                   activeOpacity={0.7}
                 >
+                  <View style={{ marginRight: 12 }}>
+                    <InitialsAvatar name={item.adoptant_name} size={44} />
+                  </View>
                   <View style={{ flex: 1 }}>
                     <Text style={{ fontSize: Sizes.FONT_MD, fontWeight: "700", color: Colors.TEXT }}>
                       {item.adoptant_name ?? "Unbekannt"}
