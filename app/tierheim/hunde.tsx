@@ -310,6 +310,18 @@ export default function TierheimHundeScreen() {
                 {/* Actions */}
                 <View style={{ flexDirection: "row", gap: 8, paddingHorizontal: 14, paddingBottom: 12 }}>
                   <TouchableOpacity
+                    onPress={() => router.push({ pathname: "/tierheim/hund/[id]", params: { id: item.id, name: item.name } })}
+                    style={{
+                      flex: 1, height: 34, borderRadius: Sizes.RADIUS_FULL,
+                      backgroundColor: Colors.PRIMARY,
+                      alignItems: "center", justifyContent: "center",
+                    }}
+                  >
+                    <Text style={{ fontSize: 12, color: "#fff", fontWeight: "700" }}>
+                      {t.tierheim_dogs_to_profile}
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
                     onPress={() => handleStatusChange(item)}
                     style={{
                       flex: 1, height: 34, borderRadius: Sizes.RADIUS_FULL,
@@ -318,22 +330,9 @@ export default function TierheimHundeScreen() {
                     }}
                   >
                     <Text style={{ fontSize: 12, color: Colors.TEXT, fontWeight: "500" }}>
-                      {t.tierheim_dogs_status_change}
+                      {t.tierheim_dogs_status_btn}
                     </Text>
                   </TouchableOpacity>
-                  {!isGuest && (
-                    <TouchableOpacity
-                      onPress={() => handleDelete(item)}
-                      style={{
-                        width: 34, height: 34, borderRadius: 17,
-                        borderWidth: 1, borderColor: "#FFCDD2",
-                        backgroundColor: "#FFF5F5",
-                        alignItems: "center", justifyContent: "center",
-                      }}
-                    >
-                      <Text style={{ fontSize: 14 }}>🗑</Text>
-                    </TouchableOpacity>
-                  )}
                 </View>
               </TouchableOpacity>
             );
