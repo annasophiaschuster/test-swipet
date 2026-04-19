@@ -15,10 +15,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.swipet.app",
-      "buildNumber": "28",
-      "extraBuildSettings": {
-        "CLANG_CXX_LANGUAGE_STANDARD": "c++20"
-      },
+      "buildNumber": "29",
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Swipet möchte auf deine Fotos zugreifen.",
         "NSCameraUsageDescription": "Swipet möchte auf deine Kamera zugreifen.",
@@ -44,6 +41,7 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
+      "./plugins/withCxxStandard",
       "expo-router",
       [
         "expo-notifications",
