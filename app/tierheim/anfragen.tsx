@@ -9,8 +9,11 @@ import {
   RefreshControl,
   ScrollView,
   StyleSheet,
+  Modal,
+  Pressable,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { supabase } from "../../lib/supabase";
@@ -74,12 +77,15 @@ function InitialsAvatar({ name }: { name: string | null }) {
 
 export default function TierheimAnfragenScreen() {
   const { lang } = useLanguage();
+  const insets = useSafeAreaInsets();
 
-  const [matchedDogs, setMatchedDogs]     = useState<MatchedDog[]>([]);
+  const [allDogs, setAllDogs]             = useState<MatchedDog[]>([]);
   const [allChats, setAllChats]           = useState<ChatItem[]>([]);
   const [selectedDogId, setSelectedDogId] = useState<string | null>(null);
   const [loading, setLoading]             = useState(true);
   const [refreshing, setRefreshing]       = useState(false);
+  const [showFilterModal, setShowFilterModal] = useState(false);
+  const [activeFilter, setActiveFilter]   = useState<null | "unread" | "favorited">(null);
 
   // ── Data ────────────────────────────────────────────────────────────────────
 
@@ -97,6 +103,21 @@ export default function TierheimAnfragenScreen() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Load ALL shelter dogs for the bubble strip
+      const { data: petsData } = await supabase
+        .from("pets")
+        .select("id, name, pet_photos(url, position)")
+        .eq("shelter_id", user.id)
+        .order("created_at", { ascending: true });
+
+      const dogs: MatchedDog[] = (petsData ?? []).map((p: any) => {
+        const photos = ((p.pet_photos ?? []) as any[])
+          .sort((a: any, b: any) => a.position - b.position);
+        return { id: p.id, name: p.name, photo: photos[0]?.url ?? null };
+      });
+      setAllDogs(dogs);
+
+      // Load accepted matches → chats
       const { data, error } = await supabase
         .from("adoption_matches")
         .select(`
@@ -147,17 +168,6 @@ export default function TierheimAnfragenScreen() {
       );
 
       setAllChats(chats);
-
-      // Unique dogs from accepted matches (preserve order)
-      const seen = new Set<string>();
-      const dogs: MatchedDog[] = [];
-      for (const c of chats) {
-        if (!seen.has(c.petId)) {
-          seen.add(c.petId);
-          dogs.push({ id: c.petId, name: c.petName, photo: c.petPhoto });
-        }
-      }
-      setMatchedDogs(dogs);
     } catch (e) {
       console.error("TierheimAnfragenScreen.load", e);
     } finally {
@@ -168,9 +178,9 @@ export default function TierheimAnfragenScreen() {
 
   // ── Derived ─────────────────────────────────────────────────────────────────
 
-  const visibleChats = selectedDogId
-    ? allChats.filter((c) => c.petId === selectedDogId)
-    : allChats;
+  const visibleChats = allChats
+    .filter((c) => !selectedDogId || c.petId === selectedDogId)
+    .filter((c) => activeFilter === "unread" ? c.unreadCount > 0 : true);
 
   const totalUnread = allChats.reduce((s, c) => s + c.unreadCount, 0);
 
@@ -206,30 +216,118 @@ export default function TierheimAnfragenScreen() {
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <SafeAreaView edges={["top"]} style={styles.safe}>
+    <SafeAreaView edges={["bottom"]} style={styles.safe}>
 
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Nachrichten</Text>
-        {totalUnread > 0 && (
-          <View style={styles.headerBadge}>
-            <Text style={styles.headerBadgeText}>{totalUnread}</Text>
+      {/* Gradient header — title + dogs strip */}
+      <LinearGradient
+        colors={[Colors.SECONDARY, Colors.PRIMARY]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={[styles.gradientHeader, { paddingTop: insets.top }]}
+      >
+        {/* Title row */}
+        <View style={styles.header}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flex: 1 }}>
+            <Text style={styles.headerTitle}>Nachrichten</Text>
+            {totalUnread > 0 && (
+              <View style={styles.headerBadge}>
+                <Text style={styles.headerBadgeText}>{totalUnread}</Text>
+              </View>
+            )}
           </View>
-        )}
-      </View>
+          <TouchableOpacity
+            onPress={() => setShowFilterModal(true)}
+            style={[styles.filterBtn, activeFilter !== null && styles.filterBtnActive]}
+            activeOpacity={0.7}
+          >
+            <Ionicons
+              name="options-outline"
+              size={20}
+              color={Colors.WHITE}
+            />
+          </TouchableOpacity>
+        </View>
 
-      {/* Matches strip */}
-      <View style={styles.stripWrap}>
-        <Text style={styles.stripLabel}>Matches</Text>
-        {matchedDogs.length === 0 ? (
-          <Text style={styles.stripEmpty}>Noch keine genehmigten Anfragen</Text>
+      {/* Filter modal */}
+      <Modal
+        visible={showFilterModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowFilterModal(false)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setShowFilterModal(false)}>
+          <Pressable style={styles.modalSheet} onPress={() => {}}>
+            <Text style={styles.modalTitle}>Filter</Text>
+
+            {([
+              { key: "unread",    label: "Ungelesene Nachrichten" },
+              { key: "favorited", label: "Favorisierte Nachrichten" },
+            ] as const).map(({ key, label }) => {
+              const active = activeFilter === key;
+              return (
+                <TouchableOpacity
+                  key={key}
+                  onPress={() => {
+                    setActiveFilter(active ? null : key);
+                    setShowFilterModal(false);
+                  }}
+                  activeOpacity={0.7}
+                  style={[styles.modalOption, active && styles.modalOptionActive]}
+                >
+                  <Text style={[styles.modalOptionText, active && styles.modalOptionTextActive]}>
+                    {label}
+                  </Text>
+                  {active && (
+                    <Ionicons name="checkmark" size={18} color={Colors.PRIMARY} />
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+
+            {activeFilter !== null && (
+              <TouchableOpacity
+                onPress={() => { setActiveFilter(null); setShowFilterModal(false); }}
+                activeOpacity={0.7}
+                style={styles.modalClear}
+              >
+                <Text style={styles.modalClearText}>Filter zurücksetzen</Text>
+              </TouchableOpacity>
+            )}
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+        {/* Dogs strip — inside gradient */}
+        <View style={styles.stripWrap}>
+        <Text style={[styles.stripLabel, { color: "rgba(255,255,255,0.75)" }]}>Hunde</Text>
+        {allDogs.length === 0 ? (
+          <Text style={styles.stripEmpty}>Noch keine Hunde angelegt</Text>
         ) : (
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.stripScroll}
           >
-            {matchedDogs.map((dog) => {
+            {/* "Alle Hunde" bubble */}
+            <TouchableOpacity
+              onPress={() => setSelectedDogId(null)}
+              activeOpacity={0.75}
+              style={styles.dogWrap}
+            >
+              <View style={[styles.dogRing, selectedDogId === null && styles.dogRingActive]}>
+                <View style={[styles.dogPhoto, styles.dogPhotoFallback]}>
+                  <Text style={{ fontSize: 22 }}>🐾</Text>
+                </View>
+              </View>
+              <Text
+                numberOfLines={1}
+                style={[styles.dogName, selectedDogId === null && styles.dogNameActive]}
+              >
+                Alle Hunde
+              </Text>
+            </TouchableOpacity>
+
+            {allDogs.map((dog) => {
               const active = selectedDogId === dog.id;
               return (
                 <TouchableOpacity
@@ -258,7 +356,8 @@ export default function TierheimAnfragenScreen() {
             })}
           </ScrollView>
         )}
-      </View>
+        </View>
+      </LinearGradient>
 
       {/* Divider */}
       <View style={styles.divider} />
@@ -269,17 +368,17 @@ export default function TierheimAnfragenScreen() {
           <Ionicons name="chatbubble-ellipses-outline" size={52} color={Colors.BORDER} />
           <Text style={styles.emptyTitle}>
             {allChats.length === 0
-              ? "Noch keine Matches"
+              ? "Noch keine Chats"
               : selectedDogId
               ? "Keine Chats für diesen Hund"
-              : "Wähle einen Hund aus"}
+              : "Noch keine aktiven Chats"}
           </Text>
           <Text style={styles.emptySub}>
             {allChats.length === 0
-              ? "Wenn eine Anfrage genehmigt wird, erscheint sie hier."
+              ? "Sobald eine Anfrage angenommen wird, erscheint der Chat hier."
               : selectedDogId
-              ? "Für diesen Hund gibt es noch keine aktiven Gespräche."
-              : "Tippe auf einen Hund oben, um seine Chats zu sehen."}
+              ? "Für diesen Hund gibt es noch keine angenommenen Anfragen."
+              : "Sobald eine Anfrage angenommen wird, erscheint der Chat hier."}
           </Text>
         </View>
       ) : (
@@ -363,23 +462,28 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.BACKGROUND },
   centered: { flex: 1, backgroundColor: Colors.BACKGROUND, alignItems: "center", justifyContent: "center" },
 
-  // Header
+  // Gradient header wrapper
+  gradientHeader: {
+    paddingTop: 0,
+    paddingBottom: 14,
+  },
+
+  // Header title row
   header: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 14,
-    gap: 8,
+    paddingTop: 12,
+    paddingBottom: 12,
   },
   headerTitle: {
     fontSize: 28,
     fontWeight: "800",
-    color: Colors.TEXT,
+    color: Colors.WHITE,
     letterSpacing: -0.5,
   },
   headerBadge: {
-    backgroundColor: Colors.PRIMARY,
+    backgroundColor: "rgba(255,255,255,0.35)",
     borderRadius: 99,
     minWidth: 22,
     height: 22,
@@ -389,20 +493,86 @@ const styles = StyleSheet.create({
   },
   headerBadgeText: { color: "#FFF", fontSize: 11, fontWeight: "800" },
 
-  // Matches strip
-  stripWrap: { paddingBottom: 14 },
-  stripLabel: {
-    fontSize: 11,
-    fontWeight: "700",
+  // Filter button
+  filterBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(255,255,255,0.25)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  filterBtnActive: {
+    backgroundColor: "rgba(255,255,255,0.45)",
+  },
+
+  // Filter modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.35)",
+    justifyContent: "flex-end",
+  },
+  modalSheet: {
+    backgroundColor: Colors.BACKGROUND,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingTop: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 36,
+    gap: 6,
+  },
+  modalTitle: {
+    fontSize: 17,
+    fontWeight: "800",
+    color: Colors.TEXT,
+    marginBottom: 10,
+  },
+  modalOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    backgroundColor: Colors.SURFACE,
+    borderWidth: 1.5,
+    borderColor: "transparent",
+  },
+  modalOptionActive: {
+    borderColor: Colors.PRIMARY,
+    backgroundColor: Colors.PRIMARY + "10",
+  },
+  modalOptionText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: Colors.TEXT,
+  },
+  modalOptionTextActive: { color: Colors.PRIMARY },
+  modalClear: {
+    marginTop: 8,
+    alignItems: "center",
+    paddingVertical: 12,
+  },
+  modalClearText: {
+    fontSize: 14,
     color: Colors.TEXT_MUTED,
-    letterSpacing: 1,
+    fontWeight: "600",
+  },
+
+  // Dogs strip
+  stripWrap: { paddingBottom: 6 },
+  stripLabel: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: "rgba(255,255,255,0.75)",
+    letterSpacing: 1.2,
     textTransform: "uppercase",
     paddingHorizontal: 20,
     marginBottom: 10,
   },
   stripEmpty: {
     fontSize: 13,
-    color: Colors.TEXT_MUTED,
+    color: "rgba(255,255,255,0.7)",
     paddingHorizontal: 20,
     fontStyle: "italic",
   },
@@ -415,24 +585,24 @@ const styles = StyleSheet.create({
     height: 68,
     borderRadius: 34,
     borderWidth: 2.5,
-    borderColor: Colors.BORDER,
+    borderColor: "rgba(255,255,255,0.4)",
     padding: 2,
     marginBottom: 5,
   },
-  dogRingActive: { borderColor: Colors.PRIMARY },
+  dogRingActive: { borderColor: Colors.WHITE },
   dogPhoto: { width: 60, height: 60, borderRadius: 30 },
   dogPhotoFallback: {
-    backgroundColor: Colors.SURFACE,
+    backgroundColor: "rgba(255,255,255,0.2)",
     alignItems: "center",
     justifyContent: "center",
   },
   dogName: {
     fontSize: 11,
     fontWeight: "600",
-    color: Colors.TEXT_MUTED,
+    color: "rgba(255,255,255,0.75)",
     textAlign: "center",
   },
-  dogNameActive: { color: Colors.PRIMARY, fontWeight: "700" },
+  dogNameActive: { color: Colors.WHITE, fontWeight: "700" },
 
   divider: { height: 1, backgroundColor: Colors.BORDER },
 

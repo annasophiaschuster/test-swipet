@@ -81,6 +81,21 @@ export type Database = {
           im_heim_seit: string | null;
           beschreibung: string | null;
           status: "verfuegbar" | "reserviert" | "vermittelt";
+          // extended fields
+          gewicht: string | null;
+          fell_typ: string | null;
+          fell_farbe: string | null;
+          hund_vertraeglich: boolean | null;
+          katze_vertraeglich: boolean | null;
+          kleintier_vertraeglich: boolean | null;
+          stubenrein: boolean | null;
+          leinenfuehrig: boolean | null;
+          maulkorbpflicht: boolean | null;
+          alleine_bleiben: string | null;
+          geimpft: boolean | null;
+          gechipt: boolean | null;
+          entwurmt: boolean | null;
+          erkrankungen: string | null;
           created_at: string;
         };
         Insert: Omit<Database["public"]["Tables"]["pets"]["Row"], "id" | "created_at">;

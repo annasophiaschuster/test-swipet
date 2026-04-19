@@ -178,9 +178,6 @@ export default function TierheimHundeScreen() {
     <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
       <GradientHeader
         title="Meine Hunde"
-        showBack
-        backLabel={t.comp_switch_modes}
-        onBack={() => router.replace("/")}
         rightElement={
           <TouchableOpacity
             onPress={() => {
