@@ -145,7 +145,7 @@ export default function TierheimDashboard() {
 
       // Logged in shelter
       const [shelterRes, petsRes, matchesRes, pendingRes] = await Promise.all([
-        supabase.from("shelter_profiles").select("org_name").eq("id", user.id).single(),
+        supabase.from("shelter_profiles").select("org_name, total_placed").eq("id", user.id).single(),
         supabase
           .from("pets")
           .select("id, name, rasse, alter_jahre, alter_monate, status, pet_photos(url, position)")
@@ -197,11 +197,13 @@ export default function TierheimDashboard() {
 
       setPets(petList);
       setPendingMatches(pendingList);
+      const actualVermittelt = petList.filter((p) => p.status === "vermittelt").length;
+      const totalPlaced = shelterRes.data?.total_placed ?? 0;
       setStats({
         orgName: shelterRes.data?.org_name ?? "Meine Organisation",
         verfuegbar: petList.filter((p) => p.status === "verfuegbar").length,
         reserviert: petList.filter((p) => p.status === "reserviert").length,
-        vermittelt: petList.filter((p) => p.status === "vermittelt").length,
+        vermittelt: Math.max(actualVermittelt, totalPlaced),
         totalMatches: matches.length,
         unreadMessages: unread,
       });
