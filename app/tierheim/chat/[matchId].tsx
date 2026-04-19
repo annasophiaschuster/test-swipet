@@ -24,13 +24,37 @@ interface Message {
   created_at: string;
 }
 
+// ─── Adoptant avatar with initials fallback ───────────────────────────────────
+const AVATAR_COLORS = ["#E27289", "#5BBF8A", "#5A9EE0", "#F4A261", "#9B72CF", "#E2A27A"];
+
+function AdoptantAvatar({ name }: { name: string | null }) {
+  const letters = (name ?? "?")
+    .split(" ")
+    .map((w) => w[0] ?? "")
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+  const colorIdx = (name ?? "?").charCodeAt(0) % AVATAR_COLORS.length;
+  const color = AVATAR_COLORS[colorIdx];
+  return (
+    <View style={{
+      width: 40, height: 40, borderRadius: 20,
+      backgroundColor: color + "28",
+      alignItems: "center", justifyContent: "center",
+    }}>
+      <Text style={{ fontSize: 15, fontWeight: "700", color }}>{letters}</Text>
+    </View>
+  );
+}
+
 export default function TierheimChatScreen() {
   const { t, lang } = useLanguage();
-  const { matchId, petName, petPhoto, adoptantName, petId, adoptantId } = useLocalSearchParams<{
+  const { matchId, petName, petPhoto, adoptantName, adoptantPhoto, petId, adoptantId } = useLocalSearchParams<{
     matchId: string;
     petName: string;
     petPhoto: string;
     adoptantName: string;
+    adoptantPhoto: string;
     petId: string;
     adoptantId: string;
   }>();
@@ -184,30 +208,20 @@ export default function TierheimChatScreen() {
         >
           <Text style={{ fontSize: 20, color: Colors.PRIMARY }}>‹</Text>
         </TouchableOpacity>
-        {petPhoto ? (
+        {/* Person avatar */}
+        {adoptantPhoto ? (
           <Image
-            source={{ uri: petPhoto }}
+            source={{ uri: adoptantPhoto }}
             style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: Colors.SURFACE }}
           />
         ) : (
-          <View
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 20,
-              backgroundColor: Colors.SURFACE,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Text style={{ fontSize: 20 }}>🐾</Text>
-          </View>
+          <AdoptantAvatar name={adoptantName ?? null} />
         )}
         <View style={{ flex: 1 }}>
           <Text style={{ fontSize: Sizes.FONT_MD, fontWeight: "700", color: Colors.TEXT }}>
-            {petName}
+            {adoptantName}
           </Text>
-          <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED }}>{adoptantName}</Text>
+          <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED }}>🐾 {petName}</Text>
         </View>
         {petId && adoptantId ? (
           <TouchableOpacity
