@@ -31,6 +31,9 @@
   "devDependencies": {
     "@types/react": "~19.1.10",
     "babel-preset-expo": "~54.0.10",
+    "dotenv": "^17.4.2",
+    "sharp": "^0.34.5",
+    "tsx": "^4.21.0",
     "typescript": "~5.9.2"
   },
   "private": true
