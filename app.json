@@ -15,7 +15,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.swipet.app",
-      "buildNumber": "36",
+      "buildNumber": "37",
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Swipet möchte auf deine Fotos zugreifen.",
         "NSCameraUsageDescription": "Swipet möchte auf deine Kamera zugreifen.",
@@ -67,7 +67,6 @@
       "ios",
       "android"
     ],
-    "newArchEnabled": false,
     "experiments": {
       "typedRoutes": false
     },
