@@ -574,7 +574,7 @@ export default function AdoptionFeed() {
         }}
       >
         <View style={{ width: 60 }} />
-        <Text style={{ fontSize: 22, fontWeight: "800", color: Colors.WHITE }}>🐾 {t.tab_discover}</Text>
+        <Text style={{ fontSize: 22, fontWeight: "800", color: Colors.WHITE }}>{t.tab_discover}</Text>
         <View style={{ width: 60 }} />
       </LinearGradient>
 

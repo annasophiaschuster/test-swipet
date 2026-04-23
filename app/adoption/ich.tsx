@@ -416,7 +416,7 @@ export default function AdoptionProfilScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
       <GradientHeader
-        title="👤 Profil"
+        title="Profil"
         rightElement={!isGuest ? (
           <TouchableOpacity
             onPress={startEdit}

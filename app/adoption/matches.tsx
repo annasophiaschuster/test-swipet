@@ -198,7 +198,7 @@ export default function AdoptionMatchesScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
       <GradientHeader
-        title="❤️ Matches"
+        title="Matches"
         subtitle={`${matches.length} ${matches.length === 1 ? "Match" : "Matches"}`}
       />
 

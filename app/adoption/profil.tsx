@@ -367,7 +367,7 @@ export default function AdoptionProfilScreen() {
   if (isGuest) {
     return (
       <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
-        <GradientHeader title="👤 Profil" />
+        <GradientHeader title="Profil" />
         <DemoProfile />
       </View>
     );
@@ -457,7 +457,7 @@ export default function AdoptionProfilScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
       <GradientHeader
-        title="👤 Profil"
+        title="Profil"
         rightElement={
           <TouchableOpacity
             onPress={startEdit}
