@@ -57,6 +57,70 @@ function EmptyState() {
   );
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Demo data (shown to guest users)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const _now = Date.now();
+const DEMO_MATCHES: AdoptionMatchItem[] = [
+  {
+    id: "demo-a-1",
+    pet_id: "demo-pet-1",
+    shelter_id: "demo-shelter-1",
+    created_at: new Date(_now - 2 * 3600000).toISOString(),
+    pet_name: "Bruno",
+    pet_rasse: "Golden Retriever",
+    pet_tierart: "hund",
+    pet_photo: null,
+    shelter_name: "Tierheim München",
+    last_message: "Hallo! Wir freuen uns über dein Interesse. Wann hättest du Zeit für ein erstes Kennenlernen?",
+    last_message_at: new Date(_now - 18 * 60000).toISOString(),
+    match_status: "accepted",
+  },
+  {
+    id: "demo-a-2",
+    pet_id: "demo-pet-2",
+    shelter_id: "demo-shelter-1",
+    created_at: new Date(_now - 26 * 3600000).toISOString(),
+    pet_name: "Luna",
+    pet_rasse: "Border Collie",
+    pet_tierart: "hund",
+    pet_photo: null,
+    shelter_name: "Tierheim München",
+    last_message: "Super, wir freuen uns auf euch! Mittwoch ab 14 Uhr passt uns gut.",
+    last_message_at: new Date(_now - 4 * 3600000).toISOString(),
+    match_status: "accepted",
+  },
+  {
+    id: "demo-a-3",
+    pet_id: "demo-pet-3",
+    shelter_id: "demo-shelter-2",
+    created_at: new Date(_now - 2 * 86400000).toISOString(),
+    pet_name: "Milo",
+    pet_rasse: "Labrador Mix",
+    pet_tierart: "hund",
+    pet_photo: null,
+    shelter_name: "Tierschutzverein München",
+    last_message: null,
+    last_message_at: null,
+    match_status: "pending",
+  },
+  {
+    id: "demo-a-4",
+    pet_id: "demo-pet-4",
+    shelter_id: "demo-shelter-3",
+    created_at: new Date(_now - 5 * 86400000).toISOString(),
+    pet_name: "Bella",
+    pet_rasse: "Chihuahua",
+    pet_tierart: "hund",
+    pet_photo: null,
+    shelter_name: "Tierheim Augsburg",
+    last_message: "Vielen Dank für dein Interesse! Leider wurde Bella bereits vermittelt.",
+    last_message_at: new Date(_now - 3 * 86400000).toISOString(),
+    match_status: "rejected",
+  },
+];
+
 export default function AdoptionMatchesScreen() {
   const { t, lang } = useLanguage();
   const STATUS_STYLE: Record<string, { bg: string; color: string; label: string }> = {
@@ -64,50 +128,6 @@ export default function AdoptionMatchesScreen() {
     accepted: { bg: Colors.SUCCESS + "22", color: Colors.SUCCESS,  label: t.adoption_matches_accepted },
     rejected: { bg: Colors.ERROR   + "22", color: Colors.ERROR,    label: t.adoption_matches_rejected },
   };
-  const DEMO_MATCHES: AdoptionMatchItem[] = [
-    {
-      id: "demo-a-1",
-      pet_id: "demo-pet-1",
-      shelter_id: "demo-shelter-1",
-      created_at: new Date(Date.now() - 2 * 3600000).toISOString(),
-      pet_name: "Bruno",
-      pet_rasse: "Golden Retriever",
-      pet_tierart: "hund",
-      pet_photo: null,
-      shelter_name: "Tierheim München",
-      last_message: t.adoption_nachrichten_demo_msg1,
-      last_message_at: new Date(Date.now() - 25 * 60000).toISOString(),
-      match_status: "accepted",
-    },
-    {
-      id: "demo-a-2",
-      pet_id: "demo-pet-2",
-      shelter_id: "demo-shelter-1",
-      created_at: new Date(Date.now() - 26 * 3600000).toISOString(),
-      pet_name: "Milo",
-      pet_rasse: "Labrador",
-      pet_tierart: "hund",
-      pet_photo: null,
-      shelter_name: "Tierheim München",
-      last_message: null,
-      last_message_at: null,
-      match_status: "pending",
-    },
-    {
-      id: "demo-a-3",
-      pet_id: "demo-pet-3",
-      shelter_id: "demo-shelter-2",
-      created_at: new Date(Date.now() - 3 * 86400000).toISOString(),
-      pet_name: "Bella",
-      pet_rasse: "Chihuahua",
-      pet_tierart: "hund",
-      pet_photo: null,
-      shelter_name: "Tierheim Berlin",
-      last_message: t.adoption_nachrichten_demo_msg2,
-      last_message_at: new Date(Date.now() - 2 * 86400000).toISOString(),
-      match_status: "rejected",
-    },
-  ];
   const [matches, setMatches]       = useState<AdoptionMatchItem[]>([]);
   const [loading, setLoading]       = useState(true);
   const [refreshing, setRefreshing] = useState(false);

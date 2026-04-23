@@ -116,6 +116,8 @@ export default function AdoptionEventsScreen() {
 
       if (!uid) {
         setWalks(DEMO_WALKS);
+        setLoading(false);
+        setRefreshing(false);
         return;
       }
 
