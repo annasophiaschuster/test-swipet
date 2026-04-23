@@ -6,11 +6,11 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { supabase } from "../../lib/supabase";
 import { Colors } from "../../constants/colors";
 import { Sizes } from "../../constants/sizes";
 import { useLanguage } from "../../contexts/LanguageContext";
+import GradientHeader from "../../components/GradientHeader";
 
 type CategoryKey = "basics" | "outdoor" | "care" | "play";
 
@@ -76,7 +76,8 @@ export default function InfoScreen() {
   const activeItems = CATEGORIES.find((c) => c.key === activeCategory)?.items ?? [];
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
+    <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
+      <GradientHeader title={t.tab_info} />
       <ScrollView
         contentContainerStyle={{ paddingBottom: 48 }}
         showsVerticalScrollIndicator={false}
@@ -296,6 +297,6 @@ export default function InfoScreen() {
           </View>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }

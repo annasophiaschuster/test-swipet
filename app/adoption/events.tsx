@@ -8,8 +8,8 @@ import {
   RefreshControl,
   Alert,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "expo-router";
+import GradientHeader from "../../components/GradientHeader";
 import { supabase } from "../../lib/supabase";
 import { Colors } from "../../constants/colors";
 import { Sizes } from "../../constants/sizes";
@@ -142,14 +142,8 @@ export default function AdoptionEventsScreen() {
     : walks;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
-      {/* Header */}
-      <View style={{
-        paddingHorizontal: Sizes.SPACING_LG, paddingTop: 8, paddingBottom: 14,
-        borderBottomWidth: 1, borderBottomColor: Colors.BORDER,
-      }}>
-        <Text style={{ fontSize: 20, fontWeight: "800", color: Colors.TEXT }}>{t.walks_title}</Text>
-      </View>
+    <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
+      <GradientHeader title={t.walks_title} />
 
       {/* Filter Chips */}
       <View style={{ flexDirection: "row", gap: 8, paddingHorizontal: Sizes.SPACING_LG, paddingVertical: 10 }}>
@@ -270,6 +264,6 @@ export default function AdoptionEventsScreen() {
           }}
         />
       )}
-    </SafeAreaView>
+    </View>
   );
 }
