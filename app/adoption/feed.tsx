@@ -13,8 +13,8 @@ import {
   PanResponder,
 } from "react-native";
 import { router } from "expo-router";
-import { LinearGradient } from "expo-linear-gradient";
 import { supabase } from "../../lib/supabase";
+import GradientHeader from "../../components/GradientHeader";
 import { Colors } from "../../constants/colors";
 import { Sizes } from "../../constants/sizes";
 import type { PetWithPhotos } from "../../components/PetCard";
@@ -564,19 +564,7 @@ export default function AdoptionFeed() {
     <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
 
       {/* Header */}
-      <LinearGradient
-        colors={[Colors.SECONDARY, Colors.PRIMARY]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={{
-          paddingTop: 56, paddingHorizontal: Sizes.SPACING_LG, paddingBottom: 14,
-          flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-        }}
-      >
-        <View style={{ width: 60 }} />
-        <Text style={{ fontSize: 22, fontWeight: "800", color: Colors.WHITE }}>{t.tab_discover}</Text>
-        <View style={{ width: 60 }} />
-      </LinearGradient>
+      <GradientHeader title={t.tab_discover} />
 
       {/* Loading */}
       {loading && (

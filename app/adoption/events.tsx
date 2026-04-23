@@ -34,6 +34,49 @@ interface WalkItem {
 
 type FilterType = "all" | "joined";
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Demo data (shown to guest users)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const DEMO_WALKS: WalkItem[] = [
+  {
+    id: "demo-1",
+    ort: "Englischer Garten, München",
+    datum: "2026-04-26",
+    uhrzeit: "10:00:00",
+    dauer_minuten: 60,
+    max_teilnehmer: 12,
+    persoenlicher_text: "Entspannter Morgenspaziergang rund um den Kleinhesseloher See. Ideal für Hunde, die neue Vierbeiner kennenlernen möchten.",
+    organizer_name: "Tierheim München",
+    participant_count: 7,
+    my_status: null,
+  },
+  {
+    id: "demo-2",
+    ort: "Olympiapark, München",
+    datum: "2026-04-30",
+    uhrzeit: "15:30:00",
+    dauer_minuten: 90,
+    max_teilnehmer: 8,
+    persoenlicher_text: "Geführter Nachmittagsspaziergang mit Beratung rund ums Thema Adoption. Bring gerne Fragen mit!",
+    organizer_name: "Pfotenhilfe e.V.",
+    participant_count: 4,
+    my_status: null,
+  },
+  {
+    id: "demo-3",
+    ort: "Westpark, München",
+    datum: "2026-05-03",
+    uhrzeit: "11:00:00",
+    dauer_minuten: 45,
+    max_teilnehmer: 6,
+    persoenlicher_text: "Kleiner Schnuppergang für zukünftige Hundebesitzer — kein eigener Hund nötig!",
+    organizer_name: "Hunde auf Zeit",
+    participant_count: 6,
+    my_status: null,
+  },
+];
+
 function formatDateDE(iso: string, lang: string): string {
   const d = new Date(iso + "T00:00:00");
   return d.toLocaleDateString(lang === "en" ? "en-US" : "de-DE", {
@@ -70,6 +113,11 @@ export default function AdoptionEventsScreen() {
       const uid = user?.id ?? null;
       setUserId(uid);
       setIsGuest(!uid);
+
+      if (!uid) {
+        setWalks(DEMO_WALKS);
+        return;
+      }
 
       const { data, error } = await supabase
         .from("walks")
