@@ -17,8 +17,8 @@ function TabIcon({ icon, focused }: { icon: keyof typeof ICONS; focused: boolean
       <Image
         source={ICONS[icon]}
         style={{
-          width: 24,
-          height: 24,
+          width: 32,
+          height: 32,
           tintColor: focused ? Colors.SECONDARY : Colors.PRIMARY,
         }}
         resizeMode="contain"
