@@ -49,12 +49,59 @@ function PropRow({
       borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10, marginBottom: 8,
     }}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-        <Text style={{ fontSize: 16 }}>{icon}</Text>
+        {!!icon && <Text style={{ fontSize: 16 }}>{icon}</Text>}
         <Text style={{ fontSize: 14, color: Colors.TEXT, fontWeight: "500" }}>{label}</Text>
       </View>
       <Text style={{ fontSize: 14, fontWeight: "700", color: ok ? Colors.SUCCESS : Colors.ERROR }}>
         {value}
       </Text>
+    </View>
+  );
+}
+
+function SectionLabel({ label }: { label: string }) {
+  return (
+    <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 20, marginTop: 22, marginBottom: 10, gap: 10 }}>
+      <View style={{ flex: 1, height: 1, backgroundColor: Colors.BORDER }} />
+      <Text style={{ fontSize: 11, fontWeight: "700", color: Colors.TEXT_MUTED, textTransform: "uppercase", letterSpacing: 1 }}>
+        {label}
+      </Text>
+      <View style={{ flex: 1, height: 1, backgroundColor: Colors.BORDER }} />
+    </View>
+  );
+}
+
+type InfoBlockRow = { label: string; value: string | boolean | null | undefined; type?: "bool" | "text" };
+
+function InfoBlock({ rows }: { rows: InfoBlockRow[] }) {
+  const visible = rows.filter((r) => r.value !== null && r.value !== undefined && r.value !== "");
+  if (!visible.length) return null;
+  return (
+    <View style={{ marginHorizontal: 20, backgroundColor: Colors.SURFACE, borderRadius: 16, overflow: "hidden" }}>
+      {visible.map((row, i) => (
+        <View key={row.label} style={{
+          flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+          paddingHorizontal: 16, paddingVertical: 13,
+          borderBottomWidth: i < visible.length - 1 ? 1 : 0,
+          borderBottomColor: Colors.BORDER,
+        }}>
+          <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED, flex: 1 }}>{row.label}</Text>
+          {typeof row.value === "boolean" || row.type === "bool" ? (
+            <View style={{
+              paddingHorizontal: 10, paddingVertical: 3, borderRadius: 99,
+              backgroundColor: row.value ? Colors.SUCCESS + "22" : "#FFEBEE",
+            }}>
+              <Text style={{ fontSize: 12, fontWeight: "700", color: row.value ? Colors.SUCCESS : "#D32F2F" }}>
+                {row.value ? "Ja" : "Nein"}
+              </Text>
+            </View>
+          ) : (
+            <Text style={{ fontSize: 14, fontWeight: "600", color: Colors.TEXT, textAlign: "right", maxWidth: "55%" }}>
+              {String(row.value)}
+            </Text>
+          )}
+        </View>
+      ))}
     </View>
   );
 }
@@ -255,9 +302,23 @@ function AdoptionPetView({
           )}
         </View>
 
+        {/* 2b. Basisdaten */}
+        {(pet.gewicht || pet.herkunft || pet.fell_typ || pet.fell_farbe) && (
+          <>
+            <SectionLabel label="Basisdaten" />
+            <InfoBlock rows={[
+              { label: "Gewicht", value: pet.gewicht ? `${pet.gewicht} kg` : null },
+              { label: "Herkunft", value: pet.herkunft ? ({ abgabetier: "Abgabetier", fundtier: "Fundtier", auslandsrettung: "Auslandsrettung", beschlagnahmt: "Beschlagnahmt" } as any)[pet.herkunft] ?? pet.herkunft : null },
+              { label: "Fell", value: [pet.fell_typ, pet.fell_farbe].filter(Boolean).join(", ") || null },
+            ]} />
+          </>
+        )}
+
         {/* 3. Zweites Foto */}
         {photos[1] && (
-          <Image source={{ uri: photos[1].url }} style={{ width: W, height: W * 0.72 }} resizeMode="cover" />
+          <View style={{ marginTop: 20 }}>
+            <Image source={{ uri: photos[1].url }} style={{ width: W, height: W * 0.72 }} resizeMode="cover" />
+          </View>
         )}
 
         {/* 4. Charakter-Tags */}
@@ -280,20 +341,42 @@ function AdoptionPetView({
         )}
 
         {/* 6. Eigenschaften */}
-        <View style={{ padding: 20, paddingTop: 18 }}>
-          <Text style={{ fontSize: 13, fontWeight: "700", color: Colors.TEXT_MUTED, textTransform: "uppercase", letterSpacing: 1, marginBottom: 14 }}>{t.adoption_feed_props_label}</Text>
-          <PropRow icon="🌿" label={t.pet_label_garden}         value={pet.braucht_garten ? t.adoption_feed_garden_yes : t.adoption_feed_garden_no}           ok={!pet.braucht_garten} />
-          <PropRow icon="✂️" label={t.pet_label_neutered}              value={pet.kastriert ? t.adoption_feed_garden_yes : t.adoption_feed_garden_no}                ok={!!pet.kastriert} />
-          <PropRow icon="👦" label={t.pet_label_children}       value={KINDER_MAP[pet.kinderfreundlich ?? ""] ?? "–"}  ok={pet.kinderfreundlich !== "nein"} />
-          <PropRow icon="🐾" label={t.pet_label_animals} value={pet.vertraeglich_mit_tieren ? t.adoption_feed_garden_yes : t.adoption_feed_garden_no}   ok={!!pet.vertraeglich_mit_tieren} />
-          <PropRow icon="🏃" label={t.pet_label_activity}        value={AKTIV_MAP[pet.aktivitaetslevel ?? ""] ?? "–"}  ok />
+        <SectionLabel label={t.adoption_feed_props_label} />
+        <View style={{ paddingHorizontal: 20 }}>
+          <PropRow icon="" label={t.pet_label_children}  value={KINDER_MAP[pet.kinderfreundlich ?? ""] ?? "–"}  ok={pet.kinderfreundlich !== "nein"} />
+          <PropRow icon="" label={t.pet_label_activity}   value={AKTIV_MAP[pet.aktivitaetslevel ?? ""] ?? "–"}  ok />
           {pet.erfahrung_benoetigt && (
-            <PropRow icon="📚" label={t.pet_label_exp} value={ERFAHRUNG_MAP[pet.erfahrung_benoetigt] ?? "–"} ok={pet.erfahrung_benoetigt === "anfaenger"} />
+            <PropRow icon="" label={t.pet_label_exp} value={ERFAHRUNG_MAP[pet.erfahrung_benoetigt] ?? "–"} ok={pet.erfahrung_benoetigt === "anfaenger"} />
           )}
+          <PropRow icon="" label={t.pet_label_garden} value={pet.braucht_garten ? t.adoption_feed_garden_yes : t.adoption_feed_garden_no} ok={!pet.braucht_garten} />
           {pet.im_heim_seit && (
-            <PropRow icon="📅" label={t.adoption_feed_in_shelter_since} value={pet.im_heim_seit} ok />
+            <PropRow icon="" label={t.adoption_feed_in_shelter_since} value={pet.im_heim_seit} ok />
           )}
         </View>
+
+        {/* 6b. Verträglichkeit & Haltung */}
+        <SectionLabel label="Verträglichkeit & Haltung" />
+        <InfoBlock rows={[
+          { label: "Verträglich mit Hunden",     value: (pet as any).hund_vertraeglich,      type: "bool" },
+          { label: "Verträglich mit Katzen",      value: (pet as any).katze_vertraeglich,     type: "bool" },
+          { label: "Verträglich mit Kleintieren", value: (pet as any).kleintier_vertraeglich, type: "bool" },
+          { label: "Stubenrein",    value: (pet as any).stubenrein,       type: "bool" },
+          { label: "Leinenführig",  value: (pet as any).leinenfuehrig,    type: "bool" },
+          { label: "Maulkorbpflicht", value: (pet as any).maulkorbpflicht, type: "bool" },
+          { label: "Alleine bleiben", value: (pet as any).alleine_bleiben
+              ? ({ nicht_moeglich: "Nicht möglich", bis_2h: "Bis 2 Std.", bis_4h: "Bis 4 Std.", bis_6h: "Bis 6 Std." } as any)[(pet as any).alleine_bleiben] ?? (pet as any).alleine_bleiben
+              : null },
+        ]} />
+
+        {/* 6c. Gesundheit */}
+        <SectionLabel label="Gesundheit" />
+        <InfoBlock rows={[
+          { label: "Geimpft",   value: (pet as any).geimpft,   type: "bool" },
+          { label: "Gechipt",   value: (pet as any).gechipt,   type: "bool" },
+          { label: "Kastriert", value: pet.kastriert,          type: "bool" },
+          { label: "Entwurmt",  value: (pet as any).entwurmt,  type: "bool" },
+          { label: "Bekannte Erkrankungen", value: (pet as any).erkrankungen ?? null },
+        ]} />
 
         {/* 7. Tierheim-Info — klickbar → öffentliches Profil */}
         {pet.shelter_name && (
@@ -302,7 +385,7 @@ function AdoptionPetView({
             activeOpacity={0.75}
             style={{ marginHorizontal: 20, marginBottom: 4, padding: 16, backgroundColor: Colors.SURFACE, borderRadius: 16, flexDirection: "row", alignItems: "center", gap: 12 }}
           >
-            <Text style={{ fontSize: 28 }}>🏠</Text>
+            <Image source={require("../../assets/tab-haus.png")} style={{ width: 28, height: 28, resizeMode: "contain", tintColor: Colors.PRIMARY }} />
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: 15, fontWeight: "700", color: Colors.TEXT }}>{pet.shelter_name}</Text>
               {pet.shelter_city && <Text style={{ fontSize: 13, color: Colors.TEXT_MUTED, marginTop: 2 }}>📍 {pet.shelter_city}</Text>}
@@ -318,11 +401,11 @@ function AdoptionPetView({
             disabled={saving}
             style={{
               flex: 1, height: 62, borderRadius: Sizes.RADIUS_FULL, backgroundColor: Colors.WHITE,
-              alignItems: "center", justifyContent: "center", borderWidth: 2, borderColor: "#FF4458",
-              shadowColor: "#FF4458", shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.15, shadowRadius: 6, elevation: 3,
+              alignItems: "center", justifyContent: "center", borderWidth: 2, borderColor: Colors.PRIMARY,
+              shadowColor: Colors.PRIMARY, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.15, shadowRadius: 6, elevation: 3,
             }}
           >
-            <Text style={{ fontSize: 22, fontWeight: "700", color: "#FF4458" }}>✕  Nope</Text>
+            <Text style={{ fontSize: 22, fontWeight: "700", color: Colors.PRIMARY }}>Nope</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => flyOff("ja")}
@@ -335,7 +418,7 @@ function AdoptionPetView({
           >
             {saving
               ? <ActivityIndicator color={Colors.WHITE} />
-              : <Text style={{ fontSize: 22, fontWeight: "700", color: Colors.WHITE }}>❤️  Like</Text>
+              : <Text style={{ fontSize: 22, fontWeight: "700", color: Colors.WHITE }}>Like</Text>
             }
           </TouchableOpacity>
         </View>

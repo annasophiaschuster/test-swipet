@@ -32,11 +32,16 @@ type AdoptantProfile = {
   alter_jahre: number | null;
   geschlecht: string | null;
   wohnsituation: string | null;
+  quadratmeter: number | null;
+  mieter_eigentuemer: string | null;
+  alleine_partner: string | null;
   erfahrung: string | null;
   kinder_im_haushalt: boolean | null;
+  kinder_alter: string | null;
   andere_tiere: boolean | null;
   aktivitaetslevel: string | null;
   arbeitszeit: string | null;
+  stunden_alleine: number | null;
   bio: string | null;
 };
 
@@ -186,8 +191,10 @@ export default function AdoptionProfilScreen() {
 
   const WOHNSITUATION_OPTIONS = [
     { key: "wohnung", label: t.adoption_profil_living_apt },
+    { key: "wohnung_mit_garten", label: (t as any).adoption_profil_living_apt_garden ?? "Wohnung mit Garten" },
     { key: "haus", label: t.adoption_profil_living_house },
     { key: "haus_mit_garten", label: t.adoption_profil_living_house_garden },
+    { key: "bauernhof", label: (t as any).adoption_profil_living_farm ?? "Bauernhof" },
   ];
   const ERFAHRUNG_OPTIONS = [
     { key: "anfaenger", label: t.adoption_profil_exp_beginner },
@@ -241,7 +248,7 @@ export default function AdoptionProfilScreen() {
       const [{ data: p }, { data: ap }] = await Promise.all([
         supabase.from("profiles").select("id, name, city, avatar_url").eq("id", user.id).single(),
         supabase.from("adoptant_profiles")
-          .select("alter_jahre, geschlecht, wohnsituation, erfahrung, kinder_im_haushalt, andere_tiere, aktivitaetslevel, arbeitszeit, bio")
+          .select("alter_jahre, geschlecht, wohnsituation, quadratmeter, mieter_eigentuemer, alleine_partner, erfahrung, kinder_im_haushalt, kinder_alter, andere_tiere, aktivitaetslevel, arbeitszeit, stunden_alleine, bio")
           .eq("id", user.id).maybeSingle(),
       ]);
 
@@ -253,11 +260,16 @@ export default function AdoptionProfilScreen() {
         alter_jahre: ap?.alter_jahre ?? null,
         geschlecht: ap?.geschlecht ?? null,
         wohnsituation: ap?.wohnsituation ?? null,
+        quadratmeter: ap?.quadratmeter ?? null,
+        mieter_eigentuemer: ap?.mieter_eigentuemer ?? null,
+        alleine_partner: ap?.alleine_partner ?? null,
         erfahrung: ap?.erfahrung ?? null,
         kinder_im_haushalt: ap?.kinder_im_haushalt ?? null,
+        kinder_alter: ap?.kinder_alter ?? null,
         andere_tiere: ap?.andere_tiere ?? null,
         aktivitaetslevel: ap?.aktivitaetslevel ?? null,
         arbeitszeit: ap?.arbeitszeit ?? null,
+        stunden_alleine: ap?.stunden_alleine ?? null,
         bio: ap?.bio ?? null,
       });
     } catch (e) {
@@ -449,10 +461,23 @@ export default function AdoptionProfilScreen() {
 
   // ── View Mode ──────────────────────────────────────────────────────────────
 
-  const WOHN_LABEL: Record<string, string> = { wohnung: t.adoption_profil_living_apt, haus: t.adoption_profil_living_house, haus_mit_garten: t.adoption_profil_living_house_garden };
+  const WOHN_LABEL: Record<string, string> = {
+    wohnung: t.adoption_profil_living_apt,
+    wohnung_mit_garten: (t as any).adoption_profil_living_apt_garden ?? "Wohnung mit Garten",
+    haus: t.adoption_profil_living_house,
+    haus_mit_garten: t.adoption_profil_living_house_garden,
+    bauernhof: (t as any).adoption_profil_living_farm ?? "Bauernhof",
+  };
   const ERF_LABEL: Record<string, string>  = { anfaenger: t.adoption_profil_exp_beginner, fortgeschritten: t.adoption_profil_exp_experienced, profi: t.adoption_profil_exp_pro };
   const AKTIV_LABEL: Record<string, string> = { ruhig: t.gassi_profil_activity_calm, mittel: t.gassi_profil_activity_medium, sportlich: t.gassi_profil_activity_athletic };
-  const ARBEIT_LABEL: Record<string, string> = { vollzeit: t.adoption_profil_work_full, teilzeit: t.adoption_profil_work_part, homeoffice: t.adoption_profil_work_home };
+  const ARBEIT_LABEL: Record<string, string> = { vollzeit: t.adoption_profil_work_full, teilzeit: t.adoption_profil_work_part, homeoffice: t.adoption_profil_work_home, nicht_berufstaetig: "Nicht berufstätig" };
+  const ALLEINE_LABEL: Record<string, string> = { alleine: t.onb_hs_living_alone, partner: t.onb_hs_living_partner, familie: t.onb_hs_living_family };
+  const MIETER_LABEL: Record<string, string> = { mieter: t.onb_hs_living_rent, eigentuemer: t.onb_hs_living_own };
+  const STUNDEN_LABEL = (h: number | null) => {
+    if (h === null) return null;
+    if (h === 0) return "Nie";
+    return `Bis ${h} Std.`;
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
@@ -475,9 +500,7 @@ export default function AdoptionProfilScreen() {
             {profile?.avatar_url ? (
               <Image source={{ uri: profile.avatar_url }} style={{ width: 90, height: 90, borderRadius: 45, borderWidth: 3, borderColor: Colors.PRIMARY }} />
             ) : (
-              <View style={{ width: 90, height: 90, borderRadius: 45, backgroundColor: Colors.PRIMARY, alignItems: "center", justifyContent: "center" }}>
-                <Text style={{ fontSize: 36 }}>❤️</Text>
-              </View>
+              <View style={{ width: 90, height: 90, borderRadius: 45, backgroundColor: Colors.PRIMARY + "20", borderWidth: 3, borderColor: Colors.PRIMARY }} />
             )}
             <View style={{
               position: "absolute", bottom: 0, right: 0,
@@ -494,15 +517,9 @@ export default function AdoptionProfilScreen() {
             {profile?.name ?? t.profil_no_name}
             {profile?.alter_jahre ? `, ${profile.alter_jahre}` : ""}
           </Text>
-          {profile?.geschlecht && (
-            <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_SM, marginTop: 2 }}>
-              {profile.geschlecht === "männlich" ? t.gassi_profil_gender_male : profile.geschlecht === "weiblich" ? t.gassi_profil_gender_female : t.gassi_profil_gender_diverse}
-            </Text>
-          )}
           <View style={{ marginTop: 8, paddingHorizontal: 14, paddingVertical: 4, backgroundColor: "#FFF0F3", borderRadius: Sizes.RADIUS_FULL }}>
             <Text style={{ color: Colors.PRIMARY, fontWeight: "600", fontSize: Sizes.FONT_SM }}>{t.adoption_profil_role}</Text>
           </View>
-          <Text style={{ color: Colors.TEXT_MUTED, fontSize: Sizes.FONT_XS, marginTop: 6 }}>{t.profil_tap_to_change}</Text>
         </View>
 
         {/* Bio */}
@@ -512,34 +529,67 @@ export default function AdoptionProfilScreen() {
           </View>
         )}
 
-        {/* Info Card */}
-        <View style={{ borderRadius: 16, overflow: "hidden", borderWidth: 1, borderColor: Colors.BORDER, marginBottom: 20 }}>
-          <View style={{ padding: 14, backgroundColor: Colors.SURFACE }}>
-            <Text style={{ fontSize: 13, fontWeight: "700", color: Colors.TEXT_MUTED, textTransform: "uppercase", letterSpacing: 1 }}>{t.adoption_profil_section}</Text>
+        {/* ── Lebenssituation ── */}
+        {(profile?.city || profile?.wohnsituation || profile?.mieter_eigentuemer || profile?.alleine_partner || profile?.quadratmeter) && (
+          <View style={{ borderRadius: 16, overflow: "hidden", borderWidth: 1, borderColor: Colors.BORDER, marginBottom: 14 }}>
+            <View style={{ padding: 14, backgroundColor: Colors.SURFACE }}>
+              <Text style={{ fontSize: 13, fontWeight: "700", color: Colors.TEXT_MUTED, textTransform: "uppercase", letterSpacing: 1 }}>Lebenssituation</Text>
+            </View>
+            {profile?.city && <InfoRow icon="📍" label={t.adoption_profil_location} value={profile.city} />}
+            {profile?.wohnsituation && <InfoRow icon="🏠" label={t.adoption_profil_location_label} value={WOHN_LABEL[profile.wohnsituation] ?? profile.wohnsituation} />}
+            {profile?.quadratmeter != null && <InfoRow icon="📐" label="Wohnfläche" value={`${profile.quadratmeter} m²`} />}
+            {profile?.mieter_eigentuemer && <InfoRow icon="🔑" label={t.profil_label_rent_own} value={MIETER_LABEL[profile.mieter_eigentuemer] ?? profile.mieter_eigentuemer} />}
+            {profile?.alleine_partner && <InfoRow icon="👥" label={t.profil_label_alone_partner} value={ALLEINE_LABEL[profile.alleine_partner] ?? profile.alleine_partner} />}
           </View>
-          {profile?.city && <InfoRow icon="📍" label={t.adoption_profil_location} value={profile.city} />}
-          {profile?.wohnsituation && <InfoRow icon="🏠" label={t.adoption_profil_location_label} value={WOHN_LABEL[profile.wohnsituation] ?? profile.wohnsituation} />}
-          {profile?.erfahrung && <InfoRow icon="📚" label={t.adoption_profil_exp_label} value={ERF_LABEL[profile.erfahrung] ?? profile.erfahrung} />}
-          {profile?.aktivitaetslevel && <InfoRow icon="🏃" label={t.adoption_profil_activity_label} value={AKTIV_LABEL[profile.aktivitaetslevel] ?? profile.aktivitaetslevel} />}
-          {profile?.arbeitszeit && <InfoRow icon="💼" label={t.adoption_profil_work_label} value={ARBEIT_LABEL[profile.arbeitszeit] ?? profile.arbeitszeit} />}
-          {profile?.kinder_im_haushalt != null && <InfoRow icon="👦" label={t.adoption_profil_children_label} value={profile.kinder_im_haushalt ? t.adoption_profil_yes : t.adoption_profil_no} />}
-          {profile?.andere_tiere != null && <InfoRow icon="🐾" label={t.adoption_profil_animals_label} value={profile.andere_tiere ? t.adoption_profil_yes : t.adoption_profil_no} />}
-          {!profile?.city && !profile?.wohnsituation && (
-            <TouchableOpacity
-              onPress={startEdit}
-              style={{ flexDirection: "row", alignItems: "center", padding: 16, gap: 10 }}
-            >
-              <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED, fontStyle: "italic" }}>{t.adoption_profil_complete}</Text>
-            </TouchableOpacity>
-          )}
-        </View>
+        )}
+
+        {/* ── Haushalt ── */}
+        {(profile?.kinder_im_haushalt != null || profile?.andere_tiere != null) && (
+          <View style={{ borderRadius: 16, overflow: "hidden", borderWidth: 1, borderColor: Colors.BORDER, marginBottom: 14 }}>
+            <View style={{ padding: 14, backgroundColor: Colors.SURFACE }}>
+              <Text style={{ fontSize: 13, fontWeight: "700", color: Colors.TEXT_MUTED, textTransform: "uppercase", letterSpacing: 1 }}>Haushalt</Text>
+            </View>
+            {profile?.kinder_im_haushalt != null && (
+              <InfoRow
+                icon="👦"
+                label={t.adoption_profil_children_label}
+                value={profile.kinder_im_haushalt
+                  ? `${t.adoption_profil_yes}${profile.kinder_alter ? ` (${profile.kinder_alter})` : ""}`
+                  : t.adoption_profil_no}
+              />
+            )}
+            {profile?.andere_tiere != null && <InfoRow icon="🐾" label={t.adoption_profil_animals_label} value={profile.andere_tiere ? t.adoption_profil_yes : t.adoption_profil_no} />}
+          </View>
+        )}
+
+        {/* ── Erfahrung & Lifestyle ── */}
+        {(profile?.erfahrung || profile?.aktivitaetslevel || profile?.arbeitszeit || profile?.stunden_alleine != null) && (
+          <View style={{ borderRadius: 16, overflow: "hidden", borderWidth: 1, borderColor: Colors.BORDER, marginBottom: 14 }}>
+            <View style={{ padding: 14, backgroundColor: Colors.SURFACE }}>
+              <Text style={{ fontSize: 13, fontWeight: "700", color: Colors.TEXT_MUTED, textTransform: "uppercase", letterSpacing: 1 }}>Erfahrung & Lifestyle</Text>
+            </View>
+            {profile?.erfahrung && <InfoRow icon="📚" label={t.adoption_profil_exp_label} value={ERF_LABEL[profile.erfahrung] ?? profile.erfahrung} />}
+            {profile?.aktivitaetslevel && <InfoRow icon="🏃" label={t.adoption_profil_activity_label} value={AKTIV_LABEL[profile.aktivitaetslevel] ?? profile.aktivitaetslevel} />}
+            {profile?.arbeitszeit && <InfoRow icon="💼" label={t.adoption_profil_work_label} value={ARBEIT_LABEL[profile.arbeitszeit] ?? profile.arbeitszeit} />}
+            {profile?.stunden_alleine != null && <InfoRow icon="⏱️" label="Hund alleine" value={STUNDEN_LABEL(profile.stunden_alleine) ?? "–"} />}
+          </View>
+        )}
+
+        {!profile?.city && !profile?.wohnsituation && (
+          <TouchableOpacity
+            onPress={startEdit}
+            style={{ padding: 16, backgroundColor: Colors.SURFACE, borderRadius: 16, marginBottom: 14, alignItems: "center" }}
+          >
+            <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED, fontStyle: "italic" }}>{t.adoption_profil_complete}</Text>
+          </TouchableOpacity>
+        )}
 
         {/* Logout */}
         <TouchableOpacity
           onPress={handleLogout}
-          style={{ height: Sizes.BUTTON_HEIGHT, borderWidth: 1.5, borderColor: Colors.ERROR, borderRadius: Sizes.RADIUS_FULL, alignItems: "center", justifyContent: "center" }}
+          style={{ height: Sizes.BUTTON_HEIGHT, borderWidth: 1.5, borderColor: Colors.PRIMARY, borderRadius: Sizes.RADIUS_FULL, alignItems: "center", justifyContent: "center", marginTop: 8 }}
         >
-          <Text style={{ color: Colors.ERROR, fontSize: Sizes.FONT_MD, fontWeight: "600" }}>{t.profil_sign_out}</Text>
+          <Text style={{ color: Colors.PRIMARY, fontSize: Sizes.FONT_MD, fontWeight: "600" }}>{t.profil_sign_out}</Text>
         </TouchableOpacity>
       </ScrollView>
     </View>

@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   Alert,
+  Image,
 } from "react-native";
 import { useFocusEffect } from "expo-router";
 import GradientHeader from "../../components/GradientHeader";
@@ -28,6 +29,8 @@ interface WalkItem {
   max_teilnehmer: number;
   persoenlicher_text: string | null;
   organizer_name: string | null;
+  organizer_avatar: string | null;
+  dog_foto: string | null;
   participant_count: number;
   my_status: string | null;
 }
@@ -48,6 +51,8 @@ const DEMO_WALKS: WalkItem[] = [
     max_teilnehmer: 12,
     persoenlicher_text: "Entspannter Morgenspaziergang rund um den Kleinhesseloher See. Ideal für Hunde, die neue Vierbeiner kennenlernen möchten.",
     organizer_name: "Tierheim München",
+    organizer_avatar: null,
+    dog_foto: null,
     participant_count: 7,
     my_status: null,
   },
@@ -60,6 +65,8 @@ const DEMO_WALKS: WalkItem[] = [
     max_teilnehmer: 8,
     persoenlicher_text: "Geführter Nachmittagsspaziergang mit Beratung rund ums Thema Adoption. Bring gerne Fragen mit!",
     organizer_name: "Pfotenhilfe e.V.",
+    organizer_avatar: null,
+    dog_foto: null,
     participant_count: 4,
     my_status: null,
   },
@@ -72,6 +79,8 @@ const DEMO_WALKS: WalkItem[] = [
     max_teilnehmer: 6,
     persoenlicher_text: "Kleiner Schnuppergang für zukünftige Hundebesitzer — kein eigener Hund nötig!",
     organizer_name: "Hunde auf Zeit",
+    organizer_avatar: null,
+    dog_foto: null,
     participant_count: 6,
     my_status: null,
   },
@@ -125,7 +134,7 @@ export default function AdoptionEventsScreen() {
         .from("walks")
         .select(`
           id, ort, datum, uhrzeit, dauer_minuten, max_teilnehmer, persoenlicher_text,
-          organizer:profiles!ersteller_id(name),
+          organizer:profiles!ersteller_id(name, avatar_url, owner_pets(foto_url)),
           teilnehmer:walk_teilnehmer(user_id, status)
         `)
         .order("datum", { ascending: true })
@@ -136,6 +145,7 @@ export default function AdoptionEventsScreen() {
       const items: WalkItem[] = (data ?? []).map((w: any) => {
         const teilnehmer: { user_id: string; status: string }[] = w.teilnehmer ?? [];
         const myEntry = uid ? teilnehmer.find((te) => te.user_id === uid) : null;
+        const dogFotos: { foto_url: string }[] = w.organizer?.owner_pets ?? [];
         return {
           id: w.id,
           ort: w.ort,
@@ -145,6 +155,8 @@ export default function AdoptionEventsScreen() {
           max_teilnehmer: w.max_teilnehmer,
           persoenlicher_text: w.persoenlicher_text,
           organizer_name: w.organizer?.name ?? null,
+          organizer_avatar: w.organizer?.avatar_url ?? null,
+          dog_foto: dogFotos[0]?.foto_url ?? null,
           participant_count: teilnehmer.filter((te) => te.status === "angenommen").length,
           my_status: myEntry?.status ?? null,
         };
@@ -258,37 +270,55 @@ export default function AdoptionEventsScreen() {
                 shadowColor: "#000", shadowOffset: { width: 0, height: 1 },
                 shadowOpacity: 0.04, shadowRadius: 4, elevation: 1,
               }}>
+                {/* Top row: date/time + avatar circles */}
                 <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
                     <Text style={{ fontSize: 13, fontWeight: "700", color: Colors.PRIMARY }}>
-                      📅 {formatDateDE(item.datum, lang)}
+                      {formatDateDE(item.datum, lang)}
                     </Text>
                     <Text style={{ fontSize: 13, color: Colors.TEXT_MUTED }}>
-                      🕐 {item.uhrzeit.slice(0, 5)}
+                      {item.uhrzeit.slice(0, 5)}
                       {item.dauer_minuten ? ` · ${item.dauer_minuten} ${t.walks_min_abbr}` : ""}
                     </Text>
                   </View>
-                  {joined && (
-                    <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 99, backgroundColor: Colors.SUCCESS + "20" }}>
-                      <Text style={{ fontSize: 10, fontWeight: "700", color: Colors.SUCCESS }}>✓ {t.walks_joined_label}</Text>
-                    </View>
-                  )}
+
+                  {/* Avatar circles: organizer + dog */}
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                    {joined && (
+                      <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 99, backgroundColor: Colors.SUCCESS + "20", marginRight: 6 }}>
+                        <Text style={{ fontSize: 10, fontWeight: "700", color: Colors.SUCCESS }}>✓ {t.walks_joined_label}</Text>
+                      </View>
+                    )}
+                    {item.organizer_avatar ? (
+                      <Image
+                        source={{ uri: item.organizer_avatar }}
+                        style={{ width: 32, height: 32, borderRadius: 16, borderWidth: 2, borderColor: Colors.WHITE, backgroundColor: Colors.SURFACE }}
+                      />
+                    ) : (
+                      <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: Colors.PRIMARY + "20", borderWidth: 2, borderColor: Colors.WHITE, alignItems: "center", justifyContent: "center" }}>
+                        <Text style={{ fontSize: 14 }}>👤</Text>
+                      </View>
+                    )}
+                    {item.dog_foto ? (
+                      <Image
+                        source={{ uri: item.dog_foto }}
+                        style={{ width: 32, height: 32, borderRadius: 16, borderWidth: 2, borderColor: Colors.WHITE, backgroundColor: Colors.SURFACE, marginLeft: -8 }}
+                      />
+                    ) : (
+                      <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: Colors.SECONDARY + "20", borderWidth: 2, borderColor: Colors.WHITE, alignItems: "center", justifyContent: "center", marginLeft: -8 }}>
+                        <Text style={{ fontSize: 14 }}>🐶</Text>
+                      </View>
+                    )}
+                  </View>
                 </View>
 
                 <Text style={{ fontSize: 15, fontWeight: "700", color: Colors.TEXT, marginBottom: 2 }}>
                   📍 {item.ort}
                 </Text>
 
-                {item.persoenlicher_text && (
-                  <Text style={{ fontSize: 13, color: Colors.TEXT_MUTED, lineHeight: 18, marginBottom: 8 }} numberOfLines={2}>
-                    {item.persoenlicher_text}
-                  </Text>
-                )}
-
-                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 4 }}>
+                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 8 }}>
                   <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED }}>
                     👥 {t.walks_participants(item.participant_count)}{item.max_teilnehmer ? ` / ${item.max_teilnehmer}` : ""}
-                    {item.organizer_name ? ` · ${item.organizer_name}` : ""}
                   </Text>
 
                   <TouchableOpacity
