@@ -12,9 +12,10 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "expo-router";
+import GradientHeader from "../../components/GradientHeader";
 import { supabase } from "../../lib/supabase";
 import { Colors } from "../../constants/colors";
 import { Sizes } from "../../constants/sizes";
@@ -36,8 +37,10 @@ interface WalkItem {
   persoenlicher_text: string | null;
   created_at: string;
   organizer_name: string | null;
+  organizer_avatar: string | null;
+  dog_foto: string | null;
   participant_count: number;
-  my_status: string | null; // "angefragt" | "angenommen" | "abgelehnt" | null
+  my_status: string | null;
   is_mine: boolean;
 }
 
@@ -73,22 +76,22 @@ function formatDateDE(iso: string, lang: string): string {
 export default function GassiEventsScreen() {
   const { t, lang } = useLanguage();
 
-  const [walks, setWalks]         = useState<WalkItem[]>([]);
-  const [loading, setLoading]     = useState(true);
+  const [walks, setWalks]           = useState<WalkItem[]>([]);
+  const [loading, setLoading]       = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [userId, setUserId]       = useState<string | null>(null);
-  const [isGuest, setIsGuest]     = useState(false);
-  const [filter, setFilter]       = useState<FilterType>("all");
+  const [userId, setUserId]         = useState<string | null>(null);
+  const [isGuest, setIsGuest]       = useState(false);
+  const [filter, setFilter]         = useState<FilterType>("all");
   const [createOpen, setCreateOpen] = useState(false);
 
   // Create form state
-  const [newOrt, setNewOrt]       = useState("");
-  const [newDatum, setNewDatum]   = useState("");
+  const [newOrt, setNewOrt]         = useState("");
+  const [newDatum, setNewDatum]     = useState("");
   const [newUhrzeit, setNewUhrzeit] = useState("");
-  const [newDauer, setNewDauer]   = useState("");
-  const [newMax, setNewMax]       = useState("10");
-  const [newText, setNewText]     = useState("");
-  const [saving, setSaving]       = useState(false);
+  const [newDauer, setNewDauer]     = useState("");
+  const [newMax, setNewMax]         = useState("10");
+  const [newText, setNewText]       = useState("");
+  const [saving, setSaving]         = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -111,7 +114,7 @@ export default function GassiEventsScreen() {
         .select(`
           id, ersteller_id, ort, treffpunkt, datum, uhrzeit,
           dauer_minuten, max_teilnehmer, persoenlicher_text, created_at,
-          organizer:profiles!ersteller_id(name),
+          organizer:profiles!ersteller_id(name, avatar_url, owner_pets(foto_url)),
           teilnehmer:walk_teilnehmer(user_id, status)
         `)
         .order("datum", { ascending: true })
@@ -121,7 +124,8 @@ export default function GassiEventsScreen() {
 
       const items: WalkItem[] = (walksData ?? []).map((w: any) => {
         const teilnehmer: { user_id: string; status: string }[] = w.teilnehmer ?? [];
-        const myEntry = uid ? teilnehmer.find((t) => t.user_id === uid) : null;
+        const myEntry = uid ? teilnehmer.find((te) => te.user_id === uid) : null;
+        const dogFotos: { foto_url: string }[] = w.organizer?.owner_pets ?? [];
         return {
           id: w.id,
           ersteller_id: w.ersteller_id,
@@ -134,7 +138,9 @@ export default function GassiEventsScreen() {
           persoenlicher_text: w.persoenlicher_text,
           created_at: w.created_at,
           organizer_name: w.organizer?.name ?? null,
-          participant_count: teilnehmer.filter((t) => t.status === "angenommen").length,
+          organizer_avatar: w.organizer?.avatar_url ?? null,
+          dog_foto: dogFotos[0]?.foto_url ?? null,
+          participant_count: teilnehmer.filter((te) => te.status === "angenommen").length,
           my_status: myEntry?.status ?? null,
           is_mine: uid ? w.ersteller_id === uid : false,
         };
@@ -217,26 +223,29 @@ export default function GassiEventsScreen() {
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
-      {/* Header */}
-      <View style={{
-        paddingHorizontal: Sizes.SPACING_LG, paddingTop: 8, paddingBottom: 14,
-        flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-        borderBottomWidth: 1, borderBottomColor: Colors.BORDER,
-      }}>
-        <Text style={{ fontSize: 20, fontWeight: "800", color: Colors.TEXT }}>{t.walks_title}</Text>
-        {!isGuest && (
-          <TouchableOpacity
-            onPress={() => setCreateOpen(true)}
-            style={{
-              backgroundColor: Colors.SECONDARY, borderRadius: Sizes.RADIUS_FULL,
-              paddingHorizontal: 14, paddingVertical: 7,
-            }}
-          >
-            <Text style={{ color: Colors.WHITE, fontWeight: "700", fontSize: 13 }}>{t.walks_create_btn}</Text>
-          </TouchableOpacity>
-        )}
-      </View>
+    <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
+      <GradientHeader
+        title={t.walks_title}
+        rightElement={
+          !isGuest ? (
+            <TouchableOpacity
+              onPress={() => setCreateOpen(true)}
+              style={{
+                backgroundColor: Colors.WHITE + "30",
+                borderRadius: Sizes.RADIUS_FULL,
+                paddingHorizontal: 14,
+                paddingVertical: 7,
+                borderWidth: 1,
+                borderColor: Colors.WHITE + "60",
+              }}
+            >
+              <Text style={{ color: Colors.WHITE, fontWeight: "700", fontSize: 13 }}>
+                {t.walks_create_btn}
+              </Text>
+            </TouchableOpacity>
+          ) : undefined
+        }
+      />
 
       {/* Filter Chips */}
       <View style={{ flexDirection: "row", gap: 8, paddingHorizontal: Sizes.SPACING_LG, paddingVertical: 10 }}>
@@ -310,11 +319,11 @@ export default function GassiEventsScreen() {
 
           <ScrollView contentContainerStyle={{ padding: Sizes.SPACING_LG, paddingBottom: 60 }}>
             {[
-              { label: t.walks_field_ort, value: newOrt, setter: setNewOrt, placeholder: "z.B. Stadtpark, Nordeingang", numeric: false },
-              { label: t.walks_field_datum, value: newDatum, setter: setNewDatum, placeholder: "15.04.2026", numeric: false },
-              { label: t.walks_field_uhrzeit, value: newUhrzeit, setter: setNewUhrzeit, placeholder: "09:30", numeric: false },
-              { label: t.walks_field_dauer, value: newDauer, setter: setNewDauer, placeholder: "60", numeric: true },
-              { label: t.walks_field_max, value: newMax, setter: setNewMax, placeholder: "10", numeric: true },
+              { label: t.walks_field_ort,     value: newOrt,     setter: setNewOrt,     placeholder: "z.B. Stadtpark, Nordeingang", numeric: false },
+              { label: t.walks_field_datum,   value: newDatum,   setter: setNewDatum,   placeholder: "15.04.2026",                  numeric: false },
+              { label: t.walks_field_uhrzeit, value: newUhrzeit, setter: setNewUhrzeit, placeholder: "09:30",                       numeric: false },
+              { label: t.walks_field_dauer,   value: newDauer,   setter: setNewDauer,   placeholder: "60",                          numeric: true  },
+              { label: t.walks_field_max,     value: newMax,     setter: setNewMax,     placeholder: "10",                          numeric: true  },
             ].map(({ label, value, setter, placeholder, numeric }) => (
               <View key={label} style={{ marginBottom: 16 }}>
                 <Text style={{ fontSize: 12, fontWeight: "700", color: Colors.TEXT_MUTED, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 6 }}>
@@ -354,7 +363,7 @@ export default function GassiEventsScreen() {
           </ScrollView>
         </KeyboardAvoidingView>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -372,7 +381,7 @@ function WalkCard({
   onLeave: (w: WalkItem) => void;
 }) {
   const joined = walk.my_status === "angenommen";
-  const full = walk.participant_count >= walk.max_teilnehmer && !joined && !walk.is_mine;
+  const full   = walk.participant_count >= walk.max_teilnehmer && !joined && !walk.is_mine;
 
   return (
     <View style={{
@@ -384,49 +393,62 @@ function WalkCard({
       shadowColor: "#000", shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.04, shadowRadius: 4, elevation: 1,
     }}>
-      {/* Date + Time Row */}
+      {/* Top row: date/time + avatar circles */}
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
           <Text style={{ fontSize: 13, fontWeight: "700", color: Colors.SECONDARY }}>
-            📅 {formatDateDE(walk.datum, lang)}
+            {formatDateDE(walk.datum, lang)}
           </Text>
           <Text style={{ fontSize: 13, color: Colors.TEXT_MUTED }}>
-            🕐 {walk.uhrzeit.slice(0, 5)}
+            {walk.uhrzeit.slice(0, 5)}
             {walk.dauer_minuten ? ` · ${walk.dauer_minuten} ${t.walks_min_abbr}` : ""}
           </Text>
         </View>
-        {walk.is_mine && (
-          <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 99, backgroundColor: Colors.SECONDARY + "20" }}>
-            <Text style={{ fontSize: 10, fontWeight: "700", color: Colors.SECONDARY }}>{t.walks_organizer}</Text>
-          </View>
-        )}
-        {joined && !walk.is_mine && (
-          <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 99, backgroundColor: Colors.SUCCESS + "20" }}>
-            <Text style={{ fontSize: 10, fontWeight: "700", color: Colors.SUCCESS }}>✓ {t.walks_joined_label}</Text>
-          </View>
-        )}
+
+        {/* Avatar circles: organizer + dog */}
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+          {walk.is_mine && (
+            <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 99, backgroundColor: Colors.SECONDARY + "20", marginRight: 6 }}>
+              <Text style={{ fontSize: 10, fontWeight: "700", color: Colors.SECONDARY }}>{t.walks_organizer}</Text>
+            </View>
+          )}
+          {joined && !walk.is_mine && (
+            <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 99, backgroundColor: Colors.SUCCESS + "20", marginRight: 6 }}>
+              <Text style={{ fontSize: 10, fontWeight: "700", color: Colors.SUCCESS }}>✓ {t.walks_joined_label}</Text>
+            </View>
+          )}
+          {walk.organizer_avatar ? (
+            <Image
+              source={{ uri: walk.organizer_avatar }}
+              style={{ width: 32, height: 32, borderRadius: 16, borderWidth: 2, borderColor: Colors.WHITE, backgroundColor: Colors.SURFACE }}
+            />
+          ) : (
+            <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: Colors.SECONDARY + "20", borderWidth: 2, borderColor: Colors.WHITE, alignItems: "center", justifyContent: "center" }}>
+              <Text style={{ fontSize: 14 }}>👤</Text>
+            </View>
+          )}
+          {walk.dog_foto ? (
+            <Image
+              source={{ uri: walk.dog_foto }}
+              style={{ width: 32, height: 32, borderRadius: 16, borderWidth: 2, borderColor: Colors.WHITE, backgroundColor: Colors.SURFACE, marginLeft: -8 }}
+            />
+          ) : (
+            <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: Colors.PRIMARY + "20", borderWidth: 2, borderColor: Colors.WHITE, alignItems: "center", justifyContent: "center", marginLeft: -8 }}>
+              <Text style={{ fontSize: 14 }}>🐶</Text>
+            </View>
+          )}
+        </View>
       </View>
 
       {/* Location */}
       <Text style={{ fontSize: 15, fontWeight: "700", color: Colors.TEXT, marginBottom: 2 }}>
         📍 {walk.ort}
       </Text>
-      {walk.treffpunkt && (
-        <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, marginBottom: 4 }}>{walk.treffpunkt}</Text>
-      )}
 
-      {/* Description */}
-      {walk.persoenlicher_text && (
-        <Text style={{ fontSize: 13, color: Colors.TEXT_MUTED, lineHeight: 18, marginBottom: 8 }} numberOfLines={2}>
-          {walk.persoenlicher_text}
-        </Text>
-      )}
-
-      {/* Participants + Organizer */}
-      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 4 }}>
+      {/* Participants + Join button */}
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 8 }}>
         <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED }}>
           👥 {t.walks_participants(walk.participant_count)}{walk.max_teilnehmer ? ` / ${walk.max_teilnehmer}` : ""}
-          {walk.organizer_name ? ` · ${walk.organizer_name}` : ""}
         </Text>
 
         {!walk.is_mine && (
@@ -435,9 +457,7 @@ function WalkCard({
             disabled={full}
             style={{
               paddingHorizontal: 16, paddingVertical: 7, borderRadius: 99,
-              backgroundColor: joined
-                ? Colors.SURFACE
-                : full ? Colors.BORDER : Colors.SECONDARY,
+              backgroundColor: joined ? Colors.SURFACE : full ? Colors.BORDER : Colors.SECONDARY,
               borderWidth: 1,
               borderColor: joined ? Colors.BORDER : full ? Colors.BORDER : Colors.SECONDARY,
             }}

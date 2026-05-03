@@ -51,6 +51,8 @@ interface OwnerInfo {
   bio: string | null;
   stadt: string;
   avatar_url: string | null;
+  photo_url: string | null;          // Mensch+Hund-Foto (Hauptbild)
+  interessen: string[];              // z.B. ["🏃 Joggen", "☕ Café"]
 }
 
 interface PartnerCard {
@@ -162,6 +164,7 @@ function SwipeCard({
   })).current;
 
   const { owner } = card;
+  const [dogProfileOpen, setDogProfileOpen] = useState(false);
 
   return (
     <Animated.View
@@ -193,151 +196,181 @@ function SwipeCard({
 
       <ScrollView showsVerticalScrollIndicator={false} bounces style={{ flex: 1 }}>
 
-        {/* 1. Hauptfoto */}
-        <View style={{ height: W * 1.1, position: "relative" }}>
-          {card.photos[0] ? (
-            <Image source={{ uri: card.photos[0] }} style={{ width: W, height: W * 1.1 }} resizeMode="cover" />
+        {/* ── 1. HAUPTBILD: Mensch + Hund ── */}
+        <View style={{ height: W * 1.15, position: "relative" }}>
+          {owner.photo_url ? (
+            <Image source={{ uri: owner.photo_url }} style={{ width: W, height: W * 1.15 }} resizeMode="cover" />
           ) : (
-            <View style={{ width: W, height: W * 1.1, backgroundColor: Colors.SURFACE, alignItems: "center", justifyContent: "center" }}>
-              <Text style={{ fontSize: 96 }}>🐶</Text>
+            <View style={{ width: W, height: W * 1.15, backgroundColor: Colors.SURFACE, alignItems: "center", justifyContent: "center" }}>
+              <Text style={{ fontSize: 72 }}>🧑‍🤝‍🐕</Text>
             </View>
           )}
-          {/* Modus badge */}
+          {/* Gradient overlay unten für Lesbarkeit */}
+          <LinearGradient
+            colors={["transparent", "rgba(0,0,0,0.55)"]}
+            style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 140 }}
+          />
+          {/* Name + Alter direkt auf dem Foto */}
+          <View style={{ position: "absolute", bottom: 20, left: 20, right: 20 }}>
+            <View style={{ flexDirection: "row", alignItems: "baseline", gap: 8, marginBottom: 4 }}>
+              <Text style={{ fontSize: 30, fontWeight: "900", color: "#fff" }}>{owner.name}</Text>
+              <Text style={{ fontSize: 20, fontWeight: "600", color: "rgba(255,255,255,0.85)" }}>
+                {owner.alter > 0 ? owner.alter : ""}
+              </Text>
+            </View>
+            <Text style={{ fontSize: 13, color: "rgba(255,255,255,0.8)", fontWeight: "500" }}>
+              📍 {owner.stadt}
+            </Text>
+          </View>
+          {/* Mode-Badge */}
           <View style={{
             position: "absolute", top: 14, left: 14,
             backgroundColor: Colors.SECONDARY,
             paddingHorizontal: 12, paddingVertical: 5, borderRadius: 99,
           }}>
-            <Text style={{ color: "#FFF", fontSize: 12, fontWeight: "700" }}>
-              {t.gassi_mode_gassi}
-            </Text>
+            <Text style={{ color: "#FFF", fontSize: 12, fontWeight: "700" }}>{t.gassi_mode_gassi}</Text>
           </View>
-          {card.photos.length > 1 && (
-            <View style={{
-              position: "absolute", top: 14, right: 14,
-              backgroundColor: "rgba(0,0,0,0.45)", borderRadius: 99, paddingHorizontal: 10, paddingVertical: 4,
-            }}>
-              <Text style={{ color: "#FFF", fontSize: 12, fontWeight: "600" }}>{`1 / ${card.photos.length}`}</Text>
-            </View>
-          )}
         </View>
 
-        {/* 2. Hund: Name + Alter + Rasse + Größe + Beschreibung */}
-        <View style={{ padding: 20, paddingBottom: 16 }}>
-          <View style={{ flexDirection: "row", alignItems: "baseline", gap: 10, marginBottom: 4 }}>
-            <Text style={{ fontSize: 30, fontWeight: "800", color: Colors.TEXT }}>{card.name}</Text>
-            {card.alter_jahre && (
-              <Text style={{ fontSize: 16, color: Colors.TEXT_MUTED }}>
-                {`${card.alter_jahre} ${card.alter_jahre === 1 ? t.gassi_year : t.gassi_years}`}
-              </Text>
-            )}
-          </View>
-          <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED, marginBottom: card.beschreibung ? 12 : 0 }}>
-            {[card.rasse, card.groesse_kategorie ? GROESSE_LABEL[card.groesse_kategorie] : null]
-              .filter(Boolean).join(" · ")}
-          </Text>
-          {card.beschreibung && (
-            <Text style={{ fontSize: 15, color: Colors.TEXT, lineHeight: 23 }}>{card.beschreibung}</Text>
-          )}
-        </View>
-
-        {/* 3. Besitzer-Sektion */}
-        <View style={{
-          marginHorizontal: 16, marginBottom: 4,
-          padding: 16, backgroundColor: Colors.SURFACE, borderRadius: 18,
-          borderWidth: 1, borderColor: Colors.BORDER,
-        }}>
-          <Text style={{ fontSize: 12, fontWeight: "700", color: Colors.TEXT_MUTED, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>
-            {t.profil_role_tierhalter}
-          </Text>
-          <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 14 }}>
-            {/* Avatar */}
-            {owner.avatar_url ? (
-              <Image
-                source={{ uri: owner.avatar_url }}
-                style={{ width: 60, height: 60, borderRadius: 30, backgroundColor: Colors.BORDER }}
-              />
-            ) : (
+        {/* ── 2. HUNDEPROFIL-CARD (klickbar) ── */}
+        <View style={{ paddingHorizontal: 20, paddingTop: 20 }}>
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={() => setDogProfileOpen((v) => !v)}
+            style={{
+              flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+              backgroundColor: Colors.SURFACE, borderRadius: 18,
+              borderWidth: 1.5, borderColor: dogProfileOpen ? Colors.SECONDARY : Colors.BORDER,
+              paddingHorizontal: 18, paddingVertical: 16,
+              shadowColor: "#000", shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.06, shadowRadius: 6, elevation: 2,
+            }}
+          >
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+              {/* Hunde-Avatar */}
               <View style={{
-                width: 60, height: 60, borderRadius: 30,
-                backgroundColor: Colors.SECONDARY,
+                width: 52, height: 52, borderRadius: 26,
+                backgroundColor: Colors.SECONDARY + "20",
                 alignItems: "center", justifyContent: "center",
               }}>
-                <Text style={{ fontSize: 22, fontWeight: "700", color: "#fff" }}>{owner.name.charAt(0)}</Text>
+                <Text style={{ fontSize: 26 }}>🐾</Text>
               </View>
-            )}
-            <View style={{ flex: 1 }}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 2 }}>
-                <Text style={{ fontSize: 18, fontWeight: "700", color: Colors.TEXT }}>{owner.name}</Text>
-                <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED }}>
-                  {`${owner.alter} · ${owner.geschlecht === "männlich" ? "♂" : owner.geschlecht === "weiblich" ? "♀" : "⚧"}`}
+              <View>
+                <Text style={{ fontSize: 16, fontWeight: "800", color: Colors.TEXT }}>
+                  {card.name}
+                </Text>
+                <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, marginTop: 2 }}>
+                  {[
+                    card.rasse,
+                    card.alter_jahre != null ? `${card.alter_jahre} ${card.alter_jahre === 1 ? t.gassi_year : t.gassi_years}` : null,
+                    card.groesse_kategorie ? GROESSE_LABEL[card.groesse_kategorie] : null,
+                  ].filter(Boolean).join(" · ")}
                 </Text>
               </View>
-              <Text style={{ fontSize: 13, color: Colors.TEXT_MUTED, marginBottom: 6 }}>
-                {`📍 ${owner.stadt}`}
-              </Text>
-              {owner.bio && (
-                <Text style={{ fontSize: 14, color: Colors.TEXT, lineHeight: 21, fontStyle: "italic" }}>
-                  "{owner.bio}"
-                </Text>
-              )}
             </View>
-          </View>
+            <Text style={{ fontSize: 13, color: Colors.SECONDARY, fontWeight: "800" }}>
+              {dogProfileOpen ? "▲" : "▼"}
+            </Text>
+          </TouchableOpacity>
         </View>
 
-        {/* 4. Zweites Foto */}
-        {card.photos[1] && (
-          <Image source={{ uri: card.photos[1] }} style={{ width: W, height: W * 0.72, marginTop: 12 }} resizeMode="cover" />
-        )}
+        {/* ── 2b. HUNDEPROFIL ausgeklappt ── */}
+        {dogProfileOpen && (
+          <View style={{
+            marginHorizontal: 20, marginTop: 2, padding: 18,
+            backgroundColor: Colors.SURFACE, borderRadius: 18,
+            borderWidth: 1.5, borderColor: Colors.SECONDARY,
+            borderTopLeftRadius: 4, borderTopRightRadius: 4,
+          }}>
+            {card.beschreibung && (
+              <Text style={{ fontSize: 14, color: Colors.TEXT, lineHeight: 22, marginBottom: 14 }}>
+                {card.beschreibung}
+              </Text>
+            )}
 
-        {/* 5. Charakter-Tags */}
-        {card.charakter_tags && card.charakter_tags.length > 0 && (
-          <View style={{ padding: 20, paddingTop: 18 }}>
-            <Text style={{ fontSize: 13, fontWeight: "700", color: Colors.TEXT_MUTED, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>
-              {t.pet_section_char}
-            </Text>
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-              {card.charakter_tags.map((tag) => (
-                <View key={tag} style={{
-                  paddingHorizontal: 14, paddingVertical: 8,
-                  backgroundColor: Colors.SECONDARY + "15", borderRadius: 99,
-                  borderWidth: 1, borderColor: Colors.SECONDARY + "40",
+            {/* Charakter-Tags */}
+            {card.charakter_tags?.length > 0 && (
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7, marginBottom: 16 }}>
+                {card.charakter_tags.map((tag) => (
+                  <View key={tag} style={{
+                    paddingHorizontal: 11, paddingVertical: 5,
+                    backgroundColor: Colors.SECONDARY + "15", borderRadius: 99,
+                    borderWidth: 1, borderColor: Colors.SECONDARY + "40",
+                  }}>
+                    <Text style={{ fontSize: 12, color: Colors.SECONDARY, fontWeight: "600" }}>{tag}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            {/* Eigenschaften-Reihe */}
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              {[
+                { emoji: "🏃", label: AKTIV_LABEL[card.aktivitaetslevel ?? ""] ?? "–" },
+                { emoji: "🐾", label: card.vertraeglich_mit_tieren ? "Tierfreundlich" : "Einzelkind" },
+                { emoji: "👦", label: card.kinderfreundlich ? "Kinderlieb" : "Kein Kind" },
+              ].map((item) => (
+                <View key={item.emoji} style={{
+                  flex: 1, backgroundColor: Colors.BACKGROUND, borderRadius: 12,
+                  paddingVertical: 10, alignItems: "center",
+                  borderWidth: 1, borderColor: Colors.BORDER,
                 }}>
-                  <Text style={{ fontSize: 13, color: Colors.SECONDARY, fontWeight: "600" }}>{tag}</Text>
+                  <Text style={{ fontSize: 18, marginBottom: 3 }}>{item.emoji}</Text>
+                  <Text style={{ fontSize: 10, color: Colors.TEXT_MUTED, textAlign: "center", fontWeight: "600" }}>{item.label}</Text>
                 </View>
               ))}
             </View>
+
+            {/* Hunde-Foto falls vorhanden */}
+            {card.photos[0] && (
+              <Image source={{ uri: card.photos[0] }} style={{ width: "100%", height: W * 0.6, borderRadius: 14, marginTop: 14 }} resizeMode="cover" />
+            )}
           </View>
         )}
 
-        {/* 6. Drittes Foto */}
-        {card.photos[2] && (
-          <Image source={{ uri: card.photos[2] }} style={{ width: W, height: W * 0.72 }} resizeMode="cover" />
-        )}
-
-        {/* 7. Eigenschaften */}
-        <View style={{ padding: 20, paddingTop: 18 }}>
-          <Text style={{ fontSize: 13, fontWeight: "700", color: Colors.TEXT_MUTED, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>
-            {t.onb_th_behavior}
+        {/* ── 3. ÜBER MICH ── */}
+        <View style={{ paddingHorizontal: 20, paddingTop: 24, paddingBottom: 8 }}>
+          <Text style={{ fontSize: 13, fontWeight: "800", color: Colors.TEXT_MUTED, textTransform: "uppercase", letterSpacing: 1, marginBottom: 14 }}>
+            Über mich
           </Text>
-          {[
-            { icon: "🏃", label: t.filter_activity, value: AKTIV_LABEL[card.aktivitaetslevel ?? ""] ?? "–" },
-            { icon: "🐾", label: t.onb_th_animal_friendly, value: card.vertraeglich_mit_tieren ? t.onb_yes : t.onb_no },
-            { icon: "👦", label: t.onb_th_child_friendly, value: card.kinderfreundlich ? t.onb_yes : t.onb_no },
-            { icon: "🎯", label: t.gassi_register_label_mode, value: t.gassi_mode_gassi },
-          ].map((row) => (
-            <View key={row.label} style={{
-              flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-              paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: Colors.BORDER,
-            }}>
-              <Text style={{ fontSize: 14, color: Colors.TEXT }}>{`${row.icon}  ${row.label}`}</Text>
-              <Text style={{ fontSize: 14, fontWeight: "600", color: Colors.TEXT }}>{row.value}</Text>
-            </View>
-          ))}
+
+          {/* Bio */}
+          {owner.bio && (
+            <Text style={{ fontSize: 15, color: Colors.TEXT, lineHeight: 24, marginBottom: 18 }}>
+              {owner.bio}
+            </Text>
+          )}
+
+          {/* Interessen */}
+          {owner.interessen?.length > 0 && (
+            <>
+              <Text style={{ fontSize: 13, fontWeight: "700", color: Colors.TEXT_MUTED, marginBottom: 10 }}>
+                Meine Interessen
+              </Text>
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+                {owner.interessen.map((interesse) => (
+                  <View key={interesse} style={{
+                    paddingHorizontal: 14, paddingVertical: 8,
+                    backgroundColor: Colors.PRIMARY + "15", borderRadius: 99,
+                    borderWidth: 1, borderColor: Colors.PRIMARY + "40",
+                  }}>
+                    <Text style={{ fontSize: 13, color: Colors.PRIMARY, fontWeight: "600" }}>
+                      {interesse}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </>
+          )}
         </View>
 
-        {/* 8. Like / Nope Buttons */}
-        <View style={{ flexDirection: "row", gap: 14, padding: 20, paddingTop: 20, paddingBottom: 44 }}>
+        {/* Zweites Foto (extra Eindruck) */}
+        {card.photos[1] && !dogProfileOpen && (
+          <Image source={{ uri: card.photos[1] }} style={{ width: W, height: W * 0.65, marginTop: 16 }} resizeMode="cover" />
+        )}
+
+        {/* ── 4. LIKE / NOPE ── */}
+        <View style={{ flexDirection: "row", gap: 14, padding: 20, paddingTop: 24, paddingBottom: 44 }}>
           <TouchableOpacity
             onPress={() => flyOff("nein")}
             disabled={saving}
@@ -411,6 +444,8 @@ function ProfileSetupScreen({ onDone }: { onDone: (profile: OwnerInfo) => void }
       bio: bio.trim() || null,
       stadt: stadt.trim(),
       avatar_url: null,
+      photo_url: null,
+      interessen: [],
     });
   };
 
@@ -532,6 +567,13 @@ function ProfileSetupScreen({ onDone }: { onDone: (profile: OwnerInfo) => void }
 
 function RegisterDogScreen({ onDone, onBack }: { onDone: () => void; onBack: () => void }) {
   const { t } = useLanguage();
+  const GROESSE_LABEL: Record<string, string> = {
+    klein: t.gassi_size_small, mittel: t.gassi_size_medium,
+    gross: t.gassi_size_large, riese: t.gassi_size_giant,
+  };
+  const AKTIV_LABEL: Record<string, string> = {
+    ruhig: t.gassi_activity_calm, mittel: t.gassi_activity_medium, sportlich: t.gassi_activity_very,
+  };
   const [name, setName]         = useState("");
   const [rasse, setRasse]       = useState("");
   const [alterJahre, setAlterJahre] = useState("");
@@ -885,9 +927,36 @@ export default function GassiFeed() {
     sportlich: t.gassi_activity_very,
   };
   const DEMO_OWNERS = [
-    { name: "Max",    alter: 28, geschlecht: "männlich", bio: t.gassi_bio_max,    stadt: "München, Schwabing",      avatar_url: null as string | null },
-    { name: "Sophie", alter: 32, geschlecht: "weiblich", bio: t.gassi_bio_sophie, stadt: "Hamburg, Altona",         avatar_url: null as string | null },
-    { name: "Jonas",  alter: 25, geschlecht: "männlich", bio: t.gassi_bio_jonas,  stadt: "Berlin, Prenzlauer Berg", avatar_url: null as string | null },
+    {
+      name: "Max", alter: 28, geschlecht: "männlich", bio: t.gassi_bio_max,
+      stadt: "München, Schwabing", avatar_url: null as string | null,
+      photo_url: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=800&fit=crop&q=80",
+      interessen: ["🏃 Joggen", "🏔️ Wandern", "☕ Café", "📷 Fotografie"],
+    },
+    {
+      name: "Sophie", alter: 32, geschlecht: "weiblich", bio: t.gassi_bio_sophie,
+      stadt: "Hamburg, Altona", avatar_url: null as string | null,
+      photo_url: "https://images.unsplash.com/photo-1548199569-3e1c6aa8f469?w=800&fit=crop&q=80",
+      interessen: ["🎵 Musik", "🌿 Natur", "🍕 Kochen", "🐾 Tierliebe"],
+    },
+    {
+      name: "Jonas", alter: 25, geschlecht: "männlich", bio: t.gassi_bio_jonas,
+      stadt: "Berlin, Prenzlauer Berg", avatar_url: null as string | null,
+      photo_url: "https://images.unsplash.com/photo-1601758003122-53c40e686a19?w=800&fit=crop&q=80",
+      interessen: ["🚴 Radfahren", "🎮 Gaming", "🍺 Craft Beer", "🏕️ Camping"],
+    },
+    {
+      name: "Lena", alter: 30, geschlecht: "weiblich", bio: "Ich liebe lange Spaziergänge und gemütliche Café-Besuche mit meinem Hund.",
+      stadt: "München, Maxvorstadt", avatar_url: null as string | null,
+      photo_url: "https://images.unsplash.com/photo-1507146153580-69a1fe6d8aa1?w=800&fit=crop&q=80",
+      interessen: ["📚 Lesen", "🧘 Yoga", "🎨 Kunst", "☕ Café"],
+    },
+    {
+      name: "Tom", alter: 34, geschlecht: "männlich", bio: "Hundebesitzer aus Leidenschaft. Immer auf der Suche nach neuen Gassi-Routen.",
+      stadt: "München, Haidhausen", avatar_url: null as string | null,
+      photo_url: "https://images.unsplash.com/photo-1562962230-16b8c1d108f3?w=800&fit=crop&q=80",
+      interessen: ["⚽ Fußball", "🏋️ Fitness", "🌍 Reisen", "🐕 Hundeplatz"],
+    },
   ];
   const [isGuest, setIsGuest]               = useState(false);
   const [myOwnerProfile, setMyOwnerProfile] = useState<OwnerInfo | null>(null);
@@ -946,11 +1015,13 @@ export default function GassiFeed() {
 
       setMyOwnerProfile({
         name: profile.name,
-        alter: 0, // stored locally; not in DB
+        alter: 0,
         geschlecht: "–",
         bio: null,
         stadt: profile.city,
         avatar_url: profile.avatar_url ?? null,
+        photo_url: null,
+        interessen: [],
       });
 
       // Load my dogs

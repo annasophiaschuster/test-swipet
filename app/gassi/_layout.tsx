@@ -1,35 +1,20 @@
 import { Tabs } from "expo-router";
 import { Colors } from "../../constants/colors";
 import { Sizes } from "../../constants/sizes";
-import { Text, View } from "react-native";
+import { Image, View } from "react-native";
 
-function TabIcon({ emoji, focused }: { emoji: string; focused: boolean }) {
+function TabIcon({ source, focused }: { source: any; focused: boolean }) {
   return (
     <View style={{ alignItems: "center", justifyContent: "center", paddingTop: 4 }}>
-      <Text style={{ fontSize: focused ? 26 : 23 }}>{emoji}</Text>
-    </View>
-  );
-}
-
-function SwipeTabIcon({ emoji, focused }: { emoji: string; focused: boolean }) {
-  return (
-    <View
-      style={{
-        width: 52,
-        height: 52,
-        borderRadius: 26,
-        backgroundColor: focused ? Colors.SECONDARY : Colors.SECONDARY + "22",
-        alignItems: "center",
-        justifyContent: "center",
-        marginTop: -10,
-        shadowColor: Colors.SECONDARY,
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: focused ? 0.4 : 0.1,
-        shadowRadius: 6,
-        elevation: focused ? 6 : 2,
-      }}
-    >
-      <Text style={{ fontSize: 26 }}>{emoji}</Text>
+      <Image
+        source={source}
+        style={{
+          width: 32,
+          height: 32,
+          tintColor: focused ? Colors.SECONDARY : Colors.PRIMARY,
+        }}
+        resizeMode="contain"
+      />
     </View>
   );
 }
@@ -59,23 +44,23 @@ export default function GassiLayout() {
     >
       <Tabs.Screen
         name="info"
-        options={{ tabBarIcon: ({ focused }) => <TabIcon emoji="ℹ️" focused={focused} /> }}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon source={require("../../assets/tab-haus.png")} focused={focused} /> }}
       />
       <Tabs.Screen
         name="events"
-        options={{ tabBarIcon: ({ focused }) => <TabIcon emoji="📅" focused={focused} /> }}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon source={require("../../assets/tab-icons/Events.png")} focused={focused} /> }}
       />
       <Tabs.Screen
         name="feed"
-        options={{ tabBarIcon: ({ focused }) => <SwipeTabIcon emoji="🐾" focused={focused} /> }}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon source={require("../../assets/tab-icons/Swipe.png")} focused={focused} /> }}
       />
       <Tabs.Screen
         name="matches"
-        options={{ tabBarIcon: ({ focused }) => <TabIcon emoji="💬" focused={focused} /> }}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon source={require("../../assets/tab-icons/Chat.png")} focused={focused} /> }}
       />
       <Tabs.Screen
         name="ich"
-        options={{ tabBarIcon: ({ focused }) => <TabIcon emoji="👤" focused={focused} /> }}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon source={require("../../assets/tab-icons/Profil.png")} focused={focused} /> }}
       />
 
       {/* Hidden routes */}
