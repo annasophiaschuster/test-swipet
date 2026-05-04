@@ -185,8 +185,8 @@ function SwipeCard({
         position: "absolute", top: 44, left: 20, zIndex: 30,
         opacity: likeOpacity, transform: [{ rotate: "-20deg" }],
       }}>
-        <View style={{ borderWidth: 3, borderColor: "#7EB77F", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6, backgroundColor: "rgba(126,183,127,0.12)" }}>
-          <Text style={{ fontSize: 26, fontWeight: "900", color: "#7EB77F", letterSpacing: 2 }}>LIKE</Text>
+        <View style={{ width: 68, height: 68, borderRadius: 34, backgroundColor: "#7EB77F", alignItems: "center", justifyContent: "center", shadowColor: "#7EB77F", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 10, elevation: 6 }}>
+          <Ionicons name="heart" size={34} color="#fff" />
         </View>
       </Animated.View>
 
@@ -195,8 +195,8 @@ function SwipeCard({
         position: "absolute", top: 44, right: 20, zIndex: 30,
         opacity: nopeOpacity, transform: [{ rotate: "20deg" }],
       }}>
-        <View style={{ borderWidth: 3, borderColor: "#E2858F", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6, backgroundColor: "rgba(226,133,143,0.12)" }}>
-          <Text style={{ fontSize: 26, fontWeight: "900", color: "#E2858F", letterSpacing: 2 }}>NOPE</Text>
+        <View style={{ width: 68, height: 68, borderRadius: 34, backgroundColor: "#E2858F", alignItems: "center", justifyContent: "center", shadowColor: "#E2858F", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 10, elevation: 6 }}>
+          <Ionicons name="close" size={36} color="#fff" />
         </View>
       </Animated.View>
 
@@ -246,6 +246,13 @@ function SwipeCard({
                 </Text>
               )}
             </View>
+
+            {/* ── 2b. BESCHREIBUNG ── */}
+            {card.beschreibung && (
+              <Text style={{ fontSize: 13, color: Colors.TEXT_MUTED, lineHeight: 19, paddingHorizontal: 14, paddingBottom: 12 }}>
+                {card.beschreibung}
+              </Text>
+            )}
 
             {/* ── 3. BESITZERPROFIL (umrandet) ── */}
             <TouchableOpacity
@@ -298,8 +305,8 @@ function SwipeCard({
               <Image
                 source={{ uri: photos[1] }}
                 style={{
-                  width: CARD_W - 24, height: Math.round(CARD_W * 0.55),
-                  marginHorizontal: 12, marginBottom: 14, borderRadius: 16,
+                  width: CARD_W, height: Math.round(CARD_W * 0.6),
+                  marginBottom: 14,
                   backgroundColor: Colors.SURFACE,
                 }}
                 resizeMode="cover"
@@ -307,56 +314,55 @@ function SwipeCard({
             )}
 
             {/* ── 5. RESTLICHE HUNDEEIGENSCHAFTEN ── */}
-            <View style={{ paddingHorizontal: 12, gap: 10 }}>
-              {/* Eigenschaften-Chips */}
-              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}>
-                {card.groesse_kategorie && (
-                  <View style={propChip}>
-                    <Text style={propChipText}>{GROESSE_LABEL[card.groesse_kategorie] ?? card.groesse_kategorie}</Text>
-                  </View>
-                )}
-                {card.aktivitaetslevel && (
-                  <View style={propChip}>
-                    <Text style={propChipText}>{AKTIV_LABEL[card.aktivitaetslevel] ?? card.aktivitaetslevel}</Text>
-                  </View>
-                )}
-                {card.kastriert && (
-                  <View style={propChip}>
-                    <Text style={propChipText}>Kastriert</Text>
-                  </View>
-                )}
-                {card.kinderfreundlich && (
-                  <View style={propChip}>
-                    <Text style={propChipText}>Kinderlieb</Text>
-                  </View>
-                )}
-                {card.vertraeglich_mit_tieren ? (
-                  <View style={propChip}>
-                    <Text style={propChipText}>Sozial</Text>
-                  </View>
-                ) : (
-                  <View style={[propChip, { borderColor: Colors.TEXT_MUTED + "40", backgroundColor: Colors.SURFACE }]}>
-                    <Text style={[propChipText, { color: Colors.TEXT_MUTED }]}>Einzelhund</Text>
-                  </View>
-                )}
+            <View style={{ paddingHorizontal: 12, gap: 12 }}>
+              {/* Eigenschaften */}
+              <View style={{ gap: 7 }}>
+                <Text style={{ fontSize: 13, fontWeight: "700", color: Colors.TEXT }}>Eigenschaften</Text>
+                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}>
+                  {card.groesse_kategorie && (
+                    <View style={propChip}>
+                      <Text style={propChipText}>{GROESSE_LABEL[card.groesse_kategorie] ?? card.groesse_kategorie}</Text>
+                    </View>
+                  )}
+                  {card.aktivitaetslevel && (
+                    <View style={propChip}>
+                      <Text style={propChipText}>{AKTIV_LABEL[card.aktivitaetslevel] ?? card.aktivitaetslevel}</Text>
+                    </View>
+                  )}
+                  {card.kastriert && (
+                    <View style={propChip}>
+                      <Text style={propChipText}>Kastriert</Text>
+                    </View>
+                  )}
+                  {card.kinderfreundlich && (
+                    <View style={propChip}>
+                      <Text style={propChipText}>Kinderlieb</Text>
+                    </View>
+                  )}
+                  {card.vertraeglich_mit_tieren ? (
+                    <View style={propChip}>
+                      <Text style={propChipText}>Sozial</Text>
+                    </View>
+                  ) : (
+                    <View style={[propChip, { borderColor: Colors.TEXT_MUTED + "40", backgroundColor: Colors.SURFACE }]}>
+                      <Text style={[propChipText, { color: Colors.TEXT_MUTED }]}>Einzelhund</Text>
+                    </View>
+                  )}
+                </View>
               </View>
 
-              {/* Charakter-Tags */}
+              {/* Charakter */}
               {card.charakter_tags?.length > 0 && (
-                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
-                  {card.charakter_tags.map((tag) => (
-                    <View key={tag} style={{ paddingHorizontal: 10, paddingVertical: 4, backgroundColor: Colors.SECONDARY + "14", borderRadius: 99, borderWidth: 1, borderColor: Colors.SECONDARY + "38" }}>
-                      <Text style={{ fontSize: 12, color: Colors.SECONDARY, fontWeight: "600" }}>{tag}</Text>
-                    </View>
-                  ))}
+                <View style={{ gap: 7 }}>
+                  <Text style={{ fontSize: 13, fontWeight: "700", color: Colors.TEXT }}>Charakter</Text>
+                  <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
+                    {card.charakter_tags.map((tag) => (
+                      <View key={tag} style={{ paddingHorizontal: 10, paddingVertical: 4, backgroundColor: Colors.SECONDARY + "14", borderRadius: 99, borderWidth: 1, borderColor: Colors.SECONDARY + "38" }}>
+                        <Text style={{ fontSize: 12, color: Colors.SECONDARY, fontWeight: "600" }}>{tag}</Text>
+                      </View>
+                    ))}
+                  </View>
                 </View>
-              )}
-
-              {/* Beschreibung */}
-              {card.beschreibung && (
-                <Text style={{ fontSize: 13, color: Colors.TEXT_MUTED, lineHeight: 19 }}>
-                  {card.beschreibung}
-                </Text>
               )}
             </View>
 
