@@ -1,388 +1,609 @@
 import { useState } from "react";
 import {
-  View, Text, TextInput, TouchableOpacity, ScrollView,
-  Alert, ActivityIndicator, StyleSheet,
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  Alert,
+  ActivityIndicator,
+  StyleSheet,
+  Image,
+  Dimensions,
 } from "react-native";
 import { router } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { SafeAreaView } from "react-native-safe-area-context";
+import * as ImagePicker from "expo-image-picker";
 import { supabase } from "../../../lib/supabase";
 import { Colors } from "../../../constants/colors";
 import { Sizes } from "../../../constants/sizes";
-import { pickSingleImage, pickMultipleImages, uploadImageToStorage } from "../../../lib/storage";
-import { useLanguage } from "../../../contexts/LanguageContext";
-import { SafeAreaView } from "react-native-safe-area-context";
-import * as ImagePicker from "expo-image-picker";
+import { uploadImageToStorage } from "../../../lib/storage";
 
-const TOTAL_STEPS = 7;
+const { width: W } = Dimensions.get("window");
+const PHOTO_SIZE = (W - 48 - 16) / 3; // 3 per row with padding + gaps
 
-type Groesse = "klein" | "mittel" | "gross" | "riese";
-type Aktivitaet = "sportlich" | "mittel" | "ruhig";
-type Treffpunkt = "park" | "wald" | "egal";
-type Ansprache = "mann" | "frau" | "divers";
+const TOTAL_STEPS = 4;
 
-const ALL_TAGS = ["verspielt", "verschmust", "ruhig", "energetisch", "treu", "neugierig"];
-const ALL_AVAILABILITY = ["morgens", "mittags", "abends", "wochenende"];
+// Same character tags as shelter pet add screen
+const CHARAKTER_TAGS = [
+  "verspielt", "verschmust", "ruhig", "treu", "neugierig",
+  "energetisch", "lernfreudig", "familienfreundlich",
+  "anhänglich", "selbstständig", "ängstlich", "dominant",
+  "vorsichtig mit Fremden",
+];
+
+const INTERESSEN_LIST = [
+  "Wandern", "Joggen", "Radfahren", "Schwimmen", "Yoga", "Fitness",
+  "Klettern", "Surfen", "Skifahren", "Tanzen", "Kampfsport", "Reiten",
+  "Tennis", "Fußball", "Basketball", "Volleyball", "Golf", "Segeln",
+  "Tauchen", "Camping", "Kochen", "Backen", "Grillen", "Kaffee trinken",
+  "Wein trinken", "Craft Beer", "Restaurants entdecken", "Vegane Küche",
+  "Reisen", "Roadtrips", "Städtetrips", "Backpacking", "Musik",
+  "Konzerte", "Festivals", "Gitarre", "Piano", "Singen", "DJ",
+  "Theater", "Kino", "Serien", "Gaming", "Lesen", "Podcasts",
+  "Fotografie", "Zeichnen", "Malen", "Design", "Mode", "Shopping",
+  "Kunst", "Museen", "Nachhaltigkeit", "Ehrenamt", "Tiere", "Natur",
+  "Gartenarbeit", "Meditation", "Selbstentwicklung", "Sprachen lernen",
+  "Technik", "Programmieren", "Unternehmertum",
+];
+
+type DogSize       = "klein" | "mittel" | "gross";
+type DogGender     = "maennlich" | "weiblich";
+type EnergyLevel   = "ruhig" | "mittel" | "sportlich";
+type DogFriendly   = "ja" | "nein" | "kommt_drauf_an";
+type AlterEinheit  = "monate" | "jahre";
 
 export default function TierhalterOnboarding() {
-  const { t } = useLanguage();
-  const [step, setStep] = useState(1);
+  const [step, setStep]       = useState(1);
   const [loading, setLoading] = useState(false);
 
-  // Step 3 — Datenschutz
-  const [datenschutz, setDatenschutz] = useState(false);
-  const [newsletter, setNewsletter] = useState(false);
+  // ── Step 2: Hundeprofil ──────────────────────────────────────────────────
+  const [dogName, setDogName]                   = useState("");
+  const [dogRasse, setDogRasse]                 = useState("");
+  const [dogAlterZahl, setDogAlterZahl]         = useState("");
+  const [dogAlterEinheit, setDogAlterEinheit]   = useState<AlterEinheit>("jahre");
+  const [dogGroesse, setDogGroesse]             = useState<DogSize | null>(null);
+  const [dogGeschlecht, setDogGeschlecht]       = useState<DogGender | null>(null);
+  const [dogEnergie, setDogEnergie]             = useState<EnergyLevel | null>(null);
+  const [dogAnimalFriendly, setDogAnimalFriendly] = useState<DogFriendly | null>(null);
+  const [dogKinderlieb, setDogKinderlieb]       = useState<boolean | null>(null);
+  const [dogKastriert, setDogKastriert]         = useState<boolean | null>(null);
+  const [dogTags, setDogTags]                   = useState<string[]>([]);
+  const [dogDesc, setDogDesc]                   = useState("");
+  const [dogPhotoUris, setDogPhotoUris]         = useState<(string | null)[]>([null, null, null, null, null, null]);
 
-  // Step 4 — Persönliche Infos
-  const [ansprache, setAnsprache] = useState<Ansprache | null>(null);
-  const [vorname, setVorname] = useState("");
-  const [geburtsdatum, setGeburtsdatum] = useState("");
-  const [plz, setPlz] = useState("");
-  const [avatarUri, setAvatarUri] = useState<string | null>(null);
-  const [bio, setBio] = useState("");
+  // ── Step 3: Menschenprofil ───────────────────────────────────────────────
+  const [vorname, setVorname]       = useState("");
+  const [alter, setAlter]           = useState("");
+  const [stadtteil, setStadtteil]   = useState("");
+  const [avatarUri, setAvatarUri]   = useState<string | null>(null);
+  const [interessen, setInteressen] = useState<string[]>([]);
+  const [bio, setBio]               = useState("");
 
-  // Step 5 — Lifestyle
-  const [aktivitaet, setAktivitaet] = useState<Aktivitaet | null>(null);
-  const [treffpunkt, setTreffpunkt] = useState<Treffpunkt | null>(null);
-  const [verfuegbarkeit, setVerfuegbarkeit] = useState<string[]>([]);
-
-  // Step 6 — Hund
-  const [dogName, setDogName] = useState("");
-  const [dogGroesse, setDogGroesse] = useState<Groesse | null>(null);
-  const [dogAlter, setDogAlter] = useState("");
-  const [dogGeschlecht, setDogGeschlecht] = useState<"maennlich" | "weiblich" | null>(null);
-  const [dogAktivitaet, setDogAktivitaet] = useState<Aktivitaet | null>(null);
-  const [dogAnimalFriendly, setDogAnimalFriendly] = useState<boolean | null>(null);
-  const [dogTags, setDogTags] = useState<string[]>([]);
-  const [dogDesc, setDogDesc] = useState("");
-  const [dogPhotoUris, setDogPhotoUris] = useState<string[]>([]);
-
+  // ── Helpers ──────────────────────────────────────────────────────────────
   const goNext = () => setStep((s) => Math.min(s + 1, TOTAL_STEPS));
   const goBack = () => setStep((s) => Math.max(s - 1, 1));
 
-  const validateStep3 = () => true;
-  const validateStep4 = () => true;
-  const validateStep6 = () => true;
-
   const toggleTag = (tag: string) => {
-    if (dogTags.includes(tag)) {
-      setDogTags(dogTags.filter((t) => t !== tag));
-    } else if (dogTags.length < 3) {
-      setDogTags([...dogTags, tag]);
-    }
+    setDogTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+    );
   };
 
-  const toggleAvailability = (slot: string) => {
-    setVerfuegbarkeit((v) =>
-      v.includes(slot) ? v.filter((x) => x !== slot) : [...v, slot]
-    );
+  const toggleInteresse = (item: string) => {
+    setInteressen((prev) => {
+      if (prev.includes(item)) return prev.filter((i) => i !== item);
+      if (prev.length >= 5) {
+        Alert.alert("Maximum erreicht", "Du kannst maximal 5 Interessen auswählen.");
+        return prev;
+      }
+      return [...prev, item];
+    });
+  };
+
+  const pickDogPhoto = async (index: number) => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true, aspect: [1, 1], quality: 0.85,
+    });
+    if (!result.canceled && result.assets[0]) {
+      setDogPhotoUris((prev) => {
+        const next = [...prev];
+        next[index] = result.assets[0].uri;
+        return next;
+      });
+    }
   };
 
   const pickAvatar = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true, aspect: [1, 1], quality: 0.7,
+      allowsEditing: true, aspect: [1, 1], quality: 0.85,
     });
     if (!result.canceled && result.assets[0]) setAvatarUri(result.assets[0].uri);
   };
 
-  const pickDogPhotos = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsMultipleSelection: true, selectionLimit: 3, quality: 0.8,
-    });
-    if (!result.canceled) {
-      setDogPhotoUris(result.assets.map((a) => a.uri).slice(0, 3));
+  const validateStep2 = () => {
+    if (!dogName.trim()) {
+      Alert.alert("Pflichtfeld fehlt", "Bitte gib deinem Hund einen Namen.");
+      return false;
     }
+    if (!dogPhotoUris[0]) {
+      Alert.alert("Foto fehlt", "Bitte lade mindestens 1 Foto hoch.");
+      return false;
+    }
+    return true;
+  };
+
+  const validateStep3 = () => {
+    if (!vorname.trim()) {
+      Alert.alert("Pflichtfeld fehlt", "Bitte gib deinen Vornamen ein.");
+      return false;
+    }
+    if (!stadtteil.trim()) {
+      Alert.alert("Pflichtfeld fehlt", "Bitte gib deinen Stadtteil ein.");
+      return false;
+    }
+    if (!avatarUri) {
+      Alert.alert("Foto fehlt", "Bitte lade ein Profilfoto hoch.");
+      return false;
+    }
+    return true;
   };
 
   const handleFinish = async () => {
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error(t.onb_err_not_logged_in);
+      if (!user) throw new Error("Nicht eingeloggt");
 
       // Upload avatar
       let avatarUrl: string | null = null;
       if (avatarUri) {
-        avatarUrl = await uploadImageToStorage("avatars", user.id + "_avatar.jpg", avatarUri);
+        avatarUrl = await uploadImageToStorage("avatars", `${user.id}_avatar.jpg`, avatarUri);
       }
 
-      // Update profile
-      await supabase.from("profiles").update({
-        ansprache, vorname: vorname.trim(), geburtsdatum,
-        plz: plz.trim(), bio: bio.trim() || null,
-        avatar_url: avatarUrl,
-        newsletter, datenschutz,
-        bevorzugter_treffpunkt: treffpunkt ?? undefined,
-        verfuegbarkeit,
-      }).eq("id", user.id);
-
       // Upload dog photos
+      const validPhotoUris = dogPhotoUris.filter(Boolean) as string[];
       const fotoUrls: string[] = [];
-      for (let i = 0; i < dogPhotoUris.length; i++) {
-        const url = await uploadImageToStorage("pet-photos", `${user.id}_dog_${i}.jpg`, dogPhotoUris[i]);
+      for (let i = 0; i < validPhotoUris.length; i++) {
+        const url = await uploadImageToStorage("pet-photos", `${user.id}_dog_${i}.jpg`, validPhotoUris[i]);
         if (url) fotoUrls.push(url);
       }
 
-      // Create dog profile
-      await supabase.from("owner_pets").insert({
-        owner_id: user.id,
-        name: dogName.trim(),
-        tierart: "hund",
-        groesse_kategorie: dogGroesse ?? undefined,
-        alter_jahre: dogAlter ? parseInt(dogAlter) : null,
-        geschlecht: dogGeschlecht ?? undefined,
-        aktivitaetslevel: dogAktivitaet ?? undefined,
-        vertraeglich_mit_tieren: dogAnimalFriendly ?? false,
-        charakter_tags: dogTags,
-        beschreibung: dogDesc.trim() || null,
-        foto_url: fotoUrls[0] ?? null,
-        foto_urls: fotoUrls,
-        modus: "gassi",
+      // Alter in Jahre umrechnen
+      const dogAlterJahre = dogAlterZahl
+        ? dogAlterEinheit === "jahre"
+          ? parseInt(dogAlterZahl)
+          : Math.round(parseInt(dogAlterZahl) / 12)
+        : null;
+
+      // Hund in owner_pets speichern (für Gassi-Feed)
+      const { error: dogError } = await supabase.from("owner_pets").insert({
+        owner_id:             user.id,
+        name:                 dogName.trim(),
+        tierart:              "hund",
+        rasse:                dogRasse.trim() || null,
+        groesse_kategorie:    dogGroesse,
+        alter_jahre:          dogAlterJahre,
+        geschlecht:           dogGeschlecht,
+        aktivitaetslevel:     dogEnergie,
+        vertraeglich_mit_tieren: dogAnimalFriendly === "ja",
+        kinderfreundlich:     dogKinderlieb ?? false,
+        kastriert:            dogKastriert ?? false,
+        charakter_tags:       dogTags,
+        beschreibung:         dogDesc.trim() || null,
+        foto_url:             fotoUrls[0] ?? null,
+        modus:                "gassi",
       });
+      if (dogError) throw dogError;
+
+      // Menschenprofil in profiles speichern
+      const { error: profileError } = await supabase.from("profiles").upsert({
+        id:         user.id,
+        name:       vorname.trim(),
+        city:       stadtteil.trim(),
+        avatar_url: avatarUrl,
+        bio:        bio.trim() || null,
+      });
+      if (profileError) throw profileError;
 
       router.replace("/gassi/feed");
     } catch (e: any) {
-      Alert.alert(t.err_generic, e.message);
+      Alert.alert("Fehler", e.message);
     } finally {
       setLoading(false);
     }
   };
 
-  // ─── Render ────────────────────────────────────────────────────────────────
+  // ── Render ────────────────────────────────────────────────────────────────
 
   return (
     <SafeAreaView style={s.safe}>
-      {step > 1 && step < TOTAL_STEPS && (
+
+      {/* Progress bar (Steps 2 + 3) */}
+      {step >= 2 && step <= 3 && (
         <View style={s.progressWrap}>
           <View style={s.progressBg}>
-            <View style={[s.progressFill, { width: `${((step - 1) / (TOTAL_STEPS - 2)) * 100}%` }]} />
+            <View style={[s.progressFill, { width: `${((step - 1) / 2) * 100}%` }]} />
           </View>
-          <Text style={s.progressText}>{t.onb_step} {step - 1} {t.onb_of} {TOTAL_STEPS - 2}</Text>
+          <Text style={s.progressText}>Schritt {step - 1} von 2</Text>
         </View>
       )}
 
-      <ScrollView style={s.scroll} contentContainerStyle={s.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={s.scroll}
+        contentContainerStyle={s.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
 
-        {/* Step 1: Welcome */}
+        {/* ─────────────────────────── STEP 1: WILLKOMMEN ─────────────────────────── */}
         {step === 1 && (
           <View style={s.centerBlock}>
-            <Text style={s.welcomeEmoji}>🐾</Text>
-            <Text style={s.welcomeTitle}>{t.onb_hb_welcome_title}</Text>
-            <Text style={s.welcomeSub}>{t.onb_hb_welcome_sub}</Text>
+            {/* Hundepfoten in rosa */}
+            <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 6, marginBottom: 24 }}>
+              <Ionicons name="paw" size={28} color={Colors.PRIMARY} style={{ opacity: 0.6 }} />
+              <Ionicons name="paw" size={44} color={Colors.PRIMARY} />
+              <Ionicons name="paw" size={28} color={Colors.PRIMARY} style={{ opacity: 0.6 }} />
+            </View>
+
+            <Text style={s.welcomeTitle}>Finde deine{"\n"}Gassi Community</Text>
+            <Text style={s.welcomeSub}>
+              Vernetze dich mit anderen Hundebesitzern in deiner Nähe.
+            </Text>
+
+            {/* Bullet Points mit Checkmarks */}
             <View style={s.featureList}>
-              {["🤝 Gassipartner finden", "💬 Direkt verabreden", "🐕 Mehrere Hunde anlegen"].map((f) => (
-                <View key={f} style={s.featureRow}><Text style={s.featureText}>{f}</Text></View>
+              {[
+                "Hundeprofile anlegen",
+                "Gassibegleitung finden",
+                "Direkt verabreden",
+              ].map((label) => (
+                <View key={label} style={s.featureRow}>
+                  <View style={s.checkCircle}>
+                    <Ionicons name="checkmark" size={14} color={Colors.PRIMARY} />
+                  </View>
+                  <Text style={s.featureText}>{label}</Text>
+                </View>
               ))}
             </View>
-            <TouchableOpacity style={[s.primaryBtn, { backgroundColor: Colors.SECONDARY }]} onPress={goNext}>
-              <Text style={s.primaryBtnText}>{t.onb_hb_welcome_btn}</Text>
+
+            <TouchableOpacity
+              style={[s.primaryBtn, { backgroundColor: Colors.PRIMARY }]}
+              onPress={goNext}
+            >
+              <Text style={s.primaryBtnText}>Los geht's</Text>
+              <Ionicons name="arrow-forward" size={18} color="#FFF" style={{ marginLeft: 8 }} />
             </TouchableOpacity>
           </View>
         )}
 
-        {/* Step 2: E-Mail Bestätigung */}
+        {/* ─────────────────────────── STEP 2: HUNDEPROFIL ─────────────────────────── */}
         {step === 2 && (
-          <View style={s.centerBlock}>
-            <Text style={s.stepEmoji}>📧</Text>
-            <Text style={s.stepTitle}>Konto erstellt!</Text>
-            <Text style={s.stepSub}>Wir haben dir eine Bestätigungs-E-Mail gesendet. Du kannst trotzdem direkt loslegen.</Text>
-            <TouchableOpacity style={[s.primaryBtn, { backgroundColor: Colors.SECONDARY }]} onPress={goNext}>
-              <Text style={s.primaryBtnText}>{t.onb_next}</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {/* Step 3: Datenschutz */}
-        {step === 3 && (
           <View>
-            <Text style={s.stepTitle}>{t.onb_hs_privacy_title}</Text>
-            <Text style={s.stepSub}>{t.onb_hs_privacy_sub}</Text>
-            <TouchableOpacity style={s.checkRow} onPress={() => setDatenschutz(!datenschutz)}>
-              <View style={[s.checkbox, datenschutz && { backgroundColor: Colors.SECONDARY, borderColor: Colors.SECONDARY }]}>
-                {datenschutz && <Text style={s.checkMark}>✓</Text>}
-              </View>
-              <Text style={s.checkLabel}>{t.onb_hs_privacy_accept}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={s.checkRow} onPress={() => setNewsletter(!newsletter)}>
-              <View style={[s.checkbox, newsletter && { backgroundColor: Colors.SECONDARY, borderColor: Colors.SECONDARY }]}>
-                {newsletter && <Text style={s.checkMark}>✓</Text>}
-              </View>
-              <Text style={s.checkLabel}>{t.onb_hs_privacy_newsletter}</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+            <Text style={s.stepTitle}>Hundeprofil anlegen</Text>
+            <Text style={s.stepSub}>Erzähl uns von deinem Vierbeiner.</Text>
 
-        {/* Step 4: Persönliche Infos */}
-        {step === 4 && (
-          <View>
-            <Text style={s.stepTitle}>{t.onb_hb_info_title}</Text>
+            {/* Name */}
+            <Text style={s.label}>
+              Name <Text style={s.required}>*</Text>
+            </Text>
+            <TextInput
+              style={s.input} value={dogName} onChangeText={setDogName}
+              placeholder="z.B. Luna" placeholderTextColor={Colors.TEXT_MUTED}
+            />
 
-            <Text style={s.label}>{t.onb_hs_info_salutation}</Text>
-            <View style={s.chipRow}>
-              {(["mann", "frau", "divers"] as Ansprache[]).map((a) => {
-                const labels = { mann: t.onb_hs_info_salutation_male, frau: t.onb_hs_info_salutation_female, divers: t.onb_hs_info_salutation_diverse };
-                return (
-                  <TouchableOpacity key={a} style={[s.chip, ansprache === a && { backgroundColor: Colors.SECONDARY, borderColor: Colors.SECONDARY }]} onPress={() => setAnsprache(a)}>
-                    <Text style={[s.chipText, ansprache === a && { color: "#FFF" }]}>{labels[a]}</Text>
+            {/* Rasse */}
+            <Text style={s.label}>Rasse</Text>
+            <TextInput
+              style={s.input} value={dogRasse} onChangeText={setDogRasse}
+              placeholder="z.B. Golden Retriever" placeholderTextColor={Colors.TEXT_MUTED}
+            />
+
+            {/* Alter + Einheit */}
+            <Text style={s.label}>Alter</Text>
+            <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
+              <TextInput
+                style={[s.input, { flex: 1 }]}
+                value={dogAlterZahl} onChangeText={setDogAlterZahl}
+                placeholder="z.B. 3" keyboardType="numeric"
+                placeholderTextColor={Colors.TEXT_MUTED}
+              />
+              <View style={{ flexDirection: "row", gap: 6 }}>
+                {([["monate", "Monate"], ["jahre", "Jahre"]] as [AlterEinheit, string][]).map(([k, label]) => (
+                  <TouchableOpacity
+                    key={k}
+                    onPress={() => setDogAlterEinheit(k)}
+                    style={[s.chip, dogAlterEinheit === k && { backgroundColor: Colors.PRIMARY, borderColor: Colors.PRIMARY }]}
+                  >
+                    <Text style={[s.chipText, dogAlterEinheit === k && { color: "#FFF" }]}>{label}</Text>
                   </TouchableOpacity>
-                );
-              })}
+                ))}
+              </View>
             </View>
 
-            <Text style={s.label}>{t.onb_hs_info_firstname}</Text>
-            <TextInput style={s.input} value={vorname} onChangeText={setVorname} placeholder="z.B. Max" placeholderTextColor={Colors.TEXT_MUTED} />
-
-            <Text style={s.label}>{t.onb_hs_info_dob}</Text>
-            <TextInput style={s.input} value={geburtsdatum} onChangeText={setGeburtsdatum} placeholder="TT.MM.JJJJ" placeholderTextColor={Colors.TEXT_MUTED} keyboardType="numbers-and-punctuation" />
-            <Text style={s.hint}>{t.onb_hs_info_dob_hint}</Text>
-
-            <Text style={s.label}>{t.onb_hb_info_plz}</Text>
-            <TextInput style={s.input} value={plz} onChangeText={setPlz} placeholder="z.B. 80331 / Schwabing" placeholderTextColor={Colors.TEXT_MUTED} />
-
-            <Text style={s.label}>{t.onb_hb_info_avatar_hint}</Text>
-            <TouchableOpacity style={[s.avatarPicker, avatarUri ? { borderColor: Colors.SECONDARY } : {}]} onPress={pickAvatar}>
-              <Text style={s.avatarPickerText}>{avatarUri ? "✅ Foto ausgewählt" : "📷 Profilbild auswählen"}</Text>
-            </TouchableOpacity>
-
-            <Text style={s.label}>{t.onb_hb_info_bio}</Text>
-            <TextInput style={[s.input, { minHeight: 80 }]} value={bio} onChangeText={setBio} placeholder={t.onb_hb_info_bio_placeholder} placeholderTextColor={Colors.TEXT_MUTED} multiline />
-          </View>
-        )}
-
-        {/* Step 5: Lifestyle */}
-        {step === 5 && (
-          <View>
-            <Text style={s.stepTitle}>{t.onb_hb_lifestyle_title}</Text>
-
-            <Text style={s.label}>{t.onb_activity_title}</Text>
-            {([["sportlich", t.onb_activity_athletic], ["mittel", t.onb_activity_medium], ["ruhig", t.onb_activity_calm]] as [Aktivitaet, string][]).map(([k, label]) => (
-              <TouchableOpacity key={k} style={[s.optionCard, aktivitaet === k && s.optionCardSecActive]} onPress={() => setAktivitaet(k)}>
-                <Text style={[s.optionText, aktivitaet === k && { color: Colors.SECONDARY }]}>{label}</Text>
-              </TouchableOpacity>
-            ))}
-
-            <Text style={s.label}>{t.onb_hb_lifestyle_meetingplace}</Text>
+            {/* Größe */}
+            <Text style={s.label}>Größe</Text>
             <View style={s.chipRow}>
-              {([["park", t.gassi_profil_meeting_park], ["wald", t.gassi_profil_meeting_forest], ["egal", t.gassi_profil_meeting_any]] as [Treffpunkt, string][]).map(([k, label]) => (
-                <TouchableOpacity key={k} style={[s.chip, treffpunkt === k && { backgroundColor: Colors.SECONDARY, borderColor: Colors.SECONDARY }]} onPress={() => setTreffpunkt(k)}>
-                  <Text style={[s.chipText, treffpunkt === k && { color: "#FFF" }]}>{label}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            <Text style={s.label}>{t.onb_hb_lifestyle_availability}</Text>
-            <View style={s.chipRow}>
-              {([["morgens", t.onb_hb_availability_morning], ["mittags", t.onb_hb_availability_noon], ["abends", t.onb_hb_availability_evening], ["wochenende", t.onb_hb_availability_weekend]] as [string, string][]).map(([k, label]) => (
-                <TouchableOpacity key={k} style={[s.chip, verfuegbarkeit.includes(k) && { backgroundColor: Colors.SECONDARY, borderColor: Colors.SECONDARY }]} onPress={() => toggleAvailability(k)}>
-                  <Text style={[s.chipText, verfuegbarkeit.includes(k) && { color: "#FFF" }]}>{label}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-        )}
-
-        {/* Step 6: Hund anlegen */}
-        {step === 6 && (
-          <View>
-            <Text style={s.stepTitle}>{t.onb_hb_dog_title}</Text>
-            <Text style={s.stepSub}>{t.onb_hb_dog_sub}</Text>
-
-            <Text style={s.label}>{t.gassi_register_label_name}</Text>
-            <TextInput style={s.input} value={dogName} onChangeText={setDogName} placeholder={t.gassi_register_ph_name} placeholderTextColor={Colors.TEXT_MUTED} />
-
-            <Text style={s.label}>{t.onb_hb_dog_photo_hint}</Text>
-            <TouchableOpacity style={[s.avatarPicker, dogPhotoUris.length > 0 ? { borderColor: Colors.SECONDARY } : {}]} onPress={pickDogPhotos}>
-              <Text style={s.avatarPickerText}>
-                {dogPhotoUris.length > 0 ? `✅ ${dogPhotoUris.length} Foto(s) ausgewählt` : "📷 Fotos auswählen (min. 1)"}
-              </Text>
-            </TouchableOpacity>
-
-            <Text style={s.label}>{t.gassi_register_label_size}</Text>
-            <View style={s.chipRow}>
-              {([["klein", t.onb_th_size_small], ["mittel", t.onb_th_size_medium], ["gross", t.onb_th_size_large], ["riese", t.onb_th_size_giant]] as [Groesse, string][]).map(([k, label]) => (
-                <TouchableOpacity key={k} style={[s.chip, dogGroesse === k && { backgroundColor: Colors.SECONDARY, borderColor: Colors.SECONDARY }]} onPress={() => setDogGroesse(k)}>
+              {([["klein", "Klein"], ["mittel", "Mittel"], ["gross", "Groß"]] as [DogSize, string][]).map(([k, label]) => (
+                <TouchableOpacity
+                  key={k}
+                  style={[s.chip, dogGroesse === k && { backgroundColor: Colors.PRIMARY, borderColor: Colors.PRIMARY }]}
+                  onPress={() => setDogGroesse(k)}
+                >
                   <Text style={[s.chipText, dogGroesse === k && { color: "#FFF" }]}>{label}</Text>
                 </TouchableOpacity>
               ))}
             </View>
 
-            <Text style={s.label}>{t.gassi_register_label_age}</Text>
-            <TextInput style={s.input} value={dogAlter} onChangeText={setDogAlter} placeholder="z.B. 3" placeholderTextColor={Colors.TEXT_MUTED} keyboardType="numeric" />
-
-            <Text style={s.label}>{t.shelter_add_section_gender}</Text>
+            {/* Geschlecht */}
+            <Text style={s.label}>Geschlecht</Text>
             <View style={s.chipRow}>
-              {([["maennlich", "♂ Männlich"], ["weiblich", "♀ Weiblich"]] as ["maennlich" | "weiblich", string][]).map(([k, label]) => (
-                <TouchableOpacity key={k} style={[s.chip, dogGeschlecht === k && { backgroundColor: Colors.SECONDARY, borderColor: Colors.SECONDARY }]} onPress={() => setDogGeschlecht(k)}>
+              {([["maennlich", "♂ Männlich"], ["weiblich", "♀ Weiblich"]] as [DogGender, string][]).map(([k, label]) => (
+                <TouchableOpacity
+                  key={k}
+                  style={[s.chip, dogGeschlecht === k && { backgroundColor: Colors.PRIMARY, borderColor: Colors.PRIMARY }]}
+                  onPress={() => setDogGeschlecht(k)}
+                >
                   <Text style={[s.chipText, dogGeschlecht === k && { color: "#FFF" }]}>{label}</Text>
                 </TouchableOpacity>
               ))}
             </View>
 
-            <Text style={s.label}>{t.gassi_register_label_activity}</Text>
+            {/* Energielevel */}
+            <Text style={s.label}>Energielevel</Text>
             <View style={s.chipRow}>
-              {([["sportlich", t.onb_activity_athletic], ["mittel", t.onb_activity_medium], ["ruhig", t.onb_activity_calm]] as [Aktivitaet, string][]).map(([k, label]) => (
-                <TouchableOpacity key={k} style={[s.chip, dogAktivitaet === k && { backgroundColor: Colors.SECONDARY, borderColor: Colors.SECONDARY }]} onPress={() => setDogAktivitaet(k)}>
-                  <Text style={[s.chipText, dogAktivitaet === k && { color: "#FFF" }]}>{label}</Text>
+              {([["ruhig", "Ruhig"], ["mittel", "Mittel"], ["sportlich", "Sehr aktiv"]] as [EnergyLevel, string][]).map(([k, label]) => (
+                <TouchableOpacity
+                  key={k}
+                  style={[s.chip, dogEnergie === k && { backgroundColor: Colors.PRIMARY, borderColor: Colors.PRIMARY }]}
+                  onPress={() => setDogEnergie(k)}
+                >
+                  <Text style={[s.chipText, dogEnergie === k && { color: "#FFF" }]}>{label}</Text>
                 </TouchableOpacity>
               ))}
             </View>
 
-            <Text style={s.label}>{t.onb_th_animal_friendly}</Text>
+            {/* Verträglich mit anderen Hunden */}
+            <Text style={s.label}>Verträglich mit anderen Hunden</Text>
             <View style={s.chipRow}>
-              <TouchableOpacity style={[s.chip, dogAnimalFriendly === true && { backgroundColor: Colors.SECONDARY, borderColor: Colors.SECONDARY }]} onPress={() => setDogAnimalFriendly(true)}>
-                <Text style={[s.chipText, dogAnimalFriendly === true && { color: "#FFF" }]}>{t.onb_yes}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[s.chip, dogAnimalFriendly === false && { backgroundColor: Colors.SECONDARY, borderColor: Colors.SECONDARY }]} onPress={() => setDogAnimalFriendly(false)}>
-                <Text style={[s.chipText, dogAnimalFriendly === false && { color: "#FFF" }]}>{t.onb_no}</Text>
-              </TouchableOpacity>
+              {([["ja", "Ja"], ["nein", "Nein"], ["kommt_drauf_an", "Kommt drauf an"]] as [DogFriendly, string][]).map(([k, label]) => (
+                <TouchableOpacity
+                  key={k}
+                  style={[s.chip, dogAnimalFriendly === k && { backgroundColor: Colors.PRIMARY, borderColor: Colors.PRIMARY }]}
+                  onPress={() => setDogAnimalFriendly(k)}
+                >
+                  <Text style={[s.chipText, dogAnimalFriendly === k && { color: "#FFF" }]}>{label}</Text>
+                </TouchableOpacity>
+              ))}
             </View>
 
-            <Text style={s.label}>{t.onb_hb_dog_char_tags}</Text>
+            {/* Kinderlieb */}
+            <Text style={s.label}>Kinderlieb</Text>
             <View style={s.chipRow}>
-              {ALL_TAGS.map((tag) => (
-                <TouchableOpacity key={tag} style={[s.chip, dogTags.includes(tag) && { backgroundColor: Colors.SECONDARY, borderColor: Colors.SECONDARY }]} onPress={() => toggleTag(tag)}>
+              {([true, false]).map((v) => (
+                <TouchableOpacity
+                  key={String(v)}
+                  style={[s.chip, dogKinderlieb === v && { backgroundColor: Colors.PRIMARY, borderColor: Colors.PRIMARY }]}
+                  onPress={() => setDogKinderlieb(v)}
+                >
+                  <Text style={[s.chipText, dogKinderlieb === v && { color: "#FFF" }]}>{v ? "Ja" : "Nein"}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {/* Kastriert */}
+            <Text style={s.label}>Kastriert</Text>
+            <View style={s.chipRow}>
+              {([true, false]).map((v) => (
+                <TouchableOpacity
+                  key={String(v)}
+                  style={[s.chip, dogKastriert === v && { backgroundColor: Colors.PRIMARY, borderColor: Colors.PRIMARY }]}
+                  onPress={() => setDogKastriert(v)}
+                >
+                  <Text style={[s.chipText, dogKastriert === v && { color: "#FFF" }]}>{v ? "Ja" : "Nein"}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {/* Charakter-Tags */}
+            <Text style={s.label}>Charakter</Text>
+            <View style={s.chipRow}>
+              {CHARAKTER_TAGS.map((tag) => (
+                <TouchableOpacity
+                  key={tag}
+                  style={[s.chip, dogTags.includes(tag) && { backgroundColor: Colors.PRIMARY, borderColor: Colors.PRIMARY }]}
+                  onPress={() => toggleTag(tag)}
+                >
                   <Text style={[s.chipText, dogTags.includes(tag) && { color: "#FFF" }]}>{tag}</Text>
                 </TouchableOpacity>
               ))}
             </View>
 
-            <Text style={s.label}>{t.onb_hb_dog_desc}</Text>
-            <TextInput style={[s.input, { minHeight: 80 }]} value={dogDesc} onChangeText={setDogDesc} placeholder={t.onb_hb_dog_desc_placeholder} placeholderTextColor={Colors.TEXT_MUTED} multiline />
+            {/* Beschreibung */}
+            <Text style={s.label}>
+              Kurze Beschreibung{" "}
+              <Text style={s.optional}>(optional)</Text>
+            </Text>
+            <TextInput
+              style={[s.input, { minHeight: 88, textAlignVertical: "top", paddingTop: 12 }]}
+              value={dogDesc}
+              onChangeText={(t) => setDogDesc(t.slice(0, 150))}
+              placeholder="Was macht deinen Hund besonders?"
+              placeholderTextColor={Colors.TEXT_MUTED}
+              multiline maxLength={150}
+            />
+            <Text style={s.charCount}>{dogDesc.length} / 150</Text>
+
+            {/* Fotos */}
+            <Text style={s.label}>
+              Fotos{" "}
+              <Text style={s.required}>*</Text>
+              <Text style={s.optional}> (min. 1, bis zu 6)</Text>
+            </Text>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+              {[0, 1, 2, 3, 4, 5].map((i) => (
+                <TouchableOpacity
+                  key={i}
+                  onPress={() => pickDogPhoto(i)}
+                  style={[
+                    s.photoSlot,
+                    dogPhotoUris[i] && { borderStyle: "solid", borderColor: Colors.PRIMARY },
+                  ]}
+                >
+                  {dogPhotoUris[i] ? (
+                    <Image source={{ uri: dogPhotoUris[i]! }} style={s.photoImg} />
+                  ) : (
+                    <View style={{ alignItems: "center" }}>
+                      <Ionicons name="camera-outline" size={26} color={Colors.TEXT_MUTED} />
+                      {i === 0 && (
+                        <Text style={{ fontSize: 10, color: Colors.PRIMARY, marginTop: 4, fontWeight: "600" }}>
+                          Pflicht
+                        </Text>
+                      )}
+                    </View>
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
         )}
 
-        {/* Step 7: Fertig */}
-        {step === 7 && (
+        {/* ─────────────────────────── STEP 3: MENSCHENPROFIL ─────────────────────────── */}
+        {step === 3 && (
+          <View>
+            <Text style={s.stepTitle}>Dein Profil</Text>
+            <Text style={s.stepSub}>Damit andere wissen, wer du bist.</Text>
+
+            {/* Vorname */}
+            <Text style={s.label}>
+              Vorname <Text style={s.required}>*</Text>
+            </Text>
+            <TextInput
+              style={s.input} value={vorname} onChangeText={setVorname}
+              placeholder="z.B. Lisa" placeholderTextColor={Colors.TEXT_MUTED}
+              autoCapitalize="words"
+            />
+
+            {/* Alter */}
+            <Text style={s.label}>Alter</Text>
+            <TextInput
+              style={s.input} value={alter} onChangeText={setAlter}
+              placeholder="z.B. 28" keyboardType="numeric"
+              placeholderTextColor={Colors.TEXT_MUTED}
+            />
+
+            {/* Stadtteil */}
+            <Text style={s.label}>
+              Stadtteil / Ort <Text style={s.required}>*</Text>
+            </Text>
+            <TextInput
+              style={s.input} value={stadtteil} onChangeText={setStadtteil}
+              placeholder="z.B. München, Schwabing"
+              placeholderTextColor={Colors.TEXT_MUTED}
+            />
+
+            {/* Profilfoto */}
+            <Text style={s.label}>
+              Profilfoto <Text style={s.required}>*</Text>
+            </Text>
+            <TouchableOpacity
+              onPress={pickAvatar}
+              style={[s.avatarPicker, avatarUri && { borderColor: Colors.PRIMARY, borderStyle: "solid" }]}
+            >
+              {avatarUri ? (
+                <Image source={{ uri: avatarUri }} style={{ width: "100%", height: "100%", borderRadius: 14 }} />
+              ) : (
+                <View style={{ alignItems: "center" }}>
+                  <Ionicons name="person-circle-outline" size={52} color={Colors.TEXT_MUTED} />
+                  <Text style={{ color: Colors.TEXT_MUTED, fontSize: 13, marginTop: 6 }}>Foto auswählen</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+
+            {/* Interessen */}
+            <Text style={s.label}>
+              Interessen{" "}
+              <Text style={s.optional}>(max. 5 auswählbar)</Text>
+            </Text>
+            <Text style={s.hint}>{interessen.length} / 5 ausgewählt</Text>
+            <View style={[s.chipRow, { marginTop: 10 }]}>
+              {INTERESSEN_LIST.map((item) => {
+                const selected = interessen.includes(item);
+                return (
+                  <TouchableOpacity
+                    key={item}
+                    onPress={() => toggleInteresse(item)}
+                    style={[s.chip, selected && { backgroundColor: Colors.PRIMARY, borderColor: Colors.PRIMARY }]}
+                  >
+                    <Text style={[s.chipText, selected && { color: "#FFF" }]}>{item}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            {/* Bio */}
+            <Text style={[s.label, { marginTop: 22 }]}>
+              Ein Satz über dich{" "}
+              <Text style={s.optional}>(optional)</Text>
+            </Text>
+            <TextInput
+              style={[s.input, { minHeight: 78, textAlignVertical: "top", paddingTop: 12 }]}
+              value={bio}
+              onChangeText={(t) => setBio(t.slice(0, 150))}
+              placeholder="z.B. Immer auf der Suche nach neuen Lieblingsrouten..."
+              placeholderTextColor={Colors.TEXT_MUTED}
+              multiline maxLength={150}
+            />
+            <Text style={s.charCount}>{bio.length} / 150</Text>
+          </View>
+        )}
+
+        {/* ─────────────────────────── STEP 4: FERTIG ─────────────────────────── */}
+        {step === 4 && (
           <View style={s.centerBlock}>
-            <Text style={s.welcomeEmoji}>🐾</Text>
-            <Text style={s.welcomeTitle}>{t.onb_hb_done_title}</Text>
-            <Text style={s.welcomeSub}>{t.onb_hb_done_sub}</Text>
+            <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 6, marginBottom: 24 }}>
+              <Ionicons name="paw" size={28} color={Colors.PRIMARY} style={{ opacity: 0.6 }} />
+              <Ionicons name="paw" size={44} color={Colors.PRIMARY} />
+              <Ionicons name="paw" size={28} color={Colors.PRIMARY} style={{ opacity: 0.6 }} />
+            </View>
+            <Text style={s.welcomeTitle}>Alles bereit!</Text>
+            <Text style={s.welcomeSub}>
+              Dein Profil ist angelegt. Jetzt kannst du Gassi-Partner in deiner Nähe finden.
+            </Text>
             {loading ? (
-              <ActivityIndicator color={Colors.SECONDARY} style={{ marginTop: 24 }} />
+              <ActivityIndicator color={Colors.PRIMARY} size="large" style={{ marginTop: 24 }} />
             ) : (
-              <TouchableOpacity style={[s.primaryBtn, { backgroundColor: Colors.SECONDARY }]} onPress={handleFinish}>
-                <Text style={s.primaryBtnText}>{t.onb_hb_done_btn}</Text>
+              <TouchableOpacity
+                style={[s.primaryBtn, { backgroundColor: Colors.PRIMARY }]}
+                onPress={handleFinish}
+              >
+                <Text style={s.primaryBtnText}>Gassi Community entdecken</Text>
+                <Ionicons name="arrow-forward" size={18} color="#FFF" style={{ marginLeft: 8 }} />
               </TouchableOpacity>
             )}
           </View>
         )}
+
       </ScrollView>
 
-      {step > 1 && step < TOTAL_STEPS && (
+      {/* Nav-Buttons (Steps 2 + 3) */}
+      {step >= 2 && step <= 3 && (
         <View style={s.navRow}>
           <TouchableOpacity style={s.backBtn} onPress={goBack}>
-            <Text style={s.backBtnText}>{t.onb_back}</Text>
+            <Text style={s.backBtnText}>Zurück</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[s.nextBtn, { backgroundColor: Colors.SECONDARY }]}
+            style={[s.nextBtn, { backgroundColor: Colors.PRIMARY }]}
             onPress={() => {
+              if (step === 2 && !validateStep2()) return;
               if (step === 3 && !validateStep3()) return;
-              if (step === 4 && !validateStep4()) return;
-              if (step === 6 && !validateStep6()) return;
               goNext();
             }}
           >
-            <Text style={s.nextBtnText}>{t.onb_next}</Text>
+            <Text style={s.nextBtnText}>Weiter</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -390,44 +611,97 @@ export default function TierhalterOnboarding() {
   );
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+
 const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.BACKGROUND },
-  progressWrap: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 4 },
-  progressBg: { height: 4, backgroundColor: Colors.BORDER, borderRadius: 2 },
-  progressFill: { height: 4, backgroundColor: Colors.SECONDARY, borderRadius: 2 },
-  progressText: { fontSize: 12, color: Colors.TEXT_MUTED, marginTop: 4, textAlign: "right" },
-  scroll: { flex: 1 },
-  scrollContent: { padding: 24, paddingBottom: 40 },
-  centerBlock: { alignItems: "center", paddingTop: 20 },
-  welcomeEmoji: { fontSize: 64, marginBottom: 16 },
-  welcomeTitle: { fontSize: 26, fontWeight: "700", color: Colors.TEXT, textAlign: "center", marginBottom: 12 },
-  welcomeSub: { fontSize: 16, color: Colors.TEXT_MUTED, textAlign: "center", lineHeight: 24, marginBottom: 24 },
-  featureList: { width: "100%", marginBottom: 32 },
-  featureRow: { paddingVertical: 10, paddingHorizontal: 16, backgroundColor: Colors.SURFACE, borderRadius: 12, marginBottom: 8 },
-  featureText: { fontSize: 15, color: Colors.TEXT },
-  stepEmoji: { fontSize: 48, textAlign: "center", marginBottom: 12 },
-  stepTitle: { fontSize: 22, fontWeight: "700", color: Colors.TEXT, marginBottom: 8 },
-  stepSub: { fontSize: 15, color: Colors.TEXT_MUTED, lineHeight: 22, marginBottom: 20 },
-  label: { fontSize: 14, fontWeight: "600", color: Colors.TEXT, marginTop: 16, marginBottom: 6 },
-  hint: { fontSize: 12, color: Colors.TEXT_MUTED, marginTop: 4 },
-  input: { borderWidth: 1, borderColor: Colors.BORDER, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: Colors.TEXT, backgroundColor: "#FFF" },
+  safe:          { flex: 1, backgroundColor: Colors.BACKGROUND },
+  scroll:        { flex: 1 },
+  scrollContent: { padding: 24, paddingBottom: 48 },
+
+  // Progress
+  progressWrap: { paddingHorizontal: 20, paddingTop: 14, paddingBottom: 2 },
+  progressBg:   { height: 4, backgroundColor: Colors.BORDER, borderRadius: 2 },
+  progressFill: { height: 4, backgroundColor: Colors.PRIMARY, borderRadius: 2 },
+  progressText: { fontSize: 12, color: Colors.TEXT_MUTED, marginTop: 5, textAlign: "right" },
+
+  // Welcome / Done
+  centerBlock:  { alignItems: "center", paddingTop: 24 },
+  welcomeTitle: {
+    fontSize: 28, fontWeight: "800", color: Colors.TEXT,
+    textAlign: "center", marginBottom: 12, lineHeight: 36,
+  },
+  welcomeSub: {
+    fontSize: 15, color: Colors.TEXT_MUTED,
+    textAlign: "center", lineHeight: 23, marginBottom: 32,
+  },
+  featureList: { width: "100%", marginBottom: 36, gap: 18 },
+  featureRow:  { flexDirection: "row", alignItems: "center", gap: 14 },
+  checkCircle: {
+    width: 28, height: 28, borderRadius: 14,
+    borderWidth: 1.5, borderColor: Colors.PRIMARY,
+    alignItems: "center", justifyContent: "center",
+    backgroundColor: Colors.PRIMARY + "12",
+  },
+  featureText: { fontSize: 16, color: Colors.TEXT, flex: 1, fontWeight: "500" },
+
+  // Form steps
+  stepTitle: { fontSize: 24, fontWeight: "800", color: Colors.TEXT, marginBottom: 6 },
+  stepSub:   { fontSize: 15, color: Colors.TEXT_MUTED, lineHeight: 22, marginBottom: 20 },
+
+  label:    { fontSize: 14, fontWeight: "600", color: Colors.TEXT, marginTop: 20, marginBottom: 8 },
+  required: { color: Colors.PRIMARY, fontWeight: "700" },
+  optional: { fontSize: 12, fontWeight: "400", color: Colors.TEXT_MUTED },
+  hint:     { fontSize: 12, color: Colors.TEXT_MUTED },
+  charCount:{ fontSize: 12, color: Colors.TEXT_MUTED, textAlign: "right", marginTop: 4 },
+
+  input: {
+    borderWidth: 1.5, borderColor: Colors.BORDER, borderRadius: 12,
+    paddingHorizontal: 14, paddingVertical: 12,
+    fontSize: 15, color: Colors.TEXT, backgroundColor: Colors.BACKGROUND,
+  },
+
   chipRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
-  chip: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 99, borderWidth: 1.5, borderColor: Colors.BORDER, backgroundColor: "#FFF" },
-  chipText: { fontSize: 14, color: Colors.TEXT },
-  optionCard: { borderWidth: 1.5, borderColor: Colors.BORDER, borderRadius: 12, padding: 14, marginBottom: 8, backgroundColor: "#FFF" },
-  optionCardSecActive: { borderColor: Colors.SECONDARY, backgroundColor: "#FFF4EE" },
-  optionText: { fontSize: 15, fontWeight: "600", color: Colors.TEXT },
-  checkRow: { flexDirection: "row", alignItems: "flex-start", gap: 12, marginBottom: 16, marginTop: 8 },
-  checkbox: { width: 22, height: 22, borderRadius: 6, borderWidth: 2, borderColor: Colors.BORDER, alignItems: "center", justifyContent: "center" },
-  checkMark: { color: "#FFF", fontSize: 13, fontWeight: "700" },
-  checkLabel: { flex: 1, fontSize: 14, color: Colors.TEXT, lineHeight: 20 },
-  avatarPicker: { borderWidth: 1.5, borderColor: Colors.BORDER, borderRadius: 10, borderStyle: "dashed", paddingVertical: 16, alignItems: "center", backgroundColor: Colors.SURFACE },
-  avatarPickerText: { fontSize: 15, color: Colors.TEXT_MUTED },
-  primaryBtn: { width: "100%", paddingVertical: 16, borderRadius: 14, alignItems: "center", marginTop: 8 },
+  chip: {
+    paddingHorizontal: 14, paddingVertical: 9, borderRadius: 99,
+    borderWidth: 1.5, borderColor: Colors.BORDER, backgroundColor: Colors.BACKGROUND,
+  },
+  chipText: { fontSize: 13, color: Colors.TEXT, fontWeight: "500" },
+
+  // Photo grid
+  photoSlot: {
+    width: PHOTO_SIZE, height: PHOTO_SIZE, borderRadius: 12,
+    borderWidth: 1.5, borderColor: Colors.BORDER, borderStyle: "dashed",
+    alignItems: "center", justifyContent: "center",
+    backgroundColor: Colors.SURFACE, overflow: "hidden",
+  },
+  photoImg: { width: "100%", height: "100%" },
+
+  // Avatar picker
+  avatarPicker: {
+    height: 148, borderWidth: 1.5, borderColor: Colors.BORDER,
+    borderStyle: "dashed", borderRadius: 16,
+    alignItems: "center", justifyContent: "center",
+    backgroundColor: Colors.SURFACE, overflow: "hidden",
+  },
+
+  // Primary button
+  primaryBtn: {
+    flexDirection: "row", alignItems: "center", justifyContent: "center",
+    width: "100%", paddingVertical: 16, borderRadius: 14, marginTop: 8,
+    shadowColor: Colors.PRIMARY, shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3, shadowRadius: 8, elevation: 4,
+  },
   primaryBtnText: { color: "#FFF", fontSize: 16, fontWeight: "700" },
-  navRow: { flexDirection: "row", paddingHorizontal: 20, paddingVertical: 12, gap: 12, borderTopWidth: 1, borderTopColor: Colors.BORDER },
-  backBtn: { flex: 1, paddingVertical: 14, borderRadius: 12, borderWidth: 1.5, borderColor: Colors.BORDER, alignItems: "center" },
+
+  // Nav row
+  navRow: {
+    flexDirection: "row", paddingHorizontal: 20,
+    paddingVertical: 14, gap: 12,
+    borderTopWidth: 1, borderTopColor: Colors.BORDER,
+    backgroundColor: Colors.BACKGROUND,
+  },
+  backBtn:     { flex: 1, paddingVertical: 14, borderRadius: 12, borderWidth: 1.5, borderColor: Colors.BORDER, alignItems: "center" },
   backBtnText: { fontSize: 15, color: Colors.TEXT, fontWeight: "500" },
-  nextBtn: { flex: 2, paddingVertical: 14, borderRadius: 12, alignItems: "center" },
+  nextBtn:     { flex: 2, paddingVertical: 14, borderRadius: 12, alignItems: "center" },
   nextBtnText: { color: "#FFF", fontSize: 15, fontWeight: "700" },
 });
