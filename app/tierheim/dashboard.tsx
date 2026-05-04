@@ -271,10 +271,10 @@ export default function TierheimDashboard() {
       }
     >
       {/* Header with stats */}
-      <View style={{ backgroundColor: Colors.SECONDARY, paddingTop: 60, paddingHorizontal: Sizes.SPACING_LG, paddingBottom: 24 }}>
+      <View style={{ backgroundColor: Colors.WHITE, paddingTop: 60, paddingHorizontal: Sizes.SPACING_LG, paddingBottom: 24, borderBottomWidth: 1, borderBottomColor: Colors.BORDER }}>
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
           <View>
-            <Text style={{ color: Colors.WHITE, fontSize: 22, fontWeight: "800" }}>
+            <Text style={{ color: Colors.SECONDARY, fontSize: 22, fontWeight: "800" }}>
               {stats?.orgName ?? t.tierheim_dashboard_your_shelter}
             </Text>
           </View>
@@ -283,10 +283,10 @@ export default function TierheimDashboard() {
             style={{
               paddingHorizontal: 14, paddingVertical: 7,
               borderRadius: Sizes.RADIUS_FULL,
-              backgroundColor: "rgba(255,255,255,0.2)",
+              backgroundColor: Colors.SURFACE,
             }}
           >
-            <Text style={{ color: Colors.WHITE, fontSize: 13, fontWeight: "600" }}>
+            <Text style={{ color: Colors.SECONDARY, fontSize: 13, fontWeight: "600" }}>
               {isGuest ? t.tierheim_dashboard_login : "Logout"}
             </Text>
           </TouchableOpacity>
@@ -418,11 +418,11 @@ export default function TierheimDashboard() {
 function StatCard({ value, label }: { value: number; label: string }) {
   return (
     <View style={{
-      flex: 1, backgroundColor: "rgba(255,255,255,0.15)",
+      flex: 1, backgroundColor: Colors.SURFACE,
       borderRadius: Sizes.RADIUS_MD, padding: 12, alignItems: "center",
     }}>
-      <Text style={{ color: Colors.WHITE, fontSize: 24, fontWeight: "800" }}>{value}</Text>
-      <Text style={{ color: "rgba(255,255,255,0.8)", fontSize: 11, textAlign: "center", marginTop: 2 }}>
+      <Text style={{ color: Colors.SECONDARY, fontSize: 24, fontWeight: "800" }}>{value}</Text>
+      <Text style={{ color: Colors.TEXT_MUTED, fontSize: 11, textAlign: "center", marginTop: 2 }}>
         {label}
       </Text>
     </View>

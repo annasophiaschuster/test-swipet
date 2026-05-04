@@ -354,15 +354,15 @@ export default function HundDetailScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
       {/* Header */}
-      <View style={{ backgroundColor: Colors.SECONDARY, paddingTop: 56, paddingHorizontal: Sizes.SPACING_LG, paddingBottom: 20 }}>
+      <View style={{ backgroundColor: Colors.WHITE, paddingTop: 56, paddingHorizontal: Sizes.SPACING_LG, paddingBottom: 20, borderBottomWidth: 1, borderBottomColor: Colors.BORDER }}>
         <TouchableOpacity
           onPress={() => router.back()}
           style={{ flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 10 }}
         >
-          <Text style={{ fontSize: 16, color: "rgba(255,255,255,0.8)" }}>‹</Text>
-          <Text style={{ fontSize: 13, color: "rgba(255,255,255,0.8)", fontWeight: "500" }}>{t.tierheim_dog_back}</Text>
+          <Text style={{ fontSize: 16, color: Colors.SECONDARY }}>‹</Text>
+          <Text style={{ fontSize: 13, color: Colors.SECONDARY, fontWeight: "500" }}>{t.tierheim_dog_back}</Text>
         </TouchableOpacity>
-        <Text style={{ fontSize: 24, fontWeight: "800", color: Colors.WHITE }}>{dogName}</Text>
+        <Text style={{ fontSize: 24, fontWeight: "800", color: Colors.SECONDARY }}>{dogName}</Text>
 
         {/* Tab buttons */}
         <View style={{ flexDirection: "row", gap: 8, marginTop: 16 }}>
@@ -378,12 +378,12 @@ export default function HundDetailScreen() {
                 onPress={() => setActiveTab(tab)}
                 style={{
                   paddingHorizontal: 16, paddingVertical: 7, borderRadius: Sizes.RADIUS_FULL,
-                  backgroundColor: active ? Colors.WHITE : "rgba(255,255,255,0.2)",
+                  backgroundColor: active ? Colors.PRIMARY : Colors.SURFACE,
                 }}
               >
                 <Text style={{
                   fontSize: 13, fontWeight: "700",
-                  color: active ? Colors.PRIMARY : Colors.WHITE,
+                  color: active ? Colors.WHITE : Colors.TEXT_MUTED,
                 }}>
                   {label}
                 </Text>

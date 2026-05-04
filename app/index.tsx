@@ -184,7 +184,7 @@ export default function SplashLoginScreen() {
     <View style={{ flex: 1 }}>
 
       {/* ── Full-screen background ── */}
-      <View style={[StyleSheet.absoluteFill, { backgroundColor: Colors.SECONDARY }]} />
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: Colors.WHITE }]} />
 
       {/* ── Language toggle ── */}
       <View style={styles.langToggleContainer}>
@@ -359,31 +359,31 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.5)",
+    borderColor: Colors.BORDER,
   },
   langBtn: {
     paddingHorizontal: 14,
     paddingVertical: 6,
-    backgroundColor: "rgba(255,255,255,0.15)",
+    backgroundColor: Colors.SURFACE,
   },
-  langBtnActive:     { backgroundColor: "rgba(255,255,255,0.9)" },
-  langBtnText:       { fontSize: 13, fontWeight: "600", color: "rgba(255,255,255,0.85)", letterSpacing: 0.5 },
-  langBtnTextActive: { color: "#CC96C1" },
+  langBtnActive:     { backgroundColor: Colors.PRIMARY },
+  langBtnText:       { fontSize: 13, fontWeight: "600", color: Colors.TEXT_MUTED, letterSpacing: 0.5 },
+  langBtnTextActive: { color: Colors.WHITE },
 
   // ── Logo ─────────────────────────────────────────────────────────────────
   logoContainer: {
     width: 160, height: 160, borderRadius: 40,
-    backgroundColor: "rgba(255,255,255,0.15)",
+    backgroundColor: Colors.SURFACE,
     alignItems: "center", justifyContent: "center",
     marginBottom: 24,
-    borderWidth: 2, borderColor: "rgba(255,255,255,0.3)",
+    borderWidth: 2, borderColor: Colors.BORDER,
   },
   appName: {
-    fontSize: 42, fontWeight: "800", color: "#FFFFFF",
+    fontSize: 42, fontWeight: "800", color: Colors.SECONDARY,
     letterSpacing: 8, marginBottom: 6,
   },
   slogan: {
-    fontSize: 15, color: "rgba(255,255,255,0.9)",
+    fontSize: 15, color: Colors.TEXT_MUTED,
     fontWeight: "300", letterSpacing: 1.5, fontStyle: "italic",
   },
 

@@ -319,7 +319,7 @@ export default function TierheimAnfragenScreen() {
     <SafeAreaView edges={["bottom"]} style={styles.safe}>
 
       {/* Header — title + dogs strip */}
-      <View style={[styles.gradientHeader, { backgroundColor: Colors.SECONDARY, paddingTop: insets.top }]}>
+      <View style={[styles.gradientHeader, { backgroundColor: Colors.WHITE, paddingTop: insets.top }]}>
         {/* Title row */}
         <View style={styles.header}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flex: 1 }}>
@@ -338,7 +338,7 @@ export default function TierheimAnfragenScreen() {
             <Ionicons
               name="options-outline"
               size={20}
-              color={Colors.WHITE}
+              color={Colors.SECONDARY}
             />
           </TouchableOpacity>
         </View>
@@ -577,10 +577,12 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.BACKGROUND },
   centered: { flex: 1, backgroundColor: Colors.BACKGROUND, alignItems: "center", justifyContent: "center" },
 
-  // Gradient header wrapper
+  // Header wrapper
   gradientHeader: {
     paddingTop: 0,
     paddingBottom: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.BORDER,
   },
 
   // Header title row
@@ -594,11 +596,11 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 28,
     fontWeight: "800",
-    color: Colors.WHITE,
+    color: Colors.SECONDARY,
     letterSpacing: -0.5,
   },
   headerBadge: {
-    backgroundColor: "rgba(255,255,255,0.35)",
+    backgroundColor: Colors.PRIMARY,
     borderRadius: 99,
     minWidth: 22,
     height: 22,
@@ -606,19 +608,19 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: 6,
   },
-  headerBadgeText: { color: "#FFF", fontSize: 11, fontWeight: "800" },
+  headerBadgeText: { color: Colors.WHITE, fontSize: 11, fontWeight: "800" },
 
   // Filter button
   filterBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "rgba(255,255,255,0.25)",
+    backgroundColor: Colors.SURFACE,
     alignItems: "center",
     justifyContent: "center",
   },
   filterBtnActive: {
-    backgroundColor: "rgba(255,255,255,0.45)",
+    backgroundColor: Colors.BORDER,
   },
 
   // Filter modal

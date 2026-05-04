@@ -122,7 +122,7 @@ export default function LoginScreen() {
       style={{ flex: 1 }}
     >
       {/* Full-screen background */}
-      <View style={[StyleSheet.absoluteFill, { backgroundColor: Colors.SECONDARY }]} />
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: Colors.WHITE }]} />
 
       {/* Header — visible in the gradient strip above the card */}
       <View style={styles.header}>
@@ -244,12 +244,12 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 36,
     fontWeight: "800",
-    color: "#FFFFFF",
+    color: Colors.SECONDARY,
     letterSpacing: 4,
     marginBottom: 8,
   },
   headerSub: {
-    color: "rgba(255,255,255,0.85)",
+    color: Colors.TEXT_MUTED,
     fontSize: 15,
     fontStyle: "italic",
   },

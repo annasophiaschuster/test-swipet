@@ -202,11 +202,11 @@ export default function TierheimHundeScreen() {
               router.push("/shelter/pets/add");
             }}
             style={{
-              backgroundColor: "rgba(255,255,255,0.25)", borderRadius: Sizes.RADIUS_FULL,
+              backgroundColor: Colors.SURFACE, borderRadius: Sizes.RADIUS_FULL,
               paddingHorizontal: 14, paddingVertical: 7,
             }}
           >
-            <Text style={{ color: Colors.WHITE, fontWeight: "700", fontSize: 15 }}>＋</Text>
+            <Text style={{ color: Colors.SECONDARY, fontWeight: "700", fontSize: 15 }}>＋</Text>
           </TouchableOpacity>
         }
       />

@@ -184,7 +184,7 @@ export default function RegisterScreen() {
         style={{ flex: 1 }}
       >
         {/* ── Header ─────────────────────────────────────────────────────────── */}
-        <View style={{ backgroundColor: Colors.SECONDARY, paddingTop: 56, paddingBottom: 24, paddingHorizontal: Sizes.SPACING_LG }}>
+        <View style={{ backgroundColor: Colors.WHITE, paddingTop: 56, paddingBottom: 24, paddingHorizontal: Sizes.SPACING_LG, borderBottomWidth: 1, borderBottomColor: Colors.BORDER }}>
           {/* Progress segments */}
           <View style={{ flexDirection: "row", gap: 4, marginBottom: 16 }}>
             {[0, 1].map((i) => (
@@ -192,15 +192,15 @@ export default function RegisterScreen() {
                 key={i}
                 style={{
                   flex: 1, height: 3, borderRadius: 2,
-                  backgroundColor: i <= stepIndex ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.3)",
+                  backgroundColor: i <= stepIndex ? Colors.PRIMARY : Colors.BORDER,
                 }}
               />
             ))}
           </View>
-          <Text style={{ fontSize: 26, fontWeight: "800", color: Colors.WHITE }}>
+          <Text style={{ fontSize: 26, fontWeight: "800", color: Colors.SECONDARY }}>
             {step === "role" ? t.register_step_role_title : t.register_step_details_title}
           </Text>
-          <Text style={{ color: Colors.WHITE, opacity: 0.8, marginTop: 4, fontSize: 14 }}>
+          <Text style={{ color: Colors.TEXT_MUTED, marginTop: 4, fontSize: 14 }}>
             {step === "role" ? t.register_step_role_sub : t.register_step_details_sub}
           </Text>
         </View>

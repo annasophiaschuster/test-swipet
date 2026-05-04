@@ -27,17 +27,19 @@ export default function GradientHeader({
   return (
     <View
       style={{
-        backgroundColor: Colors.SECONDARY,
+        backgroundColor: Colors.WHITE,
         paddingTop: 56,
         paddingBottom: 18,
         paddingHorizontal: Sizes.SPACING_LG,
+        borderBottomWidth: 1,
+        borderBottomColor: Colors.BORDER,
       }}
     >
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: showBack ? 6 : 0 }}>
         {showBack ? (
           <TouchableOpacity onPress={handleBack} style={{ flexDirection: "row", alignItems: "center", gap: 2 }}>
-            <Text style={{ color: Colors.WHITE, opacity: 0.9, fontSize: 15 }}>‹</Text>
-            <Text style={{ color: Colors.WHITE, opacity: 0.85, fontSize: 12, fontWeight: "500" }}> {resolvedBackLabel}</Text>
+            <Text style={{ color: Colors.SECONDARY, fontSize: 15 }}>‹</Text>
+            <Text style={{ color: Colors.SECONDARY, fontSize: 12, fontWeight: "500" }}> {resolvedBackLabel}</Text>
           </TouchableOpacity>
         ) : (
           <View />
@@ -48,14 +50,14 @@ export default function GradientHeader({
         style={{
           fontSize: 26,
           fontWeight: "800",
-          color: Colors.WHITE,
+          color: Colors.SECONDARY,
           marginTop: showBack ? 4 : 0,
         }}
       >
         {title}
       </Text>
       {subtitle && (
-        <Text style={{ color: Colors.WHITE, opacity: 0.85, marginTop: 4, fontSize: Sizes.FONT_SM }}>
+        <Text style={{ color: Colors.TEXT_MUTED, marginTop: 4, fontSize: Sizes.FONT_SM }}>
           {subtitle}
         </Text>
       )}
