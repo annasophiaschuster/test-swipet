@@ -19,6 +19,7 @@ import {
 import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
+import Slider from "@react-native-community/slider";
 import { supabase } from "../../lib/supabase";
 import { Colors } from "../../constants/colors";
 import { Sizes } from "../../constants/sizes";
@@ -186,7 +187,7 @@ function SwipeCard({
         opacity: likeOpacity, transform: [{ rotate: "-20deg" }],
       }}>
         <View style={{ borderWidth: 3, borderColor: "#7EB77F", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6, backgroundColor: "rgba(126,183,127,0.12)" }}>
-          <Text style={{ fontSize: 26, fontWeight: "900", color: "#7EB77F", letterSpacing: 2 }}>❤️ LIKE</Text>
+          <Text style={{ fontSize: 26, fontWeight: "900", color: "#7EB77F", letterSpacing: 2 }}>LIKE</Text>
         </View>
       </Animated.View>
 
@@ -196,7 +197,7 @@ function SwipeCard({
         opacity: nopeOpacity, transform: [{ rotate: "20deg" }],
       }}>
         <View style={{ borderWidth: 3, borderColor: "#E2858F", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6, backgroundColor: "rgba(226,133,143,0.12)" }}>
-          <Text style={{ fontSize: 26, fontWeight: "900", color: "#E2858F", letterSpacing: 2 }}>NOPE ✕</Text>
+          <Text style={{ fontSize: 26, fontWeight: "900", color: "#E2858F", letterSpacing: 2 }}>NOPE</Text>
         </View>
       </Animated.View>
 
@@ -208,23 +209,21 @@ function SwipeCard({
       }}>
         <View style={{ flex: 1, borderRadius: 24, overflow: "hidden", backgroundColor: Colors.WHITE }}>
 
-          {/* ── 1. HAUPTFOTO (oben) ── */}
-          <View style={{ height: PHOTO_H }}>
-            {photos[0] ? (
-              <Image source={{ uri: photos[0] }} style={{ width: CARD_W, height: PHOTO_H }} resizeMode="cover" />
-            ) : (
-              <View style={{ flex: 1, backgroundColor: Colors.SURFACE, alignItems: "center", justifyContent: "center" }}>
-                <Text style={{ fontSize: 72 }}>🐾</Text>
-              </View>
-            )}
-          </View>
-
-          {/* ── Scrollbarer Inhalt unter dem Foto ── */}
+          {/* ── Komplett scrollbarer Karteninhalt (inkl. Hauptfoto oben) ── */}
           <ScrollView
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom: 16 }}
             nestedScrollEnabled
           >
+            {/* ── 1. HAUPTFOTO (scrollt mit) ── */}
+            {photos[0] ? (
+              <Image source={{ uri: photos[0] }} style={{ width: CARD_W, height: PHOTO_H }} resizeMode="cover" />
+            ) : (
+              <View style={{ width: CARD_W, height: PHOTO_H, backgroundColor: Colors.SURFACE, alignItems: "center", justifyContent: "center" }}>
+                <Ionicons name="paw-outline" size={64} color={Colors.TEXT_MUTED} />
+              </View>
+            )}
+
             {/* ── 2. HUND: Name, Rasse, Geschlecht, Alter ── */}
             <View style={{
               flexDirection: "row", alignItems: "center", flexWrap: "wrap",
@@ -276,7 +275,10 @@ function SwipeCard({
                     <Text style={{ fontSize: 13, color: Colors.TEXT_MUTED }}>{owner.alter}</Text>
                   )}
                 </View>
-                <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED }}>📍 {owner.stadt}</Text>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
+                  <Ionicons name="location-outline" size={11} color={Colors.TEXT_MUTED} />
+                  <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED }}>{owner.stadt}</Text>
+                </View>
                 {owner.interessen.length > 0 && (
                   <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 4, marginTop: 3 }}>
                     {owner.interessen.slice(0, 3).map((tag) => (
@@ -437,7 +439,10 @@ function SwipeCard({
                 <Text style={{ fontSize: 26, fontWeight: "900", color: Colors.TEXT }}>{owner.name}</Text>
                 {owner.alter > 0 && <Text style={{ fontSize: 18, color: Colors.TEXT_MUTED }}>{owner.alter}</Text>}
               </View>
-              <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED, marginBottom: 20 }}>📍 {owner.stadt}</Text>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 20 }}>
+                <Ionicons name="location-outline" size={13} color={Colors.TEXT_MUTED} />
+                <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED }}>{owner.stadt}</Text>
+              </View>
               {owner.bio && (
                 <Text style={{ fontSize: 15, color: Colors.TEXT, lineHeight: 23, fontStyle: "italic", textAlign: "center", marginBottom: 24 }}>
                   „{owner.bio}"
@@ -807,7 +812,8 @@ export interface GassiFilterState {
   groesse: string[];
   aktivitaetslevel: string[];
   maxAlterJahre: number;
-  besitzerAlterGruppe: string[];
+  besitzerAlterMin: number;
+  besitzerAlterMax: number;
   besitzerGeschlecht: "alle" | "männlich" | "weiblich";
   umkreis: number;
 }
@@ -816,14 +822,11 @@ export const DEFAULT_GASSI_FILTER: GassiFilterState = {
   groesse: [],
   aktivitaetslevel: [],
   maxAlterJahre: 15,
-  besitzerAlterGruppe: [],
+  besitzerAlterMin: 18,
+  besitzerAlterMax: 80,
   besitzerGeschlecht: "alle",
   umkreis: 100,
 };
-
-
-const ALTER_OPTIONS_LIST = [1, 2, 3, 5, 8, 15];
-const UMKREIS_OPTIONS_LIST = [5, 10, 25, 50, 100];
 
 function GassiFilterModal({
   visible, filter, onApply, onClose,
@@ -834,9 +837,8 @@ function GassiFilterModal({
   onClose: () => void;
 }) {
   const { t } = useLanguage();
-  const GROESSE_LABEL: Record<string, string> = {
-    klein: t.gassi_size_small, mittel: t.gassi_size_medium,
-    gross: t.gassi_size_large, riese: t.gassi_size_giant,
+  const GROESSE_LABEL_PLAIN: Record<string, string> = {
+    klein: "Klein", mittel: "Mittel", gross: "Groß", riese: "Riese",
   };
   const AKTIV_LABEL: Record<string, string> = {
     ruhig: t.gassi_activity_calm, mittel: t.gassi_activity_medium, sportlich: t.gassi_activity_very,
@@ -857,15 +859,22 @@ function GassiFilterModal({
       style={{
         paddingHorizontal: 14, paddingVertical: 8,
         borderRadius: Sizes.RADIUS_FULL, borderWidth: 1.5,
-        borderColor: selected ? Colors.SECONDARY : Colors.BORDER,
-        backgroundColor: selected ? Colors.SECONDARY + "15" : Colors.SURFACE,
+        borderColor: selected ? Colors.PRIMARY : Colors.BORDER,
+        backgroundColor: selected ? Colors.PRIMARY + "18" : Colors.SURFACE,
         marginRight: 8, marginBottom: 8,
       }}
     >
-      <Text style={{ fontSize: 13, fontWeight: selected ? "600" : "400", color: selected ? Colors.SECONDARY : Colors.TEXT }}>
+      <Text style={{ fontSize: 13, fontWeight: selected ? "600" : "400", color: selected ? Colors.PRIMARY : Colors.TEXT }}>
         {label}
       </Text>
     </TouchableOpacity>
+  );
+
+  const SectionTitle = ({ children }: { children: React.ReactNode }) => (
+    <Text style={{ fontSize: 15, fontWeight: "700", color: Colors.TEXT, marginBottom: 6 }}>{children}</Text>
+  );
+  const ValueLabel = ({ children }: { children: React.ReactNode }) => (
+    <Text style={{ fontSize: 13, color: Colors.TEXT_MUTED, marginBottom: 4 }}>{children}</Text>
   );
 
   return (
@@ -879,58 +888,103 @@ function GassiFilterModal({
           <TouchableOpacity onPress={() => setLocal(DEFAULT_GASSI_FILTER)}>
             <Text style={{ color: Colors.TEXT_MUTED, fontSize: 13 }}>{t.filter_reset}</Text>
           </TouchableOpacity>
-          <Text style={{ fontSize: 17, fontWeight: "700", color: Colors.TEXT }}>{`${t.gassi_mode_gassi} ${t.filter_title}`}</Text>
-          <TouchableOpacity onPress={onClose}>
-            <Text style={{ fontSize: 22, color: Colors.TEXT_MUTED }}>✕</Text>
+          <Text style={{ fontSize: 17, fontWeight: "700", color: Colors.TEXT }}>{t.filter_title}</Text>
+          <TouchableOpacity onPress={onClose} style={{ padding: 4 }}>
+            <Ionicons name="close" size={22} color={Colors.TEXT_MUTED} />
           </TouchableOpacity>
         </View>
 
         <ScrollView contentContainerStyle={{ padding: Sizes.SPACING_LG }}>
-          <Text style={{ fontSize: 15, fontWeight: "700", color: Colors.TEXT, marginBottom: 8 }}>{t.filter_dog_size}</Text>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", marginBottom: 20 }}>
+
+          {/* ── 1. UMKREIS (oben, wichtigster) ── */}
+          <SectionTitle>Umkreis</SectionTitle>
+          <ValueLabel>
+            {local.umkreis >= 100 ? "Unbegrenzt" : `${local.umkreis} km`}
+          </ValueLabel>
+          <Slider
+            style={{ width: "100%", height: 40, marginBottom: 22 }}
+            minimumValue={1}
+            maximumValue={100}
+            step={1}
+            value={local.umkreis}
+            onValueChange={(v) => setLocal({ ...local, umkreis: Math.round(v) })}
+            minimumTrackTintColor={Colors.PRIMARY}
+            maximumTrackTintColor={Colors.BORDER}
+            thumbTintColor={Colors.PRIMARY}
+          />
+
+          {/* ── 2. HUNDEGRÖSSE (ohne kg) ── */}
+          <SectionTitle>Hundegröße</SectionTitle>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", marginBottom: 22 }}>
             {GROESSE_OPTIONS.map((g) => (
-              <Pill key={g} label={GROESSE_LABEL[g]} selected={local.groesse.includes(g)} onPress={() => toggleArr("groesse", g)} />
+              <Pill key={g} label={GROESSE_LABEL_PLAIN[g]} selected={local.groesse.includes(g)} onPress={() => toggleArr("groesse", g)} />
             ))}
           </View>
 
-          <Text style={{ fontSize: 15, fontWeight: "700", color: Colors.TEXT, marginBottom: 8 }}>{t.filter_dog_activity}</Text>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", marginBottom: 20 }}>
+          {/* ── 3. AKTIVITÄTSLEVEL (ohne Emojis) ── */}
+          <SectionTitle>Aktivitätslevel</SectionTitle>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", marginBottom: 22 }}>
             {AKTIV_OPTIONS.map((a) => (
               <Pill key={a} label={AKTIV_LABEL[a]} selected={local.aktivitaetslevel.includes(a)} onPress={() => toggleArr("aktivitaetslevel", a)} />
             ))}
           </View>
 
-          <Text style={{ fontSize: 15, fontWeight: "700", color: Colors.TEXT, marginBottom: 4 }}>{t.filter_max_dog_age}</Text>
-          <Text style={{ fontSize: 13, color: Colors.TEXT_MUTED, marginBottom: 10 }}>
-            {`${t.filter_up_to} ${local.maxAlterJahre === 15 ? "15+" : local.maxAlterJahre} ${t.filter_years}`}
-          </Text>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", marginBottom: 20 }}>
-            {ALTER_OPTIONS_LIST.map((a) => (
-              <Pill key={a} label={a === 15 ? "15+" : `${a} ${t.filter_years_abbr}`} selected={local.maxAlterJahre === a} onPress={() => setLocal({ ...local, maxAlterJahre: a })} />
-            ))}
-          </View>
+          {/* ── 4. ALTER HUND (Slider) ── */}
+          <SectionTitle>Alter des Hundes</SectionTitle>
+          <ValueLabel>
+            {local.maxAlterJahre >= 15 ? "Bis 15+ Jahre" : `Bis ${local.maxAlterJahre} ${local.maxAlterJahre === 1 ? "Jahr" : "Jahre"}`}
+          </ValueLabel>
+          <Slider
+            style={{ width: "100%", height: 40, marginBottom: 22 }}
+            minimumValue={1}
+            maximumValue={15}
+            step={1}
+            value={local.maxAlterJahre}
+            onValueChange={(v) => setLocal({ ...local, maxAlterJahre: Math.round(v) })}
+            minimumTrackTintColor={Colors.PRIMARY}
+            maximumTrackTintColor={Colors.BORDER}
+            thumbTintColor={Colors.PRIMARY}
+          />
 
-          <Text style={{ fontSize: 15, fontWeight: "700", color: Colors.TEXT, marginBottom: 8 }}>{t.filter_owner_age}</Text>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", marginBottom: 20 }}>
-            {["18–30", "30–50", "50+"].map((g) => (
-              <Pill key={g} label={g} selected={local.besitzerAlterGruppe.includes(g)} onPress={() => toggleArr("besitzerAlterGruppe", g)} />
-            ))}
-          </View>
+          {/* ── 5. ALTER BESITZER (Slider Min/Max) ── */}
+          <SectionTitle>Alter des Besitzers</SectionTitle>
+          <ValueLabel>{`${local.besitzerAlterMin} – ${local.besitzerAlterMax >= 80 ? "80+" : local.besitzerAlterMax} Jahre`}</ValueLabel>
+          <Text style={{ fontSize: 11, color: Colors.TEXT_MUTED, marginTop: 2 }}>Mindestalter</Text>
+          <Slider
+            style={{ width: "100%", height: 40 }}
+            minimumValue={18}
+            maximumValue={80}
+            step={1}
+            value={local.besitzerAlterMin}
+            onValueChange={(v) => {
+              const min = Math.round(v);
+              setLocal((prev) => ({ ...prev, besitzerAlterMin: min, besitzerAlterMax: Math.max(min, prev.besitzerAlterMax) }));
+            }}
+            minimumTrackTintColor={Colors.PRIMARY}
+            maximumTrackTintColor={Colors.BORDER}
+            thumbTintColor={Colors.PRIMARY}
+          />
+          <Text style={{ fontSize: 11, color: Colors.TEXT_MUTED, marginTop: 2 }}>Höchstalter</Text>
+          <Slider
+            style={{ width: "100%", height: 40, marginBottom: 22 }}
+            minimumValue={18}
+            maximumValue={80}
+            step={1}
+            value={local.besitzerAlterMax}
+            onValueChange={(v) => {
+              const max = Math.round(v);
+              setLocal((prev) => ({ ...prev, besitzerAlterMax: max, besitzerAlterMin: Math.min(prev.besitzerAlterMin, max) }));
+            }}
+            minimumTrackTintColor={Colors.PRIMARY}
+            maximumTrackTintColor={Colors.BORDER}
+            thumbTintColor={Colors.PRIMARY}
+          />
 
-          <Text style={{ fontSize: 15, fontWeight: "700", color: Colors.TEXT, marginBottom: 8 }}>{t.filter_owner_gender}</Text>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", marginBottom: 20 }}>
+          {/* ── 6. GESCHLECHT BESITZER ── */}
+          <SectionTitle>Geschlecht des Besitzers</SectionTitle>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", marginBottom: 8 }}>
             {[{ k: "alle", l: t.filter_gender_all }, { k: "männlich", l: t.filter_gender_male }, { k: "weiblich", l: t.filter_gender_female }].map(({ k, l }) => (
               <Pill key={k} label={l} selected={local.besitzerGeschlecht === k} onPress={() => setLocal({ ...local, besitzerGeschlecht: k as any })} />
-            ))}
-          </View>
-
-          <Text style={{ fontSize: 15, fontWeight: "700", color: Colors.TEXT, marginBottom: 4 }}>{t.filter_radius}</Text>
-          <Text style={{ fontSize: 13, color: Colors.TEXT_MUTED, marginBottom: 10 }}>
-            {local.umkreis === 100 ? t.filter_radius_unlimited : `${local.umkreis} km`}
-          </Text>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", marginBottom: 20 }}>
-            {UMKREIS_OPTIONS_LIST.map((u) => (
-              <Pill key={u} label={u === 100 ? t.filter_radius_all : `${u} km`} selected={local.umkreis === u} onPress={() => setLocal({ ...local, umkreis: u })} />
             ))}
           </View>
         </ScrollView>
@@ -939,7 +993,7 @@ function GassiFilterModal({
           <TouchableOpacity
             onPress={() => { onApply(local); onClose(); }}
             style={{
-              height: Sizes.BUTTON_HEIGHT, backgroundColor: Colors.SECONDARY,
+              height: Sizes.BUTTON_HEIGHT, backgroundColor: Colors.PRIMARY,
               borderRadius: Sizes.RADIUS_FULL, alignItems: "center", justifyContent: "center",
             }}
           >
@@ -1246,7 +1300,7 @@ export default function GassiFeed() {
           <Text style={{ fontSize: 12, color: "rgba(255,255,255,0.85)", fontWeight: "500" }}> {t.gassi_feed_back}</Text>
         </TouchableOpacity>
 
-        <Text style={{ fontSize: 16, fontWeight: "700", color: Colors.WHITE }}>{t.gassi_mode_gassi}</Text>
+        <View style={{ flex: 1 }} />
 
         {/* Right side: Hunde + Filter */}
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
@@ -1254,13 +1308,13 @@ export default function GassiFeed() {
             <TouchableOpacity
               onPress={() => setHundeModalVisible(true)}
               style={{
-                paddingHorizontal: 10, paddingVertical: 7,
+                paddingHorizontal: 12, paddingVertical: 7,
                 borderRadius: Sizes.RADIUS_FULL,
                 backgroundColor: "rgba(255,255,255,0.25)",
-                flexDirection: "row", alignItems: "center", gap: 4,
+                flexDirection: "row", alignItems: "center", gap: 5,
               }}
             >
-              <Text style={{ fontSize: 13 }}>🐕</Text>
+              <Ionicons name="paw" size={13} color={Colors.WHITE} />
               <Text style={{ color: Colors.WHITE, fontWeight: "600", fontSize: 11 }}>
                 {myDogs.find((d) => d.id === activeDogId)?.name ?? t.gassi_dogs_modal_title}
               </Text>
@@ -1269,13 +1323,13 @@ export default function GassiFeed() {
           <TouchableOpacity
             onPress={() => setFilterVisible(true)}
             style={{
-              paddingHorizontal: 10, paddingVertical: 7,
+              paddingHorizontal: 12, paddingVertical: 7,
               borderRadius: Sizes.RADIUS_FULL,
               backgroundColor: "rgba(255,255,255,0.25)",
-              flexDirection: "row", alignItems: "center", gap: 4,
+              flexDirection: "row", alignItems: "center", gap: 5,
             }}
           >
-            <Text style={{ fontSize: 13 }}>⚙️</Text>
+            <Ionicons name="options-outline" size={14} color={Colors.WHITE} />
             <Text style={{ color: Colors.WHITE, fontWeight: "600", fontSize: 11 }}>Filter</Text>
           </TouchableOpacity>
         </View>
@@ -1284,7 +1338,7 @@ export default function GassiFeed() {
       {/* Empty */}
       {partnerCards.length === 0 && (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32 }}>
-          <Text style={{ fontSize: 64, marginBottom: 16 }}>🐾</Text>
+          <Ionicons name="paw-outline" size={56} color={Colors.TEXT_MUTED} style={{ marginBottom: 16 }} />
           <Text style={{ fontSize: Sizes.FONT_XL, fontWeight: "700", color: Colors.TEXT, textAlign: "center", marginBottom: 8 }}>
             {t.gassi_feed_no_partners}
           </Text>
@@ -1335,7 +1389,7 @@ export default function GassiFeed() {
             backgroundColor: Colors.WHITE, borderRadius: 28, padding: 32,
             alignItems: "center", width: "82%", transform: [{ scale: matchScale }],
           }}>
-            <Text style={{ fontSize: 52, marginBottom: 8 }}>🎉</Text>
+            <Ionicons name="heart" size={48} color={Colors.PRIMARY} style={{ marginBottom: 8 }} />
             <Text style={{ fontSize: 28, fontWeight: "800", color: Colors.SECONDARY, marginBottom: 4 }}>Match!</Text>
             {matchCard?.photos[0] && (
               <Image source={{ uri: matchCard.photos[0] }} style={{ width: 100, height: 100, borderRadius: 50, marginVertical: 16, borderWidth: 3, borderColor: Colors.SECONDARY }} />
