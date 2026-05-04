@@ -19,7 +19,7 @@ function TabIcon({ icon, focused }: { icon: keyof typeof ICONS; focused: boolean
         style={{
           width: 32,
           height: 32,
-          tintColor: focused ? Colors.SECONDARY : Colors.PRIMARY,
+          tintColor: focused ? Colors.PRIMARY : Colors.SECONDARY,
         }}
         resizeMode="contain"
       />
@@ -46,8 +46,8 @@ export default function AdoptionLayout() {
           elevation: 8,
         },
         tabBarItemStyle: { flex: 1 },
-        tabBarActiveTintColor: Colors.SECONDARY,
-        tabBarInactiveTintColor: Colors.PRIMARY,
+        tabBarActiveTintColor: Colors.PRIMARY,
+        tabBarInactiveTintColor: Colors.SECONDARY,
       }}
     >
       <Tabs.Screen

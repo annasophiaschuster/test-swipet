@@ -13,7 +13,7 @@ function TabIcon({ emoji, label, focused }: { emoji: string; label: string; focu
         style={{
           fontSize: 10,
           marginTop: 2,
-          color: focused ? Colors.PRIMARY : Colors.TEXT_MUTED,
+          color: focused ? Colors.PRIMARY : Colors.SECONDARY,
           fontWeight: focused ? "600" : "400",
         }}
       >
@@ -44,7 +44,7 @@ export default function TabsLayout() {
         },
         tabBarItemStyle: { flex: 1 },
         tabBarActiveTintColor: Colors.PRIMARY,
-        tabBarInactiveTintColor: Colors.TEXT_MUTED,
+        tabBarInactiveTintColor: Colors.SECONDARY,
       }}
     >
       <Tabs.Screen

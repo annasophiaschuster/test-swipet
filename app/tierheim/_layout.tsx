@@ -12,7 +12,7 @@ function TabIcon({ source, focused }: { source: any; focused: boolean }) {
           width: 32,
           height: 32,
           resizeMode: "contain",
-          tintColor: focused ? Colors.SECONDARY : Colors.PRIMARY,
+          tintColor: focused ? Colors.PRIMARY : Colors.SECONDARY,
         }}
       />
     </View>
@@ -39,7 +39,7 @@ export default function TierheimLayout() {
         },
         tabBarItemStyle: { flex: 1 },
         tabBarActiveTintColor: Colors.PRIMARY,
-        tabBarInactiveTintColor: Colors.TEXT_MUTED,
+        tabBarInactiveTintColor: Colors.SECONDARY,
       }}
     >
       <Tabs.Screen

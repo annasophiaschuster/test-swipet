@@ -11,7 +11,7 @@ function TabIcon({ source, focused }: { source: any; focused: boolean }) {
         style={{
           width: 32,
           height: 32,
-          tintColor: focused ? Colors.SECONDARY : Colors.PRIMARY,
+          tintColor: focused ? Colors.PRIMARY : Colors.SECONDARY,
         }}
         resizeMode="contain"
       />
@@ -38,8 +38,8 @@ export default function GassiLayout() {
           elevation: 8,
         },
         tabBarItemStyle: { flex: 1 },
-        tabBarActiveTintColor: Colors.SECONDARY,
-        tabBarInactiveTintColor: Colors.TEXT_MUTED,
+        tabBarActiveTintColor: Colors.PRIMARY,
+        tabBarInactiveTintColor: Colors.SECONDARY,
       }}
     >
       <Tabs.Screen
