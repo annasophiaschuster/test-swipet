@@ -104,7 +104,6 @@ function SwipeCard({
   const AKTIV_LABEL: Record<string, string> = {
     ruhig: t.gassi_activity_calm, mittel: t.gassi_activity_medium, sportlich: t.gassi_activity_very,
   };
-  const [photoIndex, setPhotoIndex]   = useState(0);
   const [profileOpen, setProfileOpen] = useState(false);
   const photos = card.photos.length > 0 ? card.photos : [];
 
@@ -209,41 +208,13 @@ function SwipeCard({
       }}>
         <View style={{ flex: 1, borderRadius: 24, overflow: "hidden", backgroundColor: Colors.WHITE }}>
 
-          {/* ── 1. HUNDEFOTOS (fixed height) ── */}
-          <View style={{ height: PHOTO_H, position: "relative" }}>
-            {photos.length > 0 ? (
-              <ScrollView
-                horizontal pagingEnabled scrollEnabled
-                showsHorizontalScrollIndicator={false}
-                style={{ flex: 1 }}
-                onMomentumScrollEnd={(e) =>
-                  setPhotoIndex(Math.round(e.nativeEvent.contentOffset.x / CARD_W))
-                }
-              >
-                {photos.map((url, i) => (
-                  <Image key={i} source={{ uri: url }} style={{ width: CARD_W, height: PHOTO_H }} resizeMode="cover" />
-                ))}
-              </ScrollView>
+          {/* ── 1. HAUPTFOTO (oben) ── */}
+          <View style={{ height: PHOTO_H }}>
+            {photos[0] ? (
+              <Image source={{ uri: photos[0] }} style={{ width: CARD_W, height: PHOTO_H }} resizeMode="cover" />
             ) : (
               <View style={{ flex: 1, backgroundColor: Colors.SURFACE, alignItems: "center", justifyContent: "center" }}>
                 <Text style={{ fontSize: 72 }}>🐾</Text>
-              </View>
-            )}
-
-            {/* Foto-Punkte unten */}
-            {photos.length > 1 && (
-              <View style={{
-                position: "absolute", bottom: 10, left: 0, right: 0,
-                flexDirection: "row", justifyContent: "center", gap: 5,
-              }}>
-                {photos.map((_, i) => (
-                  <View key={i} style={{
-                    width: i === photoIndex ? 8 : 5,
-                    height: i === photoIndex ? 8 : 5,
-                    borderRadius: 5,
-                    backgroundColor: i === photoIndex ? "#fff" : "rgba(255,255,255,0.5)",
-                  }} />
-                ))}
               </View>
             )}
           </View>
@@ -321,7 +292,20 @@ function SwipeCard({
               <Ionicons name="chevron-forward-circle-outline" size={22} color={Colors.TEXT_MUTED} />
             </TouchableOpacity>
 
-            {/* ── 4. RESTLICHE HUNDEEIGENSCHAFTEN ── */}
+            {/* ── 4. ZWEITES HUNDEFOTO (zwischen Besitzer & Eigenschaften) ── */}
+            {photos[1] && (
+              <Image
+                source={{ uri: photos[1] }}
+                style={{
+                  width: CARD_W - 24, height: Math.round(CARD_W * 0.55),
+                  marginHorizontal: 12, marginBottom: 14, borderRadius: 16,
+                  backgroundColor: Colors.SURFACE,
+                }}
+                resizeMode="cover"
+              />
+            )}
+
+            {/* ── 5. RESTLICHE HUNDEEIGENSCHAFTEN ── */}
             <View style={{ paddingHorizontal: 12, gap: 10 }}>
               {/* Eigenschaften-Chips */}
               <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}>
@@ -374,6 +358,19 @@ function SwipeCard({
                 </Text>
               )}
             </View>
+
+            {/* ── 6. DRITTES HUNDEFOTO (Abschluss am Ende der Karte) ── */}
+            {photos[2] && (
+              <Image
+                source={{ uri: photos[2] }}
+                style={{
+                  width: CARD_W, height: Math.round(CARD_W * 0.65),
+                  marginTop: 14,
+                  backgroundColor: Colors.SURFACE,
+                }}
+                resizeMode="cover"
+              />
+            )}
           </ScrollView>
         </View>
       </View>

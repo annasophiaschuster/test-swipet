@@ -23,7 +23,7 @@ export async function registerForPushNotificationsAsync(): Promise<string | null
       name: "Swipet",
       importance: Notifications.AndroidImportance.MAX,
       vibrationPattern: [0, 250, 250, 250],
-      lightColor: "#E27289",
+      lightColor: "#CC96C1",
     });
   }
 

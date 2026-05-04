@@ -124,7 +124,7 @@ export default function LoginScreen() {
     >
       {/* Full-screen gradient */}
       <LinearGradient
-        colors={["#F0956A", "#E27289"]}
+        colors={["#82667F", "#CC96C1"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         style={StyleSheet.absoluteFill}

@@ -85,7 +85,7 @@ export default function InfoScreen() {
         {/* ── 1. LIVE COUNTER ─────────────────────────────────────── */}
         <View style={{
           margin: 20,
-          backgroundColor: "#FFF5F7",
+          backgroundColor: "#F7F0F7",
           borderRadius: 24,
           paddingVertical: 32,
           paddingHorizontal: 24,
@@ -149,7 +149,7 @@ export default function InfoScreen() {
               onPress={() => setFaqOpen(faqOpen === i ? null : i)}
               activeOpacity={0.75}
               style={{
-                backgroundColor: faqOpen === i ? "#FFF5F7" : Colors.SURFACE,
+                backgroundColor: faqOpen === i ? "#F7F0F7" : Colors.SURFACE,
                 borderRadius: 16,
                 borderWidth: 1,
                 borderColor: faqOpen === i ? Colors.PRIMARY + "50" : Colors.BORDER,

@@ -57,7 +57,7 @@ function timeLabel(iso: string | null, lang: string): string {
   return d.toLocaleDateString(locale, { day: "2-digit", month: "2-digit" });
 }
 
-const AVATAR_COLORS = ["#E27289", "#5BBF8A", "#5A9EE0", "#F4A261", "#9B72CF", "#E2A27A"];
+const AVATAR_COLORS = ["#CC96C1", "#5BBF8A", "#5A9EE0", "#F4A261", "#9B72CF", "#E2A27A"];
 
 function InitialsAvatar({ name }: { name: string | null }) {
   const letters = (name ?? "?")

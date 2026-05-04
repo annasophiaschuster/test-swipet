@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Swipet – Farbvorschau</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  /* ── Neue Grün-Palette ── */
+  :root {
+    --primary:     #9BDEAC;
+    --secondary:   #157A6E;
+    --bg:          #FFFFFF;
+    --surface:     #F0FAF3;
+    --text:        #1A2E2A;
+    --muted:       #6B8A7F;
+    --success:     #157A6E;
+    --warning:     #FFD12F;
+    --error:       #E53E3E;
+    --border:      #D4EFD9;
+    --white:       #FFFFFF;
+  }
+
+  body {
+    background: #ECECE8;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+    gap: 32px;
+  }
+
+  h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #333;
+    text-align: center;
+  }
+
+  .palette-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 700px;
+  }
+  .swatch {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .swatch-circle {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: 2px solid rgba(0,0,0,0.08);
+  }
+  .swatch-label {
+    font-size: 10px;
+    color: #555;
+    font-weight: 600;
+    text-align: center;
+  }
+
+  .screens-row {
+    display: flex;
+    gap: 28px;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-start;
+  }
+
+  /* ── Phone Frame ── */
+  .phone {
+    width: 320px;
+    height: 640px;
+    background: var(--bg);
+    border-radius: 40px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    border: 6px solid #1A1A1A;
+  }
+  .phone-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #555;
+    text-align: center;
+    margin-bottom: 8px;
+  }
+
+  /* ── Gradient Header ── */
+  .header {
+    background: linear-gradient(90deg, var(--secondary), var(--primary));
+    padding: 44px 20px 16px;
+    flex-shrink: 0;
+  }
+  .header-title {
+    color: white;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+  }
+  .header-sub {
+    color: rgba(255,255,255,0.75);
+    font-size: 12px;
+    margin-top: 2px;
+  }
+  .header-btn {
+    background: rgba(255,255,255,0.25);
+    border-radius: 99px;
+    padding: 5px 13px;
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-block;
+  }
+  .header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  /* ── Feed / Swipe Card Screen ── */
+  .scroll-area { flex: 1; overflow: hidden; background: var(--bg); }
+
+  .swipe-card {
+    margin: 12px;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+    overflow: hidden;
+  }
+  .card-photo {
+    height: 200px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    padding: 12px;
+  }
+  .card-photo-dog {
+    font-size: 72px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -60%);
+    opacity: 0.35;
+  }
+  .shelter-badge {
+    background: rgba(0,0,0,0.45);
+    color: white;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 99px;
+  }
+  .card-body { padding: 14px; }
+  .card-name { font-size: 22px; font-weight: 800; color: var(--text); }
+  .card-sub { font-size: 12px; color: var(--muted); margin-top: 2px; margin-bottom: 10px; }
+  .tag-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+  .tag {
+    background: #F0FAF3;
+    border: 1px solid var(--border);
+    color: var(--secondary);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 99px;
+  }
+  .pill-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .pill {
+    display: flex; align-items: center; gap: 4px;
+    background: #F0FAF3;
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    padding: 3px 8px;
+    font-size: 10px;
+    color: var(--secondary);
+    font-weight: 500;
+  }
+  .btn-row { display: flex; gap: 10px; padding: 14px 12px 12px; }
+  .btn-nope {
+    flex: 1; height: 46px; border-radius: 99px;
+    border: 2px solid var(--primary);
+    background: white;
+    color: var(--secondary);
+    font-size: 16px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .btn-like {
+    flex: 1; height: 46px; border-radius: 99px;
+    background: linear-gradient(90deg, var(--secondary), var(--primary));
+    color: white;
+    font-size: 16px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* ── Tab Bar ── */
+  .tabbar {
+    height: 68px;
+    background: white;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding-bottom: 8px;
+    flex-shrink: 0;
+  }
+  .tab {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+  }
+  .tab-icon {
+    width: 24px; height: 24px; background: var(--border); border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+  }
+  .tab-icon.active { background: #F0FAF3; }
+  .tab-label { font-size: 9px; color: var(--muted); font-weight: 500; }
+  .tab-label.active { color: var(--secondary); font-weight: 700; }
+  .tab-dot {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--secondary);
+    position: absolute;
+    bottom: -2px;
+  }
+
+  /* ── Profile Screen ── */
+  .profile-body { flex: 1; overflow: hidden; background: var(--bg); padding: 20px 16px; }
+  .avatar-wrap { display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; }
+  .avatar {
+    width: 76px; height: 76px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    border: 3px solid var(--primary);
+    margin-bottom: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 32px;
+  }
+  .avatar-name { font-size: 20px; font-weight: 700; color: var(--text); }
+  .role-badge {
+    margin-top: 6px;
+    background: #F0FAF3;
+    color: var(--secondary);
+    font-size: 11px; font-weight: 600;
+    padding: 3px 12px; border-radius: 99px;
+  }
+  .info-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+  .info-card-header {
+    background: var(--surface);
+    padding: 10px 14px;
+    font-size: 10px; font-weight: 700; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 1px;
+    border-bottom: 1px solid var(--border);
+  }
+  .info-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .info-row:last-child { border-bottom: none; }
+  .info-label { color: var(--muted); }
+  .info-val { font-weight: 600; color: var(--text); }
+  .logout-btn {
+    height: 44px;
+    border: 1.5px solid var(--primary);
+    border-radius: 99px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--secondary);
+    font-size: 14px; font-weight: 600;
+    margin-top: 4px;
+  }
+
+  /* ── Events Screen ── */
+  .events-body { flex: 1; overflow: hidden; background: var(--bg); padding: 10px 14px; display: flex; flex-direction: column; gap: 10px; }
+  .filter-row { display: flex; gap: 8px; }
+  .filter-chip {
+    padding: 5px 14px; border-radius: 99px;
+    font-size: 12px; font-weight: 700;
+    border: 1px solid var(--border);
+  }
+  .filter-chip.active {
+    background: var(--secondary);
+    color: white;
+    border-color: var(--secondary);
+  }
+  .filter-chip.inactive { background: var(--surface); color: var(--muted); }
+  .event-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  }
+  .event-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .event-date { font-size: 12px; font-weight: 700; color: var(--secondary); }
+  .event-time { font-size: 12px; color: var(--muted); }
+  .event-avatars { display: flex; }
+  .event-avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    border: 2px solid white;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+  }
+  .event-avatar:last-child { margin-left: -8px; background: #F0FAF3; }
+  .event-location { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+  .event-footer { display: flex; align-items: center; justify-content: space-between; }
+  .event-participants { font-size: 11px; color: var(--muted); }
+  .event-join-btn {
+    padding: 6px 16px; border-radius: 99px;
+    background: linear-gradient(90deg, var(--secondary), var(--primary));
+    color: white; font-size: 12px; font-weight: 700;
+  }
+  .event-leave-btn {
+    padding: 6px 16px; border-radius: 99px;
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--muted); font-size: 12px; font-weight: 700;
+  }
+  .joined-badge {
+    background: #E8F8ED;
+    color: var(--secondary);
+    font-size: 9px; font-weight: 700;
+    padding: 2px 8px; border-radius: 99px;
+  }
+
+  /* ── PropRow ── */
+  .prop-row {
+    display: flex; align-items: center; justify-content: space-between;
+    background: #F0FAF3;
+    border-radius: 10px; padding: 8px 12px; margin-bottom: 6px;
+  }
+  .prop-label { font-size: 12px; color: var(--text); font-weight: 500; }
+  .prop-val { font-size: 12px; font-weight: 700; color: var(--secondary); }
+
+  /* comparison toggle */
+  .toggle-area {
+    display: flex; justify-content: center; gap: 16px; flex-wrap: wrap;
+    max-width: 700px;
+  }
+  .toggle-btn {
+    padding: 10px 24px; border-radius: 99px;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    border: none; transition: all 0.2s;
+  }
+  .toggle-btn.green { background: #157A6E; color: white; }
+  .toggle-btn.pink  { background: #E27289; color: white; }
+  .compare-note { font-size: 12px; color: #777; text-align: center; }
+</style>
+</head>
+<body>
+
+<h1>🎨 Swipet — Farbvorschau</h1>
+
+<!-- Palette -->
+<div class="palette-row">
+  <div class="swatch"><div class="swatch-circle" style="background:#9BDEAC"></div><div class="swatch-label">PRIMARY<br>#9BDEAC</div></div>
+  <div class="swatch"><div class="swatch-circle" style="background:#157A6E"></div><div class="swatch-label">SECONDARY<br>#157A6E</div></div>
+  <div class="swatch"><div class="swatch-circle" style="background:#F0FAF3"></div><div class="swatch-label">SURFACE<br>#F0FAF3</div></div>
+  <div class="swatch"><div class="swatch-circle" style="background:#D4EFD9"></div><div class="swatch-label">BORDER<br>#D4EFD9</div></div>
+  <div class="swatch"><div class="swatch-circle" style="background:#1A2E2A"></div><div class="swatch-label">TEXT<br>#1A2E2A</div></div>
+  <div class="swatch"><div class="swatch-circle" style="background:#6B8A7F"></div><div class="swatch-label">MUTED<br>#6B8A7F</div></div>
+  <div class="swatch"><div class="swatch-circle" style="background:#FFD12F"></div><div class="swatch-label">WARNING<br>#FFD12F</div></div>
+  <div class="swatch"><div class="swatch-circle" style="background:#E53E3E"></div><div class="swatch-label">ERROR<br>#E53E3E</div></div>
+</div>
+
+<!-- Screens -->
+<div class="screens-row">
+
+  <!-- Screen 1: Swipe/Feed -->
+  <div>
+    <div class="phone-label">Hund entdecken</div>
+    <div class="phone">
+      <div class="header">
+        <div class="header-row">
+          <div class="header-title">Entdecken</div>
+          <div class="header-btn">Filter</div>
+        </div>
+      </div>
+      <div class="scroll-area">
+        <div class="swipe-card">
+          <div class="card-photo">
+            <div class="card-photo-dog">🐕</div>
+            <div class="shelter-badge">Tierheim München</div>
+          </div>
+          <div class="card-body">
+            <div class="card-name">Luna, 3 J. ♀</div>
+            <div class="card-sub">Labrador · Groß · München</div>
+            <div class="tag-row">
+              <div class="tag">verspielt</div>
+              <div class="tag">verschmust</div>
+              <div class="tag">familienfreundlich</div>
+            </div>
+            <div class="pill-row">
+              <div class="pill">Kein Garten nötig</div>
+              <div class="pill">Kinderfreundlich</div>
+              <div class="pill">Mittel aktiv</div>
+            </div>
+          </div>
+          <div style="padding: 0 14px;">
+            <div class="prop-row"><span class="prop-label">Kinderfreundlich</span><span class="prop-val">Ja</span></div>
+            <div class="prop-row"><span class="prop-label">Aktivität</span><span class="prop-val">Mittel aktiv</span></div>
+            <div class="prop-row"><span class="prop-label">Erfahrung</span><span class="prop-val">Einsteiger</span></div>
+          </div>
+          <div class="btn-row">
+            <div class="btn-nope">Nope</div>
+            <div class="btn-like">Like</div>
+          </div>
+        </div>
+      </div>
+      <div class="tabbar">
+        <div class="tab"><div class="tab-icon">🏠</div><div class="tab-label">Tierheime</div></div>
+        <div class="tab"><div class="tab-icon active" style="color:var(--secondary)">🐾</div><div class="tab-label active">Entdecken</div></div>
+        <div class="tab"><div class="tab-icon">💬</div><div class="tab-label">Chats</div></div>
+        <div class="tab"><div class="tab-icon">📅</div><div class="tab-label">Events</div></div>
+        <div class="tab"><div class="tab-icon">👤</div><div class="tab-label">Profil</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Screen 2: Events -->
+  <div>
+    <div class="phone-label">Walks & Events</div>
+    <div class="phone">
+      <div class="header">
+        <div class="header-title">Walks & Events</div>
+      </div>
+      <div style="padding: 10px 14px 6px; background: white; border-bottom: 1px solid var(--border);">
+        <div class="filter-row">
+          <div class="filter-chip active">Alle</div>
+          <div class="filter-chip inactive">Meine</div>
+        </div>
+      </div>
+      <div class="events-body">
+        <div class="event-card" style="border-color: #9BDEAC66;">
+          <div class="event-top">
+            <div>
+              <span class="event-date">Sa, 10.05.</span>
+              <span class="event-time" style="margin-left:8px">10:00 · 60 min</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="joined-badge">✓ Dabei</div>
+              <div class="event-avatars">
+                <div class="event-avatar">👤</div>
+                <div class="event-avatar">🐶</div>
+              </div>
+            </div>
+          </div>
+          <div class="event-location">📍 Alster, Hamburg</div>
+          <div class="event-footer">
+            <div class="event-participants">👥 5 / 12</div>
+            <div class="event-leave-btn">Verlassen</div>
+          </div>
+        </div>
+        <div class="event-card">
+          <div class="event-top">
+            <div>
+              <span class="event-date">Sa, 17.05.</span>
+              <span class="event-time" style="margin-left:8px">14:00 · 75 min</span>
+            </div>
+            <div class="event-avatars">
+              <div class="event-avatar">👤</div>
+              <div class="event-avatar">🐶</div>
+            </div>
+          </div>
+          <div class="event-location">📍 Zoopark, Düsseldorf</div>
+          <div class="event-footer">
+            <div class="event-participants">👥 3 / 10</div>
+            <div class="event-join-btn">Teilnehmen</div>
+          </div>
+        </div>
+        <div class="event-card">
+          <div class="event-top">
+            <div>
+              <span class="event-date">Sa, 24.05.</span>
+              <span class="event-time" style="margin-left:8px">11:00 · 90 min</span>
+            </div>
+            <div class="event-avatars">
+              <div class="event-avatar">👤</div>
+              <div class="event-avatar">🐶</div>
+            </div>
+          </div>
+          <div class="event-location">📍 Westpark, München</div>
+          <div class="event-footer">
+            <div class="event-participants">👥 8 / 15</div>
+            <div class="event-join-btn">Teilnehmen</div>
+          </div>
+        </div>
+      </div>
+      <div class="tabbar">
+        <div class="tab"><div class="tab-icon">🏠</div><div class="tab-label">Tierheime</div></div>
+        <div class="tab"><div class="tab-icon">🐾</div><div class="tab-label">Entdecken</div></div>
+        <div class="tab"><div class="tab-icon">💬</div><div class="tab-label">Chats</div></div>
+        <div class="tab"><div class="tab-icon active">📅</div><div class="tab-label active">Events</div></div>
+        <div class="tab"><div class="tab-icon">👤</div><div class="tab-label">Profil</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Screen 3: Profil -->
+  <div>
+    <div class="phone-label">Mein Profil</div>
+    <div class="phone">
+      <div class="header">
+        <div class="header-row">
+          <div class="header-title">Profil</div>
+          <div class="header-btn">Bearbeiten</div>
+        </div>
+      </div>
+      <div class="profile-body">
+        <div class="avatar-wrap">
+          <div class="avatar">🐾</div>
+          <div class="avatar-name">Sophia, 28</div>
+          <div class="role-badge">Hundeinteressent</div>
+        </div>
+        <div class="info-card">
+          <div class="info-card-header">Lebenssituation</div>
+          <div class="info-row"><span class="info-label">Ort</span><span class="info-val">München</span></div>
+          <div class="info-row"><span class="info-label">Wohnsituation</span><span class="info-val">Wohnung</span></div>
+          <div class="info-row"><span class="info-label">Lebenssituation</span><span class="info-val">Alleine</span></div>
+        </div>
+        <div class="info-card">
+          <div class="info-card-header">Erfahrung & Lifestyle</div>
+          <div class="info-row"><span class="info-label">Erfahrung</span><span class="info-val">Einsteiger</span></div>
+          <div class="info-row"><span class="info-label">Aktivität</span><span class="info-val">Mittel</span></div>
+          <div class="info-row"><span class="info-label">Arbeit</span><span class="info-val">Homeoffice</span></div>
+        </div>
+        <div class="logout-btn">Abmelden</div>
+      </div>
+      <div class="tabbar">
+        <div class="tab"><div class="tab-icon">🏠</div><div class="tab-label">Tierheime</div></div>
+        <div class="tab"><div class="tab-icon">🐾</div><div class="tab-label">Entdecken</div></div>
+        <div class="tab"><div class="tab-icon">💬</div><div class="tab-label">Chats</div></div>
+        <div class="tab"><div class="tab-icon">📅</div><div class="tab-label">Events</div></div>
+        <div class="tab"><div class="tab-icon active">👤</div><div class="tab-label active">Profil</div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Vergleich -->
+<div style="text-align:center; max-width:600px">
+  <div style="font-size:13px; color:#555; font-weight:600; margin-bottom:12px">Farbvergleich: aktuelles CI vs. neue Palette</div>
+  <div style="display:flex; gap:16px; justify-content:center; flex-wrap:wrap">
+    <div style="background:#E27289; color:white; padding:10px 24px; border-radius:99px; font-weight:700; font-size:14px">Aktuell Rosa #E27289</div>
+    <div style="font-size:20px; align-self:center">→</div>
+    <div style="background:#9BDEAC; color:#157A6E; padding:10px 24px; border-radius:99px; font-weight:700; font-size:14px">Neu Mint #9BDEAC</div>
+  </div>
+  <div style="display:flex; gap:16px; justify-content:center; flex-wrap:wrap; margin-top:10px">
+    <div style="background:#F0956A; color:white; padding:10px 24px; border-radius:99px; font-weight:700; font-size:14px">Aktuell Orange #F0956A</div>
+    <div style="font-size:20px; align-self:center">→</div>
+    <div style="background:#157A6E; color:white; padding:10px 24px; border-radius:99px; font-weight:700; font-size:14px">Neu Teal #157A6E</div>
+  </div>
+</div>
+
+</body>
+</html>

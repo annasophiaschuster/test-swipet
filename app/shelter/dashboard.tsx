@@ -152,7 +152,7 @@ export default function ShelterDashboard() {
 
       {/* Demo-Banner */}
       {isGuest && (
-        <View style={{ marginHorizontal: Sizes.SPACING_LG, marginTop: Sizes.SPACING_LG, padding: 14, backgroundColor: "#FFF8F0", borderRadius: 12, borderWidth: 1, borderColor: "#F0956A40", flexDirection: "row", alignItems: "center", gap: 10 }}>
+        <View style={{ marginHorizontal: Sizes.SPACING_LG, marginTop: Sizes.SPACING_LG, padding: 14, backgroundColor: "#F7F0F7", borderRadius: 12, borderWidth: 1, borderColor: "#82667F40", flexDirection: "row", alignItems: "center", gap: 10 }}>
           <Text style={{ fontSize: 18 }}>🔒</Text>
           <View style={{ flex: 1 }}>
             <Text style={{ fontSize: 13, fontWeight: "700", color: Colors.TEXT }}>{t.tierheim_dashboard_demo_title}</Text>

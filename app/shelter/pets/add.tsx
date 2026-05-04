@@ -20,7 +20,7 @@ import { pickMultipleImages, uploadImageToStorage } from "../../../lib/storage";
 // ─────────────────────────────────────────────
 // Constants
 // ─────────────────────────────────────────────
-const BRAND   = Colors.PRIMARY;   // #E27289
+const BRAND   = Colors.PRIMARY;   // #CC96C1
 const GREEN   = "#3B6D11";        // for Erfahrung active state
 const MAX_PHOTOS = 10;
 
@@ -674,7 +674,7 @@ const inputStyle = {
   fontSize: 15,
   color: "#2C2C2A",
   borderWidth: 1.5,
-  borderColor: "#F0E0E4",
+  borderColor: "#EAE0EA",
 };
 
 const textAreaStyle = {
@@ -686,7 +686,7 @@ const textAreaStyle = {
   fontSize: 15,
   color: "#2C2C2A",
   borderWidth: 1.5,
-  borderColor: "#F0E0E4",
+  borderColor: "#EAE0EA",
   textAlignVertical: "top" as const,
 };
 
@@ -695,7 +695,7 @@ const textAreaStyle = {
 // ─────────────────────────────────────────────
 
 function SectionDivider() {
-  return <View style={{ height: 1, backgroundColor: "#F0E0E4", marginTop: 28, marginBottom: 0 }} />;
+  return <View style={{ height: 1, backgroundColor: "#EAE0EA", marginTop: 28, marginBottom: 0 }} />;
 }
 
 function SectionLabel({ children }: { children: string }) {
@@ -744,7 +744,7 @@ function PillChip({
         paddingVertical: 9,
         borderRadius: 999,
         borderWidth: 1.5,
-        borderColor: selected ? color : "#F0E0E4",
+        borderColor: selected ? color : "#EAE0EA",
         backgroundColor: selected ? color : "#FFFFFF",
         alignItems: "center",
         justifyContent: "center",
@@ -779,7 +779,7 @@ function ToggleRow({
       justifyContent: "space-between",
       paddingVertical: 13,
       borderBottomWidth: last ? 0 : 1,
-      borderBottomColor: "#F0E0E4",
+      borderBottomColor: "#EAE0EA",
     }}>
       <Text style={{ fontSize: 15, color: "#2C2C2A", flex: 1, marginRight: 12 }}>{label}</Text>
       <Switch

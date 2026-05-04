@@ -210,7 +210,7 @@ export default function AdoptionNachrichten() {
                 paddingHorizontal: 14,
                 paddingVertical: 14,
                 borderRadius: 20,
-                backgroundColor: item.unread_count > 0 ? "#FFF0F5" : "#FFF5F7",
+                backgroundColor: item.unread_count > 0 ? "#F2E5F0" : "#F7F0F7",
                 shadowColor: Colors.PRIMARY,
                 shadowOffset: { width: 0, height: 2 },
                 shadowOpacity: 0.1,

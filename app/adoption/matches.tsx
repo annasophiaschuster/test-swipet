@@ -260,7 +260,7 @@ export default function AdoptionMatchesScreen() {
                   paddingHorizontal: 14,
                   paddingVertical: 14,
                   borderRadius: 20,
-                  backgroundColor: "#FFF5F7",
+                  backgroundColor: "#F7F0F7",
                   shadowColor: Colors.PRIMARY,
                   shadowOffset: { width: 0, height: 2 },
                   shadowOpacity: 0.12,

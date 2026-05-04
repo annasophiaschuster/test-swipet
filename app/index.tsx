@@ -186,7 +186,7 @@ export default function SplashLoginScreen() {
 
       {/* ── Full-screen gradient (visible above the card) ── */}
       <LinearGradient
-        colors={["#F0956A", "#E27289"]}
+        colors={["#82667F", "#CC96C1"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         style={StyleSheet.absoluteFill}
@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
   },
   langBtnActive:     { backgroundColor: "rgba(255,255,255,0.9)" },
   langBtnText:       { fontSize: 13, fontWeight: "600", color: "rgba(255,255,255,0.85)", letterSpacing: 0.5 },
-  langBtnTextActive: { color: "#E27289" },
+  langBtnTextActive: { color: "#CC96C1" },
 
   // ── Logo ─────────────────────────────────────────────────────────────────
   logoContainer: {
