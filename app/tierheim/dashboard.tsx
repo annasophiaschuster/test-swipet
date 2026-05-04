@@ -9,7 +9,6 @@ import {
   RefreshControl,
   Image,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
 import { supabase } from "../../lib/supabase";
 import { Colors } from "../../constants/colors";
@@ -272,12 +271,7 @@ export default function TierheimDashboard() {
       }
     >
       {/* Header with stats */}
-      <LinearGradient
-        colors={[Colors.SECONDARY, Colors.PRIMARY]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={{ paddingTop: 60, paddingHorizontal: Sizes.SPACING_LG, paddingBottom: 24 }}
-      >
+      <View style={{ backgroundColor: Colors.SECONDARY, paddingTop: 60, paddingHorizontal: Sizes.SPACING_LG, paddingBottom: 24 }}>
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
           <View>
             <Text style={{ color: Colors.WHITE, fontSize: 22, fontWeight: "800" }}>
@@ -304,7 +298,7 @@ export default function TierheimDashboard() {
           <StatCard value={stats?.reserviert ?? 0} label={t.tierheim_status_reserved} />
           <StatCard value={stats?.vermittelt ?? 0} label={t.tierheim_status_placed} />
         </View>
-      </LinearGradient>
+      </View>
 
       {/* Quick Actions */}
       <View style={{ padding: Sizes.SPACING_LG, paddingBottom: 8 }}>

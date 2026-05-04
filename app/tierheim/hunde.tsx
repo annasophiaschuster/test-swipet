@@ -10,7 +10,6 @@ import {
   Alert,
 } from "react-native";
 import { router, useFocusEffect } from "expo-router";
-import { LinearGradient } from "expo-linear-gradient";
 import { supabase } from "../../lib/supabase";
 import { Colors } from "../../constants/colors";
 import { Sizes } from "../../constants/sizes";

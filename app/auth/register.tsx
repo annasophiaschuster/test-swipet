@@ -15,7 +15,6 @@ import {
 } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Link, router } from "expo-router";
 import { supabase } from "../../lib/supabase";
@@ -185,12 +184,7 @@ export default function RegisterScreen() {
         style={{ flex: 1 }}
       >
         {/* ── Header ─────────────────────────────────────────────────────────── */}
-        <LinearGradient
-          colors={[Colors.SECONDARY, Colors.PRIMARY]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={{ paddingTop: 56, paddingBottom: 24, paddingHorizontal: Sizes.SPACING_LG }}
-        >
+        <View style={{ backgroundColor: Colors.SECONDARY, paddingTop: 56, paddingBottom: 24, paddingHorizontal: Sizes.SPACING_LG }}>
           {/* Progress segments */}
           <View style={{ flexDirection: "row", gap: 4, marginBottom: 16 }}>
             {[0, 1].map((i) => (
@@ -209,7 +203,7 @@ export default function RegisterScreen() {
           <Text style={{ color: Colors.WHITE, opacity: 0.8, marginTop: 4, fontSize: 14 }}>
             {step === "role" ? t.register_step_role_sub : t.register_step_details_sub}
           </Text>
-        </LinearGradient>
+        </View>
 
         {/* ── Scrollable Content ──────────────────────────────────────────────── */}
         <ScrollView

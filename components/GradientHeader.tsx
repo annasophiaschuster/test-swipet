@@ -1,5 +1,4 @@
 import { View, Text, TouchableOpacity } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { Colors } from "../constants/colors";
 import { Sizes } from "../constants/sizes";
@@ -26,11 +25,9 @@ export default function GradientHeader({
   const resolvedBackLabel = backLabel ?? t.comp_back;
   const handleBack = onBack ?? (() => router.back());
   return (
-    <LinearGradient
-      colors={[Colors.SECONDARY, Colors.PRIMARY]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
+    <View
       style={{
+        backgroundColor: Colors.SECONDARY,
         paddingTop: 56,
         paddingBottom: 18,
         paddingHorizontal: Sizes.SPACING_LG,
@@ -62,6 +59,6 @@ export default function GradientHeader({
           {subtitle}
         </Text>
       )}
-    </LinearGradient>
+    </View>
   );
 }

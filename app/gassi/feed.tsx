@@ -17,7 +17,6 @@ import {
   SafeAreaView,
 } from "react-native";
 import { router } from "expo-router";
-import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import Slider from "@react-native-community/slider";
 import { supabase } from "../../lib/supabase";
@@ -1282,11 +1281,9 @@ export default function GassiFeed() {
   return (
     <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
       {/* Header */}
-      <LinearGradient
-        colors={[Colors.SECONDARY, Colors.PRIMARY]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+      <View
         style={{
+          backgroundColor: Colors.SECONDARY,
           paddingTop: 56, paddingHorizontal: Sizes.SPACING_LG, paddingBottom: 14,
           flexDirection: "row", alignItems: "center", justifyContent: "space-between",
         }}
@@ -1333,7 +1330,7 @@ export default function GassiFeed() {
             <Text style={{ color: Colors.WHITE, fontWeight: "600", fontSize: 11 }}>Filter</Text>
           </TouchableOpacity>
         </View>
-      </LinearGradient>
+      </View>
 
       {/* Empty */}
       {partnerCards.length === 0 && (

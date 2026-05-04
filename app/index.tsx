@@ -13,7 +13,6 @@ import {
   Dimensions,
   Easing,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import Svg, { Path } from "react-native-svg";
 import { supabase } from "../lib/supabase";
@@ -184,13 +183,8 @@ export default function SplashLoginScreen() {
   return (
     <View style={{ flex: 1 }}>
 
-      {/* ── Full-screen gradient (visible above the card) ── */}
-      <LinearGradient
-        colors={["#82667F", "#CC96C1"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        style={StyleSheet.absoluteFill}
-      />
+      {/* ── Full-screen background ── */}
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: Colors.SECONDARY }]} />
 
       {/* ── Language toggle ── */}
       <View style={styles.langToggleContainer}>

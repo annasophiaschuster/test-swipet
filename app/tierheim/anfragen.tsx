@@ -15,7 +15,6 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-import { LinearGradient } from "expo-linear-gradient";
 import { router, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { supabase } from "../../lib/supabase";
@@ -319,13 +318,8 @@ export default function TierheimAnfragenScreen() {
   return (
     <SafeAreaView edges={["bottom"]} style={styles.safe}>
 
-      {/* Gradient header — title + dogs strip */}
-      <LinearGradient
-        colors={[Colors.SECONDARY, Colors.PRIMARY]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={[styles.gradientHeader, { paddingTop: insets.top }]}
-      >
+      {/* Header — title + dogs strip */}
+      <View style={[styles.gradientHeader, { backgroundColor: Colors.SECONDARY, paddingTop: insets.top }]}>
         {/* Title row */}
         <View style={styles.header}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flex: 1 }}>
@@ -458,7 +452,7 @@ export default function TierheimAnfragenScreen() {
           </ScrollView>
         )}
         </View>
-      </LinearGradient>
+      </View>
 
       {/* Divider */}
       <View style={styles.divider} />

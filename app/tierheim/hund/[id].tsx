@@ -11,7 +11,6 @@ import {
   Alert,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
-import { LinearGradient } from "expo-linear-gradient";
 import { supabase } from "../../../lib/supabase";
 import { Colors } from "../../../constants/colors";
 import { Sizes } from "../../../constants/sizes";
@@ -354,13 +353,8 @@ export default function HundDetailScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
-      {/* Gradient header */}
-      <LinearGradient
-        colors={[Colors.SECONDARY, Colors.PRIMARY]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={{ paddingTop: 56, paddingHorizontal: Sizes.SPACING_LG, paddingBottom: 20 }}
-      >
+      {/* Header */}
+      <View style={{ backgroundColor: Colors.SECONDARY, paddingTop: 56, paddingHorizontal: Sizes.SPACING_LG, paddingBottom: 20 }}>
         <TouchableOpacity
           onPress={() => router.back()}
           style={{ flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 10 }}
@@ -397,7 +391,7 @@ export default function HundDetailScreen() {
             );
           })}
         </View>
-      </LinearGradient>
+      </View>
 
       {/* Tab content */}
       {activeTab === "infos" && (
