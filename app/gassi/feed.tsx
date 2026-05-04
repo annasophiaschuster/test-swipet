@@ -24,8 +24,9 @@ import { Colors } from "../../constants/colors";
 import { Sizes } from "../../constants/sizes";
 import { useLanguage } from "../../contexts/LanguageContext";
 
-const { width: W } = Dimensions.get("window");
+const { width: W, height: H } = Dimensions.get("window");
 const CARD_W = W - 16; // Card has 8px margin each side
+const PHOTO_H = Math.round(H * 0.38); // Dog photo area height
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants & Labels
@@ -200,143 +201,208 @@ function SwipeCard({
         </View>
       </Animated.View>
 
-      {/* ── Visuelle Karte ── */}
+      {/* ── Visuelle Karte (shadow wrapper + clip wrapper) ── */}
       <View style={{
-        flex: 1, margin: 8, marginBottom: 4,
-        borderRadius: 24, backgroundColor: Colors.WHITE,
-        overflow: "hidden",
+        flex: 1, margin: 8, marginBottom: 4, borderRadius: 24,
         shadowColor: "#000", shadowOffset: { width: 0, height: 6 },
         shadowOpacity: 0.13, shadowRadius: 16, elevation: 8,
       }}>
+        <View style={{ flex: 1, borderRadius: 24, overflow: "hidden", backgroundColor: Colors.WHITE }}>
 
-        {/* ── 1. HUNDEFOTOS (60%) ── */}
-        <View style={{ flex: 6, position: "relative" }}>
-          {photos.length > 0 ? (
-            <ScrollView
-              horizontal
-              pagingEnabled
-              scrollEnabled
-              showsHorizontalScrollIndicator={false}
-              style={{ flex: 1 }}
-              onMomentumScrollEnd={(e) =>
-                setPhotoIndex(Math.round(e.nativeEvent.contentOffset.x / CARD_W))
-              }
-            >
-              {photos.map((url, i) => (
-                <Image
-                  key={i}
-                  source={{ uri: url }}
-                  style={{ width: CARD_W, height: "100%" }}
-                  resizeMode="cover"
-                />
-              ))}
-            </ScrollView>
-          ) : (
-            <View style={{ flex: 1, backgroundColor: Colors.SURFACE, alignItems: "center", justifyContent: "center" }}>
-              <Text style={{ fontSize: 72 }}>🐾</Text>
-            </View>
-          )}
+          {/* ── 1. HUNDEFOTOS (fixed height) ── */}
+          <View style={{ height: PHOTO_H, position: "relative" }}>
+            {photos.length > 0 ? (
+              <ScrollView
+                horizontal pagingEnabled scrollEnabled
+                showsHorizontalScrollIndicator={false}
+                style={{ flex: 1 }}
+                onMomentumScrollEnd={(e) =>
+                  setPhotoIndex(Math.round(e.nativeEvent.contentOffset.x / CARD_W))
+                }
+              >
+                {photos.map((url, i) => (
+                  <Image key={i} source={{ uri: url }} style={{ width: CARD_W, height: PHOTO_H }} resizeMode="cover" />
+                ))}
+              </ScrollView>
+            ) : (
+              <View style={{ flex: 1, backgroundColor: Colors.SURFACE, alignItems: "center", justifyContent: "center" }}>
+                <Text style={{ fontSize: 72 }}>🐾</Text>
+              </View>
+            )}
 
-          {/* Name + Rasse label oben links */}
-          <View style={{
-            position: "absolute", top: 14, left: 14,
-            backgroundColor: "rgba(0,0,0,0.48)", borderRadius: 10,
-            paddingHorizontal: 11, paddingVertical: 6,
-          }}>
-            <Text style={{ color: "#fff", fontWeight: "800", fontSize: 15 }}>{card.name}</Text>
-            {card.rasse && (
-              <Text style={{ color: "rgba(255,255,255,0.85)", fontSize: 11, marginTop: 1 }}>{card.rasse}</Text>
+            {/* Foto-Punkte unten */}
+            {photos.length > 1 && (
+              <View style={{
+                position: "absolute", bottom: 10, left: 0, right: 0,
+                flexDirection: "row", justifyContent: "center", gap: 5,
+              }}>
+                {photos.map((_, i) => (
+                  <View key={i} style={{
+                    width: i === photoIndex ? 8 : 5,
+                    height: i === photoIndex ? 8 : 5,
+                    borderRadius: 5,
+                    backgroundColor: i === photoIndex ? "#fff" : "rgba(255,255,255,0.5)",
+                  }} />
+                ))}
+              </View>
             )}
           </View>
 
-          {/* Foto-Punkte unten */}
-          {photos.length > 1 && (
+          {/* ── Scrollbarer Inhalt unter dem Foto ── */}
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 16 }}
+            nestedScrollEnabled
+          >
+            {/* ── 2. HUND: Name, Rasse, Geschlecht, Alter ── */}
             <View style={{
-              position: "absolute", bottom: 10, left: 0, right: 0,
-              flexDirection: "row", justifyContent: "center", gap: 5,
+              flexDirection: "row", alignItems: "center", flexWrap: "wrap",
+              paddingHorizontal: 14, paddingTop: 11, paddingBottom: 8, gap: 5,
             }}>
-              {photos.map((_, i) => (
-                <View key={i} style={{
-                  width: i === photoIndex ? 8 : 5,
-                  height: i === photoIndex ? 8 : 5,
-                  borderRadius: 5,
-                  backgroundColor: i === photoIndex ? "#fff" : "rgba(255,255,255,0.5)",
-                }} />
-              ))}
+              <Text style={{ fontSize: 20, fontWeight: "900", color: Colors.TEXT }}>{card.name}</Text>
+              {card.geschlecht === "maennlich" && (
+                <Text style={{ fontSize: 20, color: "#5B9BD5", fontWeight: "700" }}>♂</Text>
+              )}
+              {card.geschlecht === "weiblich" && (
+                <Text style={{ fontSize: 20, color: Colors.PRIMARY, fontWeight: "700" }}>♀</Text>
+              )}
+              {card.alter_jahre != null && (
+                <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED, fontWeight: "600" }}>
+                  · {card.alter_jahre} {card.alter_jahre === 1 ? "Jahr" : "Jahre"}
+                </Text>
+              )}
+              {card.rasse && (
+                <Text style={{ fontSize: 13, color: Colors.TEXT_MUTED, flex: 1 }} numberOfLines={1}>
+                  · {card.rasse}
+                </Text>
+              )}
             </View>
-          )}
+
+            {/* ── 3. BESITZERPROFIL (umrandet) ── */}
+            <TouchableOpacity
+              activeOpacity={0.88}
+              onPress={() => setProfileOpen(true)}
+              style={{
+                marginHorizontal: 12, marginBottom: 12,
+                borderWidth: 1.5, borderColor: Colors.BORDER, borderRadius: 16,
+                padding: 11, flexDirection: "row", alignItems: "center", gap: 11,
+              }}
+            >
+              {/* Avatar */}
+              {owner.avatar_url ? (
+                <Image source={{ uri: owner.avatar_url }} style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: Colors.BORDER }} />
+              ) : (
+                <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: Colors.SECONDARY, alignItems: "center", justifyContent: "center" }}>
+                  <Text style={{ fontSize: 20, fontWeight: "700", color: "#fff" }}>{owner.name.charAt(0)}</Text>
+                </View>
+              )}
+
+              {/* Info */}
+              <View style={{ flex: 1, gap: 2 }}>
+                <View style={{ flexDirection: "row", alignItems: "baseline", gap: 5 }}>
+                  <Text style={{ fontSize: 15, fontWeight: "800", color: Colors.TEXT }}>{owner.name}</Text>
+                  {owner.alter > 0 && (
+                    <Text style={{ fontSize: 13, color: Colors.TEXT_MUTED }}>{owner.alter}</Text>
+                  )}
+                </View>
+                <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED }}>📍 {owner.stadt}</Text>
+                {owner.interessen.length > 0 && (
+                  <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 4, marginTop: 3 }}>
+                    {owner.interessen.slice(0, 3).map((tag) => (
+                      <View key={tag} style={{ paddingHorizontal: 7, paddingVertical: 2, backgroundColor: Colors.PRIMARY + "12", borderRadius: 99, borderWidth: 1, borderColor: Colors.PRIMARY + "28" }}>
+                        <Text style={{ fontSize: 10, color: Colors.PRIMARY, fontWeight: "600" }}>{tag}</Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </View>
+
+              {/* Chevron */}
+              <Ionicons name="chevron-forward-circle-outline" size={22} color={Colors.TEXT_MUTED} />
+            </TouchableOpacity>
+
+            {/* ── 4. RESTLICHE HUNDEEIGENSCHAFTEN ── */}
+            <View style={{ paddingHorizontal: 12, gap: 10 }}>
+              {/* Eigenschaften-Chips */}
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}>
+                {card.groesse_kategorie && (
+                  <View style={propChip}>
+                    <Text style={propChipText}>{GROESSE_LABEL[card.groesse_kategorie] ?? card.groesse_kategorie}</Text>
+                  </View>
+                )}
+                {card.aktivitaetslevel && (
+                  <View style={propChip}>
+                    <Text style={propChipText}>{AKTIV_LABEL[card.aktivitaetslevel] ?? card.aktivitaetslevel}</Text>
+                  </View>
+                )}
+                {card.kastriert && (
+                  <View style={propChip}>
+                    <Text style={propChipText}>Kastriert</Text>
+                  </View>
+                )}
+                {card.kinderfreundlich && (
+                  <View style={propChip}>
+                    <Text style={propChipText}>Kinderlieb</Text>
+                  </View>
+                )}
+                {card.vertraeglich_mit_tieren ? (
+                  <View style={propChip}>
+                    <Text style={propChipText}>Sozial</Text>
+                  </View>
+                ) : (
+                  <View style={[propChip, { borderColor: Colors.TEXT_MUTED + "40", backgroundColor: Colors.SURFACE }]}>
+                    <Text style={[propChipText, { color: Colors.TEXT_MUTED }]}>Einzelhund</Text>
+                  </View>
+                )}
+              </View>
+
+              {/* Charakter-Tags */}
+              {card.charakter_tags?.length > 0 && (
+                <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
+                  {card.charakter_tags.map((tag) => (
+                    <View key={tag} style={{ paddingHorizontal: 10, paddingVertical: 4, backgroundColor: Colors.SECONDARY + "14", borderRadius: 99, borderWidth: 1, borderColor: Colors.SECONDARY + "38" }}>
+                      <Text style={{ fontSize: 12, color: Colors.SECONDARY, fontWeight: "600" }}>{tag}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
+
+              {/* Beschreibung */}
+              {card.beschreibung && (
+                <Text style={{ fontSize: 13, color: Colors.TEXT_MUTED, lineHeight: 19 }} numberOfLines={2}>
+                  {card.beschreibung}
+                </Text>
+              )}
+            </View>
+          </ScrollView>
         </View>
-
-        {/* ── 2. BESITZER-KURZPROFIL (40%) ── */}
-        <TouchableOpacity
-          activeOpacity={0.88}
-          onPress={() => setProfileOpen(true)}
-          style={{
-            flex: 4, flexDirection: "row", alignItems: "center",
-            paddingHorizontal: 16, paddingVertical: 12, gap: 13,
-            borderTopWidth: 1, borderTopColor: Colors.BORDER,
-          }}
-        >
-          {/* Avatar */}
-          {owner.avatar_url ? (
-            <Image source={{ uri: owner.avatar_url }} style={{ width: 54, height: 54, borderRadius: 27, backgroundColor: Colors.BORDER }} />
-          ) : (
-            <View style={{ width: 54, height: 54, borderRadius: 27, backgroundColor: Colors.SECONDARY, alignItems: "center", justifyContent: "center" }}>
-              <Text style={{ fontSize: 22, fontWeight: "700", color: "#fff" }}>{owner.name.charAt(0)}</Text>
-            </View>
-          )}
-
-          {/* Info */}
-          <View style={{ flex: 1, gap: 3 }}>
-            <View style={{ flexDirection: "row", alignItems: "baseline", gap: 6 }}>
-              <Text style={{ fontSize: 17, fontWeight: "800", color: Colors.TEXT }}>{owner.name}</Text>
-              {owner.alter > 0 && (
-                <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED }}>{owner.alter}</Text>
-              )}
-            </View>
-            <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED }}>📍 {owner.stadt}</Text>
-            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 5, marginTop: 4 }}>
-              {card.aktivitaetslevel && (
-                <View style={{ paddingHorizontal: 8, paddingVertical: 3, backgroundColor: Colors.SECONDARY + "18", borderRadius: 99, borderWidth: 1, borderColor: Colors.SECONDARY + "35" }}>
-                  <Text style={{ fontSize: 11, color: Colors.SECONDARY, fontWeight: "600" }}>{AKTIV_LABEL[card.aktivitaetslevel]}</Text>
-                </View>
-              )}
-              {owner.interessen.slice(0, 3).map((tag) => (
-                <View key={tag} style={{ paddingHorizontal: 8, paddingVertical: 3, backgroundColor: Colors.PRIMARY + "12", borderRadius: 99, borderWidth: 1, borderColor: Colors.PRIMARY + "30" }}>
-                  <Text style={{ fontSize: 11, color: Colors.PRIMARY, fontWeight: "600" }}>{tag}</Text>
-                </View>
-              ))}
-            </View>
-          </View>
-
-          {/* Chevron */}
-          <Ionicons name="chevron-up-circle-outline" size={24} color={Colors.TEXT_MUTED} />
-        </TouchableOpacity>
       </View>
 
-      {/* ── Like / Nope Buttons ── */}
-      <View style={{ flexDirection: "row", gap: 14, paddingHorizontal: 24, paddingBottom: 12, paddingTop: 6 }}>
+      {/* ── Like / Nope Buttons (nur Icons, kein Text) ── */}
+      <View style={{ flexDirection: "row", gap: 16, paddingHorizontal: 32, paddingBottom: 12, paddingTop: 4 }}>
         <TouchableOpacity
           onPress={() => flyOff("nein")} disabled={saving}
           style={{
-            flex: 1, height: 58, borderRadius: Sizes.RADIUS_FULL, backgroundColor: Colors.WHITE,
-            alignItems: "center", justifyContent: "center", borderWidth: 2, borderColor: "#FF4458",
-            shadowColor: "#FF4458", shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.15, shadowRadius: 6, elevation: 3,
+            flex: 1, height: 58, borderRadius: Sizes.RADIUS_FULL,
+            backgroundColor: "#FF4458",
+            alignItems: "center", justifyContent: "center",
+            shadowColor: "#FF4458", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4,
           }}
         >
-          <Text style={{ fontSize: 20, fontWeight: "700", color: "#FF4458" }}>✕  Nope</Text>
+          <Ionicons name="close" size={32} color="#fff" />
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => flyOff("ja")} disabled={saving}
           style={{
-            flex: 1, height: 58, borderRadius: Sizes.RADIUS_FULL, backgroundColor: Colors.SECONDARY,
+            flex: 1, height: 58, borderRadius: Sizes.RADIUS_FULL,
+            backgroundColor: "#00C853",
             alignItems: "center", justifyContent: "center",
-            shadowColor: Colors.SECONDARY, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4,
+            shadowColor: "#00C853", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4,
           }}
         >
           {saving
-            ? <ActivityIndicator color={Colors.WHITE} />
-            : <Text style={{ fontSize: 20, fontWeight: "700", color: Colors.WHITE }}>❤️  Like</Text>
+            ? <ActivityIndicator color="#fff" />
+            : <Ionicons name="heart" size={27} color="#fff" />
           }
         </TouchableOpacity>
       </View>
@@ -969,6 +1035,14 @@ const inputStyle = {
   borderWidth: 1.5, borderColor: Colors.BORDER, borderRadius: 12,
   paddingHorizontal: 16, paddingVertical: 12, fontSize: 15, color: Colors.TEXT,
   backgroundColor: Colors.BACKGROUND, marginBottom: 18,
+};
+const propChip = {
+  paddingHorizontal: 10, paddingVertical: 4,
+  backgroundColor: Colors.PRIMARY + "12", borderRadius: 99 as const,
+  borderWidth: 1, borderColor: Colors.PRIMARY + "30",
+};
+const propChipText = {
+  fontSize: 12, color: Colors.PRIMARY, fontWeight: "600" as const,
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
