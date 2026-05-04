@@ -202,6 +202,7 @@ export default function TierhalterOnboarding() {
       // Menschenprofil in profiles speichern
       const { error: profileError } = await supabase.from("profiles").upsert({
         id:         user.id,
+        role:       "tierhalter",
         name:       vorname.trim(),
         city:       stadtteil.trim(),
         avatar_url: avatarUrl,
