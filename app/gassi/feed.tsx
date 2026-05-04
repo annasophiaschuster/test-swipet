@@ -186,8 +186,8 @@ function SwipeCard({
         position: "absolute", top: 44, left: 20, zIndex: 30,
         opacity: likeOpacity, transform: [{ rotate: "-20deg" }],
       }}>
-        <View style={{ borderWidth: 3, borderColor: "#00C853", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6, backgroundColor: "rgba(0,200,83,0.1)" }}>
-          <Text style={{ fontSize: 26, fontWeight: "900", color: "#00C853", letterSpacing: 2 }}>❤️ LIKE</Text>
+        <View style={{ borderWidth: 3, borderColor: "#7EB77F", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6, backgroundColor: "rgba(126,183,127,0.12)" }}>
+          <Text style={{ fontSize: 26, fontWeight: "900", color: "#7EB77F", letterSpacing: 2 }}>❤️ LIKE</Text>
         </View>
       </Animated.View>
 
@@ -196,8 +196,8 @@ function SwipeCard({
         position: "absolute", top: 44, right: 20, zIndex: 30,
         opacity: nopeOpacity, transform: [{ rotate: "20deg" }],
       }}>
-        <View style={{ borderWidth: 3, borderColor: "#FF4458", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6, backgroundColor: "rgba(255,68,88,0.1)" }}>
-          <Text style={{ fontSize: 26, fontWeight: "900", color: "#FF4458", letterSpacing: 2 }}>NOPE ✕</Text>
+        <View style={{ borderWidth: 3, borderColor: "#E2858F", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6, backgroundColor: "rgba(226,133,143,0.12)" }}>
+          <Text style={{ fontSize: 26, fontWeight: "900", color: "#E2858F", letterSpacing: 2 }}>NOPE ✕</Text>
         </View>
       </Animated.View>
 
@@ -369,7 +369,7 @@ function SwipeCard({
 
               {/* Beschreibung */}
               {card.beschreibung && (
-                <Text style={{ fontSize: 13, color: Colors.TEXT_MUTED, lineHeight: 19 }} numberOfLines={2}>
+                <Text style={{ fontSize: 13, color: Colors.TEXT_MUTED, lineHeight: 19 }}>
                   {card.beschreibung}
                 </Text>
               )}
@@ -384,9 +384,9 @@ function SwipeCard({
           onPress={() => flyOff("nein")} disabled={saving}
           style={{
             flex: 1, height: 58, borderRadius: Sizes.RADIUS_FULL,
-            backgroundColor: "#FF4458",
+            backgroundColor: "#E2858F",
             alignItems: "center", justifyContent: "center",
-            shadowColor: "#FF4458", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4,
+            shadowColor: "#E2858F", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4,
           }}
         >
           <Ionicons name="close" size={32} color="#fff" />
@@ -395,9 +395,9 @@ function SwipeCard({
           onPress={() => flyOff("ja")} disabled={saving}
           style={{
             flex: 1, height: 58, borderRadius: Sizes.RADIUS_FULL,
-            backgroundColor: "#00C853",
+            backgroundColor: "#7EB77F",
             alignItems: "center", justifyContent: "center",
-            shadowColor: "#00C853", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4,
+            shadowColor: "#7EB77F", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4,
           }}
         >
           {saving
@@ -407,7 +407,7 @@ function SwipeCard({
         </TouchableOpacity>
       </View>
 
-      {/* ── Vollprofil Modal ── */}
+      {/* ── Besitzerprofil Modal ── */}
       <Modal
         visible={profileOpen}
         animationType="slide"
@@ -421,30 +421,28 @@ function SwipeCard({
             paddingHorizontal: 20, paddingVertical: 14,
             borderBottomWidth: 1, borderBottomColor: Colors.BORDER,
           }}>
-            <Text style={{ fontSize: 18, fontWeight: "800", color: Colors.TEXT }}>Profil</Text>
+            <Text style={{ fontSize: 18, fontWeight: "800", color: Colors.TEXT }}>Besitzer</Text>
             <TouchableOpacity onPress={() => setProfileOpen(false)} style={{ padding: 4 }}>
               <Ionicons name="close" size={24} color={Colors.TEXT_MUTED} />
             </TouchableOpacity>
           </View>
 
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 48 }}>
-
-            {/* ── MENSCHENPROFIL ── */}
-            <View style={{ alignItems: "center", paddingTop: 28, paddingBottom: 24, paddingHorizontal: 24 }}>
+            <View style={{ alignItems: "center", paddingTop: 32, paddingBottom: 28, paddingHorizontal: 24 }}>
               {owner.avatar_url ? (
-                <Image source={{ uri: owner.avatar_url }} style={{ width: 96, height: 96, borderRadius: 48, backgroundColor: Colors.BORDER, marginBottom: 14 }} />
+                <Image source={{ uri: owner.avatar_url }} style={{ width: 100, height: 100, borderRadius: 50, backgroundColor: Colors.BORDER, marginBottom: 16 }} />
               ) : (
-                <View style={{ width: 96, height: 96, borderRadius: 48, backgroundColor: Colors.SECONDARY, alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
-                  <Text style={{ fontSize: 38, fontWeight: "700", color: "#fff" }}>{owner.name.charAt(0)}</Text>
+                <View style={{ width: 100, height: 100, borderRadius: 50, backgroundColor: Colors.SECONDARY, alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
+                  <Text style={{ fontSize: 40, fontWeight: "700", color: "#fff" }}>{owner.name.charAt(0)}</Text>
                 </View>
               )}
               <View style={{ flexDirection: "row", alignItems: "baseline", gap: 8, marginBottom: 4 }}>
                 <Text style={{ fontSize: 26, fontWeight: "900", color: Colors.TEXT }}>{owner.name}</Text>
                 {owner.alter > 0 && <Text style={{ fontSize: 18, color: Colors.TEXT_MUTED }}>{owner.alter}</Text>}
               </View>
-              <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED, marginBottom: 16 }}>📍 {owner.stadt}</Text>
+              <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED, marginBottom: 20 }}>📍 {owner.stadt}</Text>
               {owner.bio && (
-                <Text style={{ fontSize: 15, color: Colors.TEXT, lineHeight: 23, fontStyle: "italic", textAlign: "center", marginBottom: 20 }}>
+                <Text style={{ fontSize: 15, color: Colors.TEXT, lineHeight: 23, fontStyle: "italic", textAlign: "center", marginBottom: 24 }}>
                   „{owner.bio}"
                 </Text>
               )}
@@ -456,72 +454,6 @@ function SwipeCard({
                     </View>
                   ))}
                 </View>
-              )}
-            </View>
-
-            {/* Divider */}
-            <View style={{ height: 8, backgroundColor: Colors.SURFACE }} />
-
-            {/* ── HUNDEPROFIL ── */}
-            <View style={{ paddingHorizontal: 24, paddingTop: 24 }}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 16 }}>
-                <Text style={{ fontSize: 20 }}>🐾</Text>
-                <Text style={{ fontSize: 20, fontWeight: "800", color: Colors.TEXT }}>{card.name}</Text>
-                {card.rasse && <Text style={{ fontSize: 14, color: Colors.TEXT_MUTED }}>· {card.rasse}</Text>}
-              </View>
-
-              {/* Alle Fotos horizontal scrollbar */}
-              {photos.length > 0 && (
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20, marginHorizontal: -24 }}>
-                  {photos.map((url, i) => (
-                    <Image key={i} source={{ uri: url }} style={{ width: W * 0.72, height: W * 0.72, borderRadius: 16, marginLeft: i === 0 ? 24 : 10, marginRight: i === photos.length - 1 ? 24 : 0 }} resizeMode="cover" />
-                  ))}
-                </ScrollView>
-              )}
-
-              {/* Eigenschaften-Grid */}
-              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 18 }}>
-                {[
-                  { label: "Alter", value: card.alter_jahre != null ? `${card.alter_jahre} ${card.alter_jahre === 1 ? "Jahr" : "Jahre"}` : "–" },
-                  { label: "Größe", value: card.groesse_kategorie ? GROESSE_LABEL[card.groesse_kategorie] : "–" },
-                  { label: "Geschlecht", value: card.geschlecht === "maennlich" ? "♂ Männlich" : card.geschlecht === "weiblich" ? "♀ Weiblich" : "–" },
-                  { label: "Energie", value: AKTIV_LABEL[card.aktivitaetslevel ?? ""] ?? "–" },
-                  { label: "Kastriert", value: card.kastriert ? "Ja" : "Nein" },
-                  { label: "Mit Hunden", value: card.vertraeglich_mit_tieren ? "Verträglich" : "Einzelhund" },
-                  { label: "Kinderlieb", value: card.kinderfreundlich ? "Ja" : "Nein" },
-                ].map((row) => (
-                  <View key={row.label} style={{
-                    backgroundColor: Colors.SURFACE, borderRadius: 12,
-                    paddingHorizontal: 14, paddingVertical: 10,
-                    borderWidth: 1, borderColor: Colors.BORDER,
-                    minWidth: "45%", flex: 1,
-                  }}>
-                    <Text style={{ fontSize: 11, color: Colors.TEXT_MUTED, fontWeight: "600", marginBottom: 3 }}>{row.label}</Text>
-                    <Text style={{ fontSize: 14, color: Colors.TEXT, fontWeight: "700" }}>{row.value}</Text>
-                  </View>
-                ))}
-              </View>
-
-              {/* Charakter Tags */}
-              {card.charakter_tags?.length > 0 && (
-                <>
-                  <Text style={{ fontSize: 13, fontWeight: "700", color: Colors.TEXT_MUTED, marginBottom: 10 }}>Charakter</Text>
-                  <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 18 }}>
-                    {card.charakter_tags.map((tag) => (
-                      <View key={tag} style={{ paddingHorizontal: 12, paddingVertical: 7, backgroundColor: Colors.SECONDARY + "15", borderRadius: 99, borderWidth: 1, borderColor: Colors.SECONDARY + "40" }}>
-                        <Text style={{ fontSize: 13, color: Colors.SECONDARY, fontWeight: "600" }}>{tag}</Text>
-                      </View>
-                    ))}
-                  </View>
-                </>
-              )}
-
-              {/* Beschreibung */}
-              {card.beschreibung && (
-                <>
-                  <Text style={{ fontSize: 13, fontWeight: "700", color: Colors.TEXT_MUTED, marginBottom: 8 }}>Über {card.name}</Text>
-                  <Text style={{ fontSize: 15, color: Colors.TEXT, lineHeight: 24 }}>{card.beschreibung}</Text>
-                </>
               )}
             </View>
           </ScrollView>
