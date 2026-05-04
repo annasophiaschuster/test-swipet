@@ -14,6 +14,7 @@ import {
   Easing,
 } from "react-native";
 import Svg, { Path } from "react-native-svg";
+import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Link, router } from "expo-router";
@@ -184,9 +185,21 @@ export default function RegisterScreen() {
         style={{ flex: 1 }}
       >
         {/* ── Header ─────────────────────────────────────────────────────────── */}
-        <View style={{ backgroundColor: Colors.WHITE, paddingTop: 56, paddingBottom: 24, paddingHorizontal: Sizes.SPACING_LG, borderBottomWidth: 1, borderBottomColor: Colors.BORDER }}>
-          {/* Progress segments */}
-          <View style={{ flexDirection: "row", gap: 4, marginBottom: 16 }}>
+        {/* Gradient header — same height as swipe header */}
+        <LinearGradient
+          colors={[Colors.SECONDARY, Colors.PRIMARY]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{ paddingTop: 56, paddingBottom: 14, paddingHorizontal: Sizes.SPACING_LG, flexDirection: "row", alignItems: "center" }}
+        >
+          <Text style={{ flex: 1, fontSize: 20, fontWeight: "800", color: Colors.WHITE }} numberOfLines={1}>
+            {step === "role" ? t.register_step_role_title : t.register_step_details_title}
+          </Text>
+        </LinearGradient>
+
+        {/* Progress + subtitle — below gradient */}
+        <View style={{ paddingHorizontal: Sizes.SPACING_LG, paddingTop: 12, paddingBottom: 14, borderBottomWidth: 1, borderBottomColor: Colors.BORDER, backgroundColor: Colors.WHITE }}>
+          <View style={{ flexDirection: "row", gap: 4, marginBottom: 8 }}>
             {[0, 1].map((i) => (
               <View
                 key={i}
@@ -197,10 +210,7 @@ export default function RegisterScreen() {
               />
             ))}
           </View>
-          <Text style={{ fontSize: 26, fontWeight: "800", color: Colors.SECONDARY }}>
-            {step === "role" ? t.register_step_role_title : t.register_step_details_title}
-          </Text>
-          <Text style={{ color: Colors.TEXT_MUTED, marginTop: 4, fontSize: 14 }}>
+          <Text style={{ color: Colors.TEXT_MUTED, fontSize: 13 }}>
             {step === "role" ? t.register_step_role_sub : t.register_step_details_sub}
           </Text>
         </View>

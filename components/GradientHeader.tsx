@@ -1,4 +1,5 @@
 import { View, Text, TouchableOpacity } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { Colors } from "../constants/colors";
 import { Sizes } from "../constants/sizes";
@@ -25,42 +26,42 @@ export default function GradientHeader({
   const resolvedBackLabel = backLabel ?? t.comp_back;
   const handleBack = onBack ?? (() => router.back());
   return (
-    <View
+    <LinearGradient
+      colors={[Colors.SECONDARY, Colors.PRIMARY]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
       style={{
-        backgroundColor: Colors.WHITE,
         paddingTop: 56,
-        paddingBottom: 18,
+        paddingBottom: 14,
         paddingHorizontal: Sizes.SPACING_LG,
-        borderBottomWidth: 1,
-        borderBottomColor: Colors.BORDER,
       }}
     >
-      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: showBack ? 6 : 0 }}>
-        {showBack ? (
-          <TouchableOpacity onPress={handleBack} style={{ flexDirection: "row", alignItems: "center", gap: 2 }}>
-            <Text style={{ color: Colors.SECONDARY, fontSize: 15 }}>‹</Text>
-            <Text style={{ color: Colors.SECONDARY, fontSize: 12, fontWeight: "500" }}> {resolvedBackLabel}</Text>
+      {/* Single navigation row — same height as swipe header */}
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+        {showBack && (
+          <TouchableOpacity onPress={handleBack} style={{ flexDirection: "row", alignItems: "center", gap: 2, marginRight: 4 }}>
+            <Text style={{ color: Colors.WHITE, opacity: 0.9, fontSize: 18 }}>‹</Text>
+            <Text style={{ color: Colors.WHITE, opacity: 0.85, fontSize: 12, fontWeight: "500" }}>{resolvedBackLabel}</Text>
           </TouchableOpacity>
-        ) : (
-          <View />
         )}
+        <Text
+          style={{
+            flex: 1,
+            fontSize: 20,
+            fontWeight: "800",
+            color: Colors.WHITE,
+          }}
+          numberOfLines={1}
+        >
+          {title}
+        </Text>
         {rightElement ?? <View />}
       </View>
-      <Text
-        style={{
-          fontSize: 26,
-          fontWeight: "800",
-          color: Colors.SECONDARY,
-          marginTop: showBack ? 4 : 0,
-        }}
-      >
-        {title}
-      </Text>
       {subtitle && (
-        <Text style={{ color: Colors.TEXT_MUTED, marginTop: 4, fontSize: Sizes.FONT_SM }}>
+        <Text style={{ color: Colors.WHITE, opacity: 0.85, marginTop: 4, fontSize: Sizes.FONT_SM }}>
           {subtitle}
         </Text>
       )}
-    </View>
+    </LinearGradient>
   );
 }

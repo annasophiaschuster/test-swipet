@@ -16,6 +16,7 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { supabase } from "../../lib/supabase";
 import { Colors } from "../../constants/colors";
@@ -319,7 +320,12 @@ export default function TierheimAnfragenScreen() {
     <SafeAreaView edges={["bottom"]} style={styles.safe}>
 
       {/* Header — title + dogs strip */}
-      <View style={[styles.gradientHeader, { backgroundColor: Colors.WHITE, paddingTop: insets.top }]}>
+      <LinearGradient
+        colors={[Colors.SECONDARY, Colors.PRIMARY]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={[styles.gradientHeader, { paddingTop: insets.top }]}
+      >
         {/* Title row */}
         <View style={styles.header}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flex: 1 }}>
@@ -338,7 +344,7 @@ export default function TierheimAnfragenScreen() {
             <Ionicons
               name="options-outline"
               size={20}
-              color={Colors.SECONDARY}
+              color={Colors.WHITE}
             />
           </TouchableOpacity>
         </View>
@@ -452,7 +458,7 @@ export default function TierheimAnfragenScreen() {
           </ScrollView>
         )}
         </View>
-      </View>
+      </LinearGradient>
 
       {/* Divider */}
       <View style={styles.divider} />
@@ -577,30 +583,26 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.BACKGROUND },
   centered: { flex: 1, backgroundColor: Colors.BACKGROUND, alignItems: "center", justifyContent: "center" },
 
-  // Header wrapper
+  // Gradient header wrapper — same padding as swipe header
   gradientHeader: {
-    paddingTop: 0,
     paddingBottom: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.BORDER,
+    paddingHorizontal: 20,
   },
 
   // Header title row
   header: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 20,
     paddingTop: 12,
-    paddingBottom: 12,
   },
   headerTitle: {
-    fontSize: 28,
+    fontSize: 20,
     fontWeight: "800",
-    color: Colors.SECONDARY,
-    letterSpacing: -0.5,
+    color: Colors.WHITE,
+    letterSpacing: -0.3,
   },
   headerBadge: {
-    backgroundColor: Colors.PRIMARY,
+    backgroundColor: "rgba(255,255,255,0.35)",
     borderRadius: 99,
     minWidth: 22,
     height: 22,
@@ -615,12 +617,12 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: Colors.SURFACE,
+    backgroundColor: "rgba(255,255,255,0.25)",
     alignItems: "center",
     justifyContent: "center",
   },
   filterBtnActive: {
-    backgroundColor: Colors.BORDER,
+    backgroundColor: "rgba(255,255,255,0.45)",
   },
 
   // Filter modal

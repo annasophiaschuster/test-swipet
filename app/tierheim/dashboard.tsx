@@ -10,6 +10,7 @@ import {
   Image,
 } from "react-native";
 import { router, useFocusEffect } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
 import { supabase } from "../../lib/supabase";
 import { Colors } from "../../constants/colors";
 import { Sizes } from "../../constants/sizes";
@@ -271,33 +272,35 @@ export default function TierheimDashboard() {
       }
     >
       {/* Header with stats */}
-      <View style={{ backgroundColor: Colors.WHITE, paddingTop: 60, paddingHorizontal: Sizes.SPACING_LG, paddingBottom: 24, borderBottomWidth: 1, borderBottomColor: Colors.BORDER }}>
-        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
-          <View>
-            <Text style={{ color: Colors.SECONDARY, fontSize: 22, fontWeight: "800" }}>
-              {stats?.orgName ?? t.tierheim_dashboard_your_shelter}
-            </Text>
-          </View>
-          <TouchableOpacity
-            onPress={handleLogout}
-            style={{
-              paddingHorizontal: 14, paddingVertical: 7,
-              borderRadius: Sizes.RADIUS_FULL,
-              backgroundColor: Colors.SURFACE,
-            }}
-          >
-            <Text style={{ color: Colors.SECONDARY, fontSize: 13, fontWeight: "600" }}>
-              {isGuest ? t.tierheim_dashboard_login : "Logout"}
-            </Text>
-          </TouchableOpacity>
-        </View>
+      {/* Gradient header — same height as swipe header */}
+      <LinearGradient
+        colors={[Colors.SECONDARY, Colors.PRIMARY]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={{ paddingTop: 56, paddingHorizontal: Sizes.SPACING_LG, paddingBottom: 14, flexDirection: "row", alignItems: "center" }}
+      >
+        <Text style={{ flex: 1, color: Colors.WHITE, fontSize: 20, fontWeight: "800" }} numberOfLines={1}>
+          {stats?.orgName ?? t.tierheim_dashboard_your_shelter}
+        </Text>
+        <TouchableOpacity
+          onPress={handleLogout}
+          style={{
+            paddingHorizontal: 14, paddingVertical: 7,
+            borderRadius: Sizes.RADIUS_FULL,
+            backgroundColor: "rgba(255,255,255,0.25)",
+          }}
+        >
+          <Text style={{ color: Colors.WHITE, fontSize: 13, fontWeight: "600" }}>
+            {isGuest ? t.tierheim_dashboard_login : "Logout"}
+          </Text>
+        </TouchableOpacity>
+      </LinearGradient>
 
-        {/* Stats: Verfügbar / Reserviert / Vermittelt */}
-        <View style={{ flexDirection: "row", gap: 10 }}>
-          <StatCard value={stats?.verfuegbar ?? 0} label={t.tierheim_status_available} />
-          <StatCard value={stats?.reserviert ?? 0} label={t.tierheim_status_reserved} />
-          <StatCard value={stats?.vermittelt ?? 0} label={t.tierheim_status_placed} />
-        </View>
+      {/* Stats strip */}
+      <View style={{ flexDirection: "row", gap: 10, paddingHorizontal: Sizes.SPACING_LG, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: Colors.BORDER }}>
+        <StatCard value={stats?.verfuegbar ?? 0} label={t.tierheim_status_available} />
+        <StatCard value={stats?.reserviert ?? 0} label={t.tierheim_status_reserved} />
+        <StatCard value={stats?.vermittelt ?? 0} label={t.tierheim_status_placed} />
       </View>
 
       {/* Quick Actions */}

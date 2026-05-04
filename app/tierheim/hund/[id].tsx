@@ -11,6 +11,7 @@ import {
   Alert,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
 import { supabase } from "../../../lib/supabase";
 import { Colors } from "../../../constants/colors";
 import { Sizes } from "../../../constants/sizes";
@@ -353,44 +354,49 @@ export default function HundDetailScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
-      {/* Header */}
-      <View style={{ backgroundColor: Colors.WHITE, paddingTop: 56, paddingHorizontal: Sizes.SPACING_LG, paddingBottom: 20, borderBottomWidth: 1, borderBottomColor: Colors.BORDER }}>
+      {/* Gradient header — same height as swipe header */}
+      <LinearGradient
+        colors={[Colors.SECONDARY, Colors.PRIMARY]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={{ paddingTop: 56, paddingHorizontal: Sizes.SPACING_LG, paddingBottom: 14, flexDirection: "row", alignItems: "center", gap: 8 }}
+      >
         <TouchableOpacity
           onPress={() => router.back()}
-          style={{ flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 10 }}
+          style={{ flexDirection: "row", alignItems: "center", gap: 2 }}
         >
-          <Text style={{ fontSize: 16, color: Colors.SECONDARY }}>‹</Text>
-          <Text style={{ fontSize: 13, color: Colors.SECONDARY, fontWeight: "500" }}>{t.tierheim_dog_back}</Text>
+          <Text style={{ fontSize: 18, color: "rgba(255,255,255,0.9)" }}>‹</Text>
+          <Text style={{ fontSize: 12, color: "rgba(255,255,255,0.85)", fontWeight: "500" }}>{t.tierheim_dog_back}</Text>
         </TouchableOpacity>
-        <Text style={{ fontSize: 24, fontWeight: "800", color: Colors.SECONDARY }}>{dogName}</Text>
+        <Text style={{ flex: 1, fontSize: 20, fontWeight: "800", color: Colors.WHITE }} numberOfLines={1}>{dogName}</Text>
+      </LinearGradient>
 
-        {/* Tab buttons */}
-        <View style={{ flexDirection: "row", gap: 8, marginTop: 16 }}>
-          {(["infos", "anfragen", "nachrichten"] as const).map((tab) => {
-            const label =
-              tab === "infos" ? t.tierheim_dog_tab_infos :
-              tab === "anfragen" ? t.tierheim_dog_tab_anfragen :
-              t.tierheim_dog_tab_nachrichten;
-            const active = activeTab === tab;
-            return (
-              <TouchableOpacity
-                key={tab}
-                onPress={() => setActiveTab(tab)}
-                style={{
-                  paddingHorizontal: 16, paddingVertical: 7, borderRadius: Sizes.RADIUS_FULL,
-                  backgroundColor: active ? Colors.PRIMARY : Colors.SURFACE,
-                }}
-              >
-                <Text style={{
-                  fontSize: 13, fontWeight: "700",
-                  color: active ? Colors.WHITE : Colors.TEXT_MUTED,
-                }}>
-                  {label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+      {/* Tab bar — below gradient */}
+      <View style={{ flexDirection: "row", gap: 8, paddingHorizontal: Sizes.SPACING_LG, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: Colors.BORDER, backgroundColor: Colors.WHITE }}>
+        {(["infos", "anfragen", "nachrichten"] as const).map((tab) => {
+          const label =
+            tab === "infos" ? t.tierheim_dog_tab_infos :
+            tab === "anfragen" ? t.tierheim_dog_tab_anfragen :
+            t.tierheim_dog_tab_nachrichten;
+          const active = activeTab === tab;
+          return (
+            <TouchableOpacity
+              key={tab}
+              onPress={() => setActiveTab(tab)}
+              style={{
+                paddingHorizontal: 16, paddingVertical: 7, borderRadius: Sizes.RADIUS_FULL,
+                backgroundColor: active ? Colors.PRIMARY : Colors.SURFACE,
+              }}
+            >
+              <Text style={{
+                fontSize: 13, fontWeight: "700",
+                color: active ? Colors.WHITE : Colors.TEXT_MUTED,
+              }}>
+                {label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
       {/* Tab content */}

@@ -16,6 +16,7 @@ import {
   Dimensions,
 } from "react-native";
 import { router } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
 import Svg, { Path } from "react-native-svg";
 import { supabase } from "../../lib/supabase";
 import { Colors } from "../../constants/colors";
@@ -121,8 +122,13 @@ export default function LoginScreen() {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={{ flex: 1 }}
     >
-      {/* Full-screen background */}
-      <View style={[StyleSheet.absoluteFill, { backgroundColor: Colors.WHITE }]} />
+      {/* Full-screen gradient */}
+      <LinearGradient
+        colors={[Colors.SECONDARY, Colors.PRIMARY]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
 
       {/* Header — visible in the gradient strip above the card */}
       <View style={styles.header}>
@@ -244,12 +250,12 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 36,
     fontWeight: "800",
-    color: Colors.SECONDARY,
+    color: Colors.WHITE,
     letterSpacing: 4,
     marginBottom: 8,
   },
   headerSub: {
-    color: Colors.TEXT_MUTED,
+    color: "rgba(255,255,255,0.85)",
     fontSize: 15,
     fontStyle: "italic",
   },

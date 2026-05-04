@@ -17,6 +17,7 @@ import {
   SafeAreaView,
 } from "react-native";
 import { router } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import Slider from "@react-native-community/slider";
 import { supabase } from "../../lib/supabase";
@@ -1287,12 +1288,13 @@ export default function GassiFeed() {
   return (
     <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
       {/* Header */}
-      <View
+      <LinearGradient
+        colors={[Colors.SECONDARY, Colors.PRIMARY]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
         style={{
-          backgroundColor: Colors.WHITE,
           paddingTop: 56, paddingHorizontal: Sizes.SPACING_LG, paddingBottom: 14,
-          flexDirection: "row", alignItems: "center", justifyContent: "space-between",
-          borderBottomWidth: 1, borderBottomColor: Colors.BORDER,
+          flexDirection: "row", alignItems: "center",
         }}
       >
         {/* Back to splash */}
@@ -1300,8 +1302,8 @@ export default function GassiFeed() {
           onPress={() => router.replace("/")}
           style={{ flexDirection: "row", alignItems: "center", gap: 2 }}
         >
-          <Text style={{ fontSize: 18, color: Colors.SECONDARY }}>‹</Text>
-          <Text style={{ fontSize: 12, color: Colors.SECONDARY, fontWeight: "500" }}> {t.gassi_feed_back}</Text>
+          <Text style={{ fontSize: 18, color: "rgba(255,255,255,0.9)" }}>‹</Text>
+          <Text style={{ fontSize: 12, color: "rgba(255,255,255,0.85)", fontWeight: "500" }}> {t.gassi_feed_back}</Text>
         </TouchableOpacity>
 
         <View style={{ flex: 1 }} />
@@ -1314,12 +1316,12 @@ export default function GassiFeed() {
               style={{
                 paddingHorizontal: 12, paddingVertical: 7,
                 borderRadius: Sizes.RADIUS_FULL,
-                backgroundColor: Colors.SURFACE,
+                backgroundColor: "rgba(255,255,255,0.25)",
                 flexDirection: "row", alignItems: "center", gap: 5,
               }}
             >
-              <Ionicons name="paw" size={13} color={Colors.SECONDARY} />
-              <Text style={{ color: Colors.SECONDARY, fontWeight: "600", fontSize: 11 }}>
+              <Ionicons name="paw" size={13} color={Colors.WHITE} />
+              <Text style={{ color: Colors.WHITE, fontWeight: "600", fontSize: 11 }}>
                 {myDogs.find((d) => d.id === activeDogId)?.name ?? t.gassi_dogs_modal_title}
               </Text>
             </TouchableOpacity>
@@ -1329,15 +1331,15 @@ export default function GassiFeed() {
             style={{
               paddingHorizontal: 12, paddingVertical: 7,
               borderRadius: Sizes.RADIUS_FULL,
-              backgroundColor: Colors.SURFACE,
+              backgroundColor: "rgba(255,255,255,0.25)",
               flexDirection: "row", alignItems: "center", gap: 5,
             }}
           >
-            <Ionicons name="options-outline" size={14} color={Colors.SECONDARY} />
-            <Text style={{ color: Colors.SECONDARY, fontWeight: "600", fontSize: 11 }}>Filter</Text>
+            <Ionicons name="options-outline" size={14} color={Colors.WHITE} />
+            <Text style={{ color: Colors.WHITE, fontWeight: "600", fontSize: 11 }}>Filter</Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </LinearGradient>
 
       {/* Empty */}
       {partnerCards.length === 0 && (
