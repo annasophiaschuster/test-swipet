@@ -9,6 +9,7 @@ import {
   RefreshControl,
 } from "react-native";
 import { router, useFocusEffect } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { supabase } from "../../lib/supabase";
 import { Colors } from "../../constants/colors";
 import { Sizes } from "../../constants/sizes";
@@ -26,9 +27,8 @@ interface OwnerMatchItem {
   other_owner_name: string | null;
   last_message: string | null;
   last_message_at: string | null;
-  match_status?: "matched" | "pending";
+  unread: boolean;
 }
-
 
 function formatTime(iso: string | null, yesterday: string, lang: string): string {
   if (!iso) return "";
@@ -42,55 +42,100 @@ function formatTime(iso: string | null, yesterday: string, lang: string): string
   return d.toLocaleDateString(locale, { day: "2-digit", month: "2-digit" });
 }
 
+// Unsplash dog avatars for demo
+const DEMO_AVATARS = [
+  "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=120&q=80",
+  "https://images.unsplash.com/photo-1552053831-71594a27632d?w=120&q=80",
+  "https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=120&q=80",
+  "https://images.unsplash.com/photo-1561037404-61cd46aa615b?w=120&q=80",
+  "https://images.unsplash.com/photo-1586671267731-da2cf3ceeb80?w=120&q=80",
+];
+
 export default function GassiMatchesScreen() {
   const { t, lang } = useLanguage();
+
+  const now = Date.now();
 
   const DEMO_MATCHES: OwnerMatchItem[] = [
     {
       id: "demo-gm-1",
       modus: "gassi",
-      created_at: new Date(Date.now() - 45 * 60000).toISOString(),
-      other_pet_name: "Kira",
-      other_pet_rasse: "Husky",
+      created_at: new Date(now - 12 * 60000).toISOString(),
+      other_pet_name: "Luna",
+      other_pet_rasse: "Golden Retriever",
       other_pet_tierart: "hund",
-      other_pet_photo: null,
-      other_owner_name: "Max",
-      last_message: t.gassi_match_msg,
-      last_message_at: new Date(Date.now() - 45 * 60000).toISOString(),
-      match_status: "matched",
+      other_pet_photo: DEMO_AVATARS[0],
+      other_owner_name: "Sophie",
+      last_message: "Morgen früh um 9 am Stadtpark? 🌳",
+      last_message_at: new Date(now - 12 * 60000).toISOString(),
+      unread: true,
     },
     {
       id: "demo-gm-2",
       modus: "gassi",
-      created_at: new Date(Date.now() - 3 * 3600000).toISOString(),
-      other_pet_name: "Cookie",
-      other_pet_rasse: "Australian Shepherd",
+      created_at: new Date(now - 2 * 3600000).toISOString(),
+      other_pet_name: "Balu",
+      other_pet_rasse: "Berner Sennenhund",
       other_pet_tierart: "hund",
-      other_pet_photo: null,
-      other_owner_name: "Sarah",
-      last_message: "Match! ✅",
-      last_message_at: new Date(Date.now() - 3 * 3600000).toISOString(),
-      match_status: "matched",
+      other_pet_photo: DEMO_AVATARS[1],
+      other_owner_name: "Jonas",
+      last_message: "Super, dann sehen wir uns Samstag!",
+      last_message_at: new Date(now - 2 * 3600000).toISOString(),
+      unread: false,
     },
     {
       id: "demo-gm-3",
+      modus: "spieldate",
+      created_at: new Date(now - 5 * 3600000).toISOString(),
+      other_pet_name: "Mia",
+      other_pet_rasse: "Labrador",
+      other_pet_tierart: "hund",
+      other_pet_photo: DEMO_AVATARS[2],
+      other_owner_name: "Laura",
+      last_message: "Klingt gut! Mia ist total verspielt 😄",
+      last_message_at: new Date(now - 5 * 3600000).toISOString(),
+      unread: false,
+    },
+    {
+      id: "demo-gm-4",
       modus: "gassi",
-      created_at: new Date(Date.now() - 26 * 3600000).toISOString(),
-      other_pet_name: "Rocky",
+      created_at: new Date(now - 26 * 3600000).toISOString(),
+      other_pet_name: "Rex",
+      other_pet_rasse: "Schäferhund",
+      other_pet_tierart: "hund",
+      other_pet_photo: DEMO_AVATARS[3],
+      other_owner_name: "Markus",
+      last_message: "Habt ihr heute schon Gassi gemacht?",
+      last_message_at: new Date(now - 26 * 3600000).toISOString(),
+      unread: true,
+    },
+    {
+      id: "demo-gm-5",
+      modus: "spieldate",
+      created_at: new Date(now - 3 * 86400000).toISOString(),
+      other_pet_name: "Nala",
+      other_pet_rasse: "Husky",
+      other_pet_tierart: "hund",
+      other_pet_photo: DEMO_AVATARS[4],
+      other_owner_name: "Emma",
+      last_message: "Es war so schön! Machen wir das bald wieder 🐾",
+      last_message_at: new Date(now - 3 * 86400000).toISOString(),
+      unread: false,
+    },
+    {
+      id: "demo-gm-6",
+      modus: "gassi",
+      created_at: new Date(now - 5 * 86400000).toISOString(),
+      other_pet_name: "Bruno",
       other_pet_rasse: "Bulldogge",
       other_pet_tierart: "hund",
       other_pet_photo: null,
       other_owner_name: "Tom",
       last_message: null,
       last_message_at: null,
-      match_status: "pending",
+      unread: false,
     },
   ];
-
-  const STATUS_STYLE: Record<string, { bg: string; color: string; label: string }> = {
-    matched: { bg: Colors.SUCCESS + "22", color: Colors.SUCCESS, label: "✅ Match" },
-    pending: { bg: Colors.WARNING + "22", color: "#B8860B", label: t.gassi_matches_status_pending },
-  };
 
   const [matches, setMatches]       = useState<OwnerMatchItem[]>([]);
   const [loading, setLoading]       = useState(true);
@@ -154,7 +199,7 @@ export default function GassiMatchesScreen() {
             other_owner_name: otherPet?.owner?.name ?? null,
             last_message: msgs?.[0]?.text ?? null,
             last_message_at: msgs?.[0]?.created_at ?? null,
-            match_status: "matched",
+            unread: false,
           };
         })
       );
@@ -179,13 +224,13 @@ export default function GassiMatchesScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: Colors.BACKGROUND }}>
       <GradientHeader
-        title="❤️ Gassi-Matches"
+        title="Matches"
         subtitle={`${matches.length} ${matches.length === 1 ? "Match" : "Matches"}`}
       />
 
       {matches.length === 0 ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32 }}>
-          <Text style={{ fontSize: 64, marginBottom: 16 }}>🐾</Text>
+          <Ionicons name="heart-outline" size={64} color={Colors.BORDER} style={{ marginBottom: 16 }} />
           <Text style={{ fontSize: Sizes.FONT_XL, fontWeight: "700", color: Colors.TEXT, textAlign: "center", marginBottom: 8 }}>
             {t.matches_empty_owner_title}
           </Text>
@@ -197,7 +242,7 @@ export default function GassiMatchesScreen() {
         <FlatList
           data={matches}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ paddingVertical: 8 }}
+          contentContainerStyle={{ paddingTop: 8, paddingBottom: 24 }}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -205,8 +250,10 @@ export default function GassiMatchesScreen() {
               tintColor={Colors.SECONDARY}
             />
           }
+          ItemSeparatorComponent={() => (
+            <View style={{ height: 1, backgroundColor: Colors.BORDER, marginLeft: 88 }} />
+          )}
           renderItem={({ item }) => {
-            const statusStyle = item.match_status ? STATUS_STYLE[item.match_status] : null;
             return (
               <TouchableOpacity
                 onPress={() => {
@@ -225,87 +272,86 @@ export default function GassiMatchesScreen() {
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
-                  marginHorizontal: 16,
-                  marginVertical: 6,
-                  paddingHorizontal: 14,
+                  paddingHorizontal: 16,
                   paddingVertical: 14,
-                  borderRadius: 20,
-                  backgroundColor: "#FFF8F2",
-                  shadowColor: Colors.SECONDARY,
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.12,
-                  shadowRadius: 8,
-                  elevation: 2,
+                  backgroundColor: Colors.WHITE,
                 }}
-                activeOpacity={0.7}
+                activeOpacity={0.65}
               >
                 {/* Avatar */}
-                <View style={{ marginRight: 14 }}>
+                <View style={{ marginRight: 14, position: "relative" }}>
                   {item.other_pet_photo ? (
                     <Image
                       source={{ uri: item.other_pet_photo }}
-                      style={{ width: 60, height: 60, borderRadius: 30, backgroundColor: Colors.SURFACE }}
+                      style={{ width: 58, height: 58, borderRadius: 29, backgroundColor: Colors.SURFACE }}
                     />
                   ) : (
                     <View style={{
-                      width: 60, height: 60, borderRadius: 30,
-                      backgroundColor: Colors.SURFACE, alignItems: "center", justifyContent: "center",
+                      width: 58, height: 58, borderRadius: 29,
+                      backgroundColor: Colors.SURFACE,
+                      alignItems: "center", justifyContent: "center",
                     }}>
-                      <Text style={{ fontSize: 28 }}>🐶</Text>
+                      <Ionicons name="paw" size={26} color={Colors.SECONDARY} />
                     </View>
                   )}
+                  {/* Modus badge */}
                   <View style={{
-                    position: "absolute", bottom: -2, right: -2,
-                    width: 22, height: 22, borderRadius: 11,
-                    backgroundColor: Colors.SECONDARY, alignItems: "center", justifyContent: "center",
-                    borderWidth: 2, borderColor: Colors.BACKGROUND,
+                    position: "absolute", bottom: -1, right: -1,
+                    width: 20, height: 20, borderRadius: 10,
+                    backgroundColor: item.modus === "gassi" ? Colors.SECONDARY : Colors.PRIMARY,
+                    alignItems: "center", justifyContent: "center",
+                    borderWidth: 2, borderColor: Colors.WHITE,
                   }}>
-                    <Text style={{ fontSize: 10 }}>
-                      {item.modus === "gassi" ? "G" : "D"}
-                    </Text>
+                    <Ionicons
+                      name={item.modus === "gassi" ? "walk" : "football"}
+                      size={10}
+                      color={Colors.WHITE}
+                    />
                   </View>
                 </View>
 
-                {/* Content */}
+                {/* Text */}
                 <View style={{ flex: 1 }}>
-                  <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 2 }}>
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flex: 1 }}>
-                      <Text style={{ fontSize: Sizes.FONT_MD, fontWeight: "700", color: Colors.TEXT }}>
-                        {item.other_pet_name}
-                      </Text>
-                      {statusStyle && (
-                        <View style={{
-                          backgroundColor: statusStyle.bg,
-                          paddingHorizontal: 7, paddingVertical: 2, borderRadius: 99,
-                        }}>
-                          <Text style={{ fontSize: 10, fontWeight: "700", color: statusStyle.color }}>
-                            {statusStyle.label}
-                          </Text>
-                        </View>
-                      )}
-                    </View>
+                  <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 3 }}>
+                    <Text style={{ fontSize: 15, fontWeight: item.unread ? "800" : "600", color: Colors.TEXT }}>
+                      {item.other_pet_name}
+                      {item.other_owner_name ? (
+                        <Text style={{ fontSize: 13, fontWeight: "400", color: Colors.TEXT_MUTED }}>
+                          {" "}· {item.other_owner_name}
+                        </Text>
+                      ) : null}
+                    </Text>
                     <Text style={{ fontSize: 11, color: Colors.TEXT_MUTED }}>
                       {formatTime(item.last_message_at ?? item.created_at, t.matches_yesterday, lang)}
                     </Text>
                   </View>
-                  <Text style={{ fontSize: Sizes.FONT_SM, color: Colors.TEXT_MUTED, marginTop: 1 }}>
-                    {[item.other_owner_name ?? t.gassi_dog_owner_fallback, item.other_pet_rasse].filter(Boolean).join(" · ")}
-                    {` · ${item.modus === "gassi" ? t.gassi_matches_gassi_date : t.gassi_mode_deck}`}
-                  </Text>
-                  <Text
-                    numberOfLines={1}
-                    style={{
-                      fontSize: Sizes.FONT_SM,
-                      color: item.last_message ? Colors.TEXT : Colors.TEXT_MUTED,
-                      marginTop: 3,
-                      fontStyle: item.last_message ? "normal" : "italic",
-                    }}
-                  >
-                    {item.last_message ?? t.gassi_matches_wait_match}
-                  </Text>
-                </View>
 
-                <Text style={{ color: Colors.TEXT_MUTED, marginLeft: 8, fontSize: 16 }}>›</Text>
+                  <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, marginBottom: 4 }}>
+                    {[item.other_pet_rasse, item.modus === "gassi" ? t.gassi_matches_gassi_date : t.gassi_matches_spieldate]
+                      .filter(Boolean).join(" · ")}
+                  </Text>
+
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                    <Text
+                      numberOfLines={1}
+                      style={{
+                        flex: 1,
+                        fontSize: 13,
+                        color: item.unread ? Colors.TEXT : Colors.TEXT_MUTED,
+                        fontWeight: item.unread ? "600" : "400",
+                        fontStyle: item.last_message ? "normal" : "italic",
+                      }}
+                    >
+                      {item.last_message ?? t.gassi_matches_wait_match}
+                    </Text>
+                    {item.unread && (
+                      <View style={{
+                        width: 9, height: 9, borderRadius: 5,
+                        backgroundColor: Colors.PRIMARY, flexShrink: 0,
+                      }} />
+                    )}
+                  </View>
+                </View>
               </TouchableOpacity>
             );
           }}
