@@ -383,7 +383,7 @@ export default function GassiMatchesScreen() {
                 </View>
 
                 <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED, marginBottom: 4 }}>
-                  {[item.other_pet_rasse, item.modus === "gassi" ? t.gassi_matches_gassi_date : t.gassi_matches_spieldate].filter(Boolean).join(" · ")}
+                  {item.other_pet_rasse ?? ""}
                 </Text>
 
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
@@ -397,7 +397,7 @@ export default function GassiMatchesScreen() {
                       fontStyle: item.last_message ? "normal" : "italic",
                     }}
                   >
-                    {item.last_message ?? t.gassi_matches_wait_match}
+                    {item.last_message ?? "Beginne die Konversation"}
                   </Text>
                 </View>
               </View>
