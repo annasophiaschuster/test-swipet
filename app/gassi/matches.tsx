@@ -354,8 +354,8 @@ export default function GassiMatchesScreen() {
               style={styles.row}
               activeOpacity={0.65}
             >
-              {/* Avatar + modus badge */}
-              <View style={{ marginRight: 14, position: "relative" }}>
+              {/* Avatar */}
+              <View style={{ marginRight: 14 }}>
                 {item.other_pet_photo ? (
                   <Image source={{ uri: item.other_pet_photo }} style={styles.avatar} />
                 ) : (
@@ -363,9 +363,6 @@ export default function GassiMatchesScreen() {
                     <Ionicons name="paw" size={26} color={Colors.SECONDARY} />
                   </View>
                 )}
-                <View style={[styles.modusBadge, { backgroundColor: item.modus === "gassi" ? Colors.SECONDARY : Colors.PRIMARY }]}>
-                  <Ionicons name={item.modus === "gassi" ? "walk" : "football"} size={10} color={Colors.WHITE} />
-                </View>
               </View>
 
               {/* Text */}
