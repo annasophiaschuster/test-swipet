@@ -233,9 +233,9 @@ export default function GassiChatScreen() {
           <Text style={{ fontSize: Sizes.FONT_MD, fontWeight: "700", color: Colors.TEXT }}>
             {petName}
           </Text>
-          <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED }}>
-            {[ownerName, modusBadge].filter(Boolean).join(" · ")}
-          </Text>
+          {ownerName ? (
+            <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED }}>{ownerName}</Text>
+          ) : null}
         </View>
       </View>
 
