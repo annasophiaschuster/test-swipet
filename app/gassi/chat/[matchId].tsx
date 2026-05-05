@@ -100,13 +100,19 @@ export default function GassiChatScreen() {
 
   const initChat = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+      // Demo match — always show local dummy data regardless of login state
+      if (matchId?.startsWith("demo-gm-")) {
         setIsDemo(true);
         setUserId(ME);
         setMessages(DEMO_CONVERSATIONS[matchId] ?? []);
         setLoading(false);
         setTimeout(() => flatListRef.current?.scrollToEnd({ animated: false }), 100);
+        return;
+      }
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setLoading(false);
         return;
       }
       setUserId(user.id);

@@ -175,6 +175,14 @@ export default function GassiMatchesScreen() {
 
       if (error) throw error;
 
+      // Fall back to demo matches if the user has none yet
+      if ((data ?? []).length === 0) {
+        setMatches(DEMO_MATCHES);
+        setLoading(false);
+        setRefreshing(false);
+        return;
+      }
+
       const items: OwnerMatchItem[] = await Promise.all(
         (data ?? []).map(async (m: any) => {
           const isA = m.owner_a_id === user.id;
