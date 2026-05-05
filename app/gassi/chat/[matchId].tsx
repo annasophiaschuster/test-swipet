@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { supabase } from "../../../lib/supabase";
 import { Colors } from "../../../constants/colors";
 import { Sizes } from "../../../constants/sizes";
@@ -23,18 +24,57 @@ interface Message {
   created_at: string;
 }
 
-const DEMO_USER_ID = "demo-amir";
-const DEMO_MAX_ID  = "demo-max";
+const ME = "demo-me";
+const OTHER = "demo-other";
+
+function ago(minutes: number) {
+  return new Date(Date.now() - minutes * 60000).toISOString();
+}
+
+// Realistic dummy conversations per match
+const DEMO_CONVERSATIONS: Record<string, Message[]> = {
+  "demo-gm-1": [
+    { id: "1-1", sender_id: OTHER, text: "Hey! Super dass wir gematcht haben 🐾 Luna freut sich schon!", created_at: ago(90) },
+    { id: "1-2", sender_id: ME,    text: "Hi Sophie! Ja total, mein Hund liebt andere Hunde 😄 Wann seid ihr so unterwegs?", created_at: ago(80) },
+    { id: "1-3", sender_id: OTHER, text: "Meistens morgens so gegen 9. Wärst du dabei?", created_at: ago(75) },
+    { id: "1-4", sender_id: ME,    text: "Klingt perfekt! Habt ihr einen Lieblingsort?", created_at: ago(30) },
+    { id: "1-5", sender_id: OTHER, text: "Morgen früh um 9 am Stadtpark? 🌳", created_at: ago(12) },
+  ],
+  "demo-gm-2": [
+    { id: "2-1", sender_id: OTHER, text: "Hallo! Balu und ich würden uns über ein Gassi-Date freuen 🐕", created_at: ago(300) },
+    { id: "2-2", sender_id: ME,    text: "Hey Jonas! Sehr gerne. Am Wochenende?", created_at: ago(280) },
+    { id: "2-3", sender_id: OTHER, text: "Samstag um 10 am Flaucher?", created_at: ago(260) },
+    { id: "2-4", sender_id: ME,    text: "Perfekt, da kenn ich mich gut aus! Bis Samstag 👍", created_at: ago(250) },
+    { id: "2-5", sender_id: OTHER, text: "Super, dann sehen wir uns Samstag!", created_at: ago(120) },
+  ],
+  "demo-gm-3": [
+    { id: "3-1", sender_id: ME,    text: "Hi Laura! Mia sieht so verspielt aus auf den Fotos 😍", created_at: ago(360) },
+    { id: "3-2", sender_id: OTHER, text: "Ja sie liebt es zu toben! Dein Hund auch so aktiv?", created_at: ago(340) },
+    { id: "3-3", sender_id: ME,    text: "Total! Vielleicht können wir mal ein Spieldate machen?", created_at: ago(320) },
+    { id: "3-4", sender_id: OTHER, text: "Das wäre super! Ich bin die meiste Zeit flexibel.", created_at: ago(310) },
+    { id: "3-5", sender_id: ME,    text: "Wie wäre es nächste Woche Mittwoch Nachmittag?", created_at: ago(300) },
+    { id: "3-6", sender_id: OTHER, text: "Klingt gut! Mia ist total verspielt 😄", created_at: ago(298) },
+  ],
+  "demo-gm-4": [
+    { id: "4-1", sender_id: OTHER, text: "Hey! Rex und ich sind in deiner Nähe, cool 🐾", created_at: ago(1500) },
+    { id: "4-2", sender_id: ME,    text: "Oh nice! Wo geht ihr meistens lang?", created_at: ago(1440) },
+    { id: "4-3", sender_id: OTHER, text: "Am liebsten im Olympiapark. Riesig und super für Hunde!", created_at: ago(1400) },
+    { id: "4-4", sender_id: ME,    text: "Den kenn ich! Vielleicht können wir uns mal dort treffen?", created_at: ago(1380) },
+    { id: "4-5", sender_id: OTHER, text: "Habt ihr heute schon Gassi gemacht?", created_at: ago(26 * 60) },
+  ],
+  "demo-gm-5": [
+    { id: "5-1", sender_id: ME,    text: "Hey Emma! Nala ist so eine schöne Huskydame 😍", created_at: ago(5 * 1440) },
+    { id: "5-2", sender_id: OTHER, text: "Danke! Sie ist auch super lieb mit anderen Hunden.", created_at: ago(5 * 1440 - 20) },
+    { id: "5-3", sender_id: ME,    text: "Wollen wir mal zusammen laufen?", created_at: ago(5 * 1440 - 40) },
+    { id: "5-4", sender_id: OTHER, text: "Sehr gerne! Donnerstag morgen?", created_at: ago(4 * 1440) },
+    { id: "5-5", sender_id: ME,    text: "Perfekt, bin dabei! 🐕", created_at: ago(4 * 1440 - 10) },
+    { id: "5-6", sender_id: OTHER, text: "Es war so schön! Machen wir das bald wieder 🐾", created_at: ago(3 * 1440) },
+  ],
+  "demo-gm-6": [],
+};
 
 export default function GassiChatScreen() {
   const { t, lang } = useLanguage();
-
-  const DEMO_MESSAGES_GM1: Message[] = [
-    { id: "dm-gm1-1", sender_id: DEMO_MAX_ID,  text: t.gassi_chat_demo_msg1, created_at: new Date(Date.now() - 50 * 60000).toISOString() },
-    { id: "dm-gm1-2", sender_id: DEMO_USER_ID, text: t.gassi_chat_demo_msg2, created_at: new Date(Date.now() - 45 * 60000).toISOString() },
-    { id: "dm-gm1-3", sender_id: DEMO_MAX_ID,  text: t.gassi_chat_demo_msg3, created_at: new Date(Date.now() - 46 * 60000).toISOString() },
-    { id: "dm-gm1-4", sender_id: DEMO_USER_ID, text: t.gassi_chat_demo_msg4, created_at: new Date(Date.now() - 44 * 60000).toISOString() },
-  ];
   const { matchId, petName, petPhoto, ownerName, modus } = useLocalSearchParams<{
     matchId: string;
     petName: string;
@@ -48,6 +88,7 @@ export default function GassiChatScreen() {
   const [inputText, setInputText] = useState("");
   const [sending, setSending] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [isDemo, setIsDemo] = useState(false);
   const flatListRef = useRef<FlatList>(null);
 
   useEffect(() => {
@@ -59,15 +100,13 @@ export default function GassiChatScreen() {
 
   const initChat = async () => {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        if (matchId === "demo-gm-1") {
-          setUserId(DEMO_USER_ID);
-          setMessages(DEMO_MESSAGES_GM1);
-          setLoading(false);
-        }
+        setIsDemo(true);
+        setUserId(ME);
+        setMessages(DEMO_CONVERSATIONS[matchId] ?? []);
+        setLoading(false);
+        setTimeout(() => flatListRef.current?.scrollToEnd({ animated: false }), 100);
         return;
       }
       setUserId(user.id);
@@ -75,25 +114,22 @@ export default function GassiChatScreen() {
 
       supabase
         .channel(`gassi-chat-${matchId}`)
-        .on(
-          "postgres_changes",
-          {
-            event: "INSERT",
-            schema: "public",
-            table: "messages",
-            filter: `match_id=eq.${matchId}`,
-          },
-          (payload) => {
-            const newMsg = payload.new as Message;
-            setMessages((prev) =>
-              prev.find((m) => m.id === newMsg.id) ? prev : [...prev, newMsg]
-            );
-            setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
-          }
-        )
+        .on("postgres_changes", {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+          filter: `match_id=eq.${matchId}`,
+        }, (payload) => {
+          const newMsg = payload.new as Message;
+          setMessages((prev) =>
+            prev.find((m) => m.id === newMsg.id) ? prev : [...prev, newMsg]
+          );
+          setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
+        })
         .subscribe();
     } catch (e) {
       console.error("initChat", e);
+      setLoading(false);
     }
   };
 
@@ -118,6 +154,20 @@ export default function GassiChatScreen() {
   const sendMessage = async () => {
     const text = inputText.trim();
     if (!text || !userId || sending) return;
+
+    if (isDemo) {
+      const newMsg: Message = {
+        id: `demo-sent-${Date.now()}`,
+        sender_id: ME,
+        text,
+        created_at: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, newMsg]);
+      setInputText("");
+      setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
+      return;
+    }
+
     setSending(true);
     setInputText("");
     try {
@@ -154,13 +204,14 @@ export default function GassiChatScreen() {
           flexDirection: "row",
           alignItems: "center",
           gap: 12,
+          backgroundColor: Colors.WHITE,
         }}
       >
         <TouchableOpacity
           onPress={() => router.back()}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
-          <Text style={{ fontSize: 20, color: Colors.SECONDARY }}>‹</Text>
+          <Text style={{ fontSize: 22, color: Colors.SECONDARY }}>‹</Text>
         </TouchableOpacity>
         {petPhoto ? (
           <Image
@@ -168,17 +219,8 @@ export default function GassiChatScreen() {
             style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: Colors.SURFACE }}
           />
         ) : (
-          <View
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 20,
-              backgroundColor: Colors.SURFACE,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Text style={{ fontSize: 20 }}>🐾</Text>
+          <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: Colors.SURFACE, alignItems: "center", justifyContent: "center" }}>
+            <Ionicons name="paw" size={20} color={Colors.SECONDARY} />
           </View>
         )}
         <View style={{ flex: 1 }}>
@@ -186,7 +228,7 @@ export default function GassiChatScreen() {
             {petName}
           </Text>
           <Text style={{ fontSize: 12, color: Colors.TEXT_MUTED }}>
-            {`${ownerName} · ${modusBadge}`}
+            {[ownerName, modusBadge].filter(Boolean).join(" · ")}
           </Text>
         </View>
       </View>
@@ -207,22 +249,18 @@ export default function GassiChatScreen() {
             keyExtractor={(item) => item.id}
             contentContainerStyle={{ padding: 16, paddingBottom: 8 }}
             ListEmptyComponent={
-              <View style={{ alignItems: "center", paddingTop: 40 }}>
-                <Text style={{ fontSize: 40, marginBottom: 12 }}>🐕</Text>
-                <Text
-                  style={{
-                    color: Colors.TEXT_MUTED,
-                    textAlign: "center",
-                    lineHeight: 22,
-                  }}
-                >
-                  {ownerName} {t.gassi_chat_match_text}{"\n"}
+              <View style={{ alignItems: "center", paddingTop: 48 }}>
+                <Ionicons name="heart" size={48} color={Colors.BORDER} style={{ marginBottom: 14 }} />
+                <Text style={{ color: Colors.TEXT, fontWeight: "700", fontSize: 16, marginBottom: 6 }}>
+                  {t.gassi_chat_match_text}
+                </Text>
+                <Text style={{ color: Colors.TEXT_MUTED, textAlign: "center", lineHeight: 22, paddingHorizontal: 24 }}>
                   {modus === "gassi" ? t.gassi_chat_match_cta_gassi : t.gassi_chat_match_cta_play}
                 </Text>
               </View>
             }
             renderItem={({ item }) => {
-              const isMe = item.sender_id === userId;
+              const isMe = item.sender_id === userId || item.sender_id === ME;
               return (
                 <View
                   style={{
@@ -242,27 +280,11 @@ export default function GassiChatScreen() {
                       paddingVertical: 9,
                     }}
                   >
-                    <Text
-                      style={{
-                        color: isMe ? Colors.WHITE : Colors.TEXT,
-                        fontSize: Sizes.FONT_MD,
-                        lineHeight: 20,
-                      }}
-                    >
+                    <Text style={{ color: isMe ? Colors.WHITE : Colors.TEXT, fontSize: Sizes.FONT_MD, lineHeight: 20 }}>
                       {item.text}
                     </Text>
-                    <Text
-                      style={{
-                        color: isMe ? "rgba(255,255,255,0.65)" : Colors.TEXT_MUTED,
-                        fontSize: 10,
-                        marginTop: 3,
-                        textAlign: "right",
-                      }}
-                    >
-                      {new Date(item.created_at).toLocaleTimeString(lang === "en" ? "en-US" : "de-DE", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
+                    <Text style={{ color: isMe ? "rgba(255,255,255,0.65)" : Colors.TEXT_MUTED, fontSize: 10, marginTop: 3, textAlign: "right" }}>
+                      {new Date(item.created_at).toLocaleTimeString(lang === "en" ? "en-US" : "de-DE", { hour: "2-digit", minute: "2-digit" })}
                     </Text>
                   </View>
                 </View>
@@ -280,7 +302,7 @@ export default function GassiChatScreen() {
             paddingVertical: 10,
             borderTopWidth: 1,
             borderTopColor: Colors.BORDER,
-            backgroundColor: Colors.BACKGROUND,
+            backgroundColor: Colors.WHITE,
             gap: 8,
           }}
         >
@@ -321,7 +343,7 @@ export default function GassiChatScreen() {
             {sending ? (
               <ActivityIndicator size="small" color={Colors.WHITE} />
             ) : (
-              <Text style={{ fontSize: 16 }}>↑</Text>
+              <Ionicons name="arrow-up" size={18} color={Colors.WHITE} />
             )}
           </TouchableOpacity>
         </View>
