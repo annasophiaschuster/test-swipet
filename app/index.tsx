@@ -14,7 +14,6 @@ import {
   Easing,
 } from "react-native";
 import { router } from "expo-router";
-import { LinearGradient } from "expo-linear-gradient";
 import Svg, { Path } from "react-native-svg";
 import { supabase } from "../lib/supabase";
 import { useLanguage, type Lang } from "../contexts/LanguageContext";
@@ -184,13 +183,8 @@ export default function SplashLoginScreen() {
   return (
     <View style={{ flex: 1 }}>
 
-      {/* ── Full-screen gradient ── */}
-      <LinearGradient
-        colors={[Colors.SECONDARY, Colors.PRIMARY]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        style={StyleSheet.absoluteFill}
-      />
+      {/* ── Full-screen background ── */}
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: Colors.WHITE }]} />
 
       {/* ── Language toggle ── */}
       <View style={styles.langToggleContainer}>
@@ -229,16 +223,14 @@ export default function SplashLoginScreen() {
           },
         ]}
       >
-        <View style={styles.logoContainer}>
-          <Image
-            source={require("../assets/logo2.png")}
-            style={{ width: 140, height: 140, borderRadius: 32 }}
-            resizeMode="contain"
-          />
-        </View>
+        <Image
+          source={require("../assets/neues logo.jpeg")}
+          style={{ width: 180, height: 180 }}
+          resizeMode="contain"
+        />
         <Text style={styles.appName}>SWIPET</Text>
         <Animated.Text style={[styles.slogan, { opacity: sloganAnim }]}>
-          Love at first sniff 🐾
+          Love at first sniff
         </Animated.Text>
       </Animated.View>
 
@@ -365,31 +357,24 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.5)",
+    borderColor: Colors.BORDER,
   },
   langBtn: {
     paddingHorizontal: 14,
     paddingVertical: 6,
-    backgroundColor: "rgba(255,255,255,0.15)",
+    backgroundColor: Colors.SURFACE,
   },
-  langBtnActive:     { backgroundColor: "rgba(255,255,255,0.9)" },
-  langBtnText:       { fontSize: 13, fontWeight: "600", color: "rgba(255,255,255,0.85)", letterSpacing: 0.5 },
-  langBtnTextActive: { color: Colors.PRIMARY },
+  langBtnActive:     { backgroundColor: Colors.PRIMARY },
+  langBtnText:       { fontSize: 13, fontWeight: "600", color: Colors.TEXT_MUTED, letterSpacing: 0.5 },
+  langBtnTextActive: { color: Colors.WHITE },
 
   // ── Logo ─────────────────────────────────────────────────────────────────
-  logoContainer: {
-    width: 160, height: 160, borderRadius: 40,
-    backgroundColor: "rgba(255,255,255,0.15)",
-    alignItems: "center", justifyContent: "center",
-    marginBottom: 24,
-    borderWidth: 2, borderColor: "rgba(255,255,255,0.3)",
-  },
   appName: {
-    fontSize: 42, fontWeight: "800", color: Colors.WHITE,
+    fontSize: 42, fontWeight: "800", color: Colors.SECONDARY,
     letterSpacing: 8, marginBottom: 6,
   },
   slogan: {
-    fontSize: 15, color: "rgba(255,255,255,0.9)",
+    fontSize: 15, color: Colors.TEXT_MUTED,
     fontWeight: "300", letterSpacing: 1.5, fontStyle: "italic",
   },
 
