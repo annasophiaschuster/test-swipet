@@ -224,8 +224,8 @@ export default function SplashLoginScreen() {
         ]}
       >
         <Image
-          source={require("../assets/neues logo.jpeg")}
-          style={{ width: 180, height: 180 }}
+          source={require("../assets/logo-neu.png")}
+          style={{ width: 220, height: 124 }}
           resizeMode="contain"
         />
         <Text style={styles.appName}>SWIPET</Text>
